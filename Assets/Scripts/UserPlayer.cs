@@ -3,7 +3,6 @@ using System.Collections;
 
 public class UserPlayer : Player
 {
-    public float moveSpeed = 10;
 
 	// Use this for initialization
 	void Start () {
