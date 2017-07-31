@@ -20,9 +20,16 @@ public class Tile : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        transform.GetComponent<Renderer>().material.color = Color.blue;
+        if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
+        {
+            transform.GetComponent<Renderer>().material.color = Color.blue;
+        }
+        else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
+        {
+            transform.GetComponent<Renderer>().material.color = Color.red;
+        }
 
-        Debug.Log("Pos (" + gridPostion.x + "," + gridPostion.y + ")");
+        //Debug.Log("Pos (" + gridPostion.x + "," + gridPostion.y + ")");
     }
 
     private void OnMouseExit()
@@ -33,6 +40,14 @@ public class Tile : MonoBehaviour
 
     private void OnMouseDown()
     {
-        GameManager.inatance.moveCurrentPlayer(this);
+        if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
+        {
+            GameManager.inatance.moveCurrentPlayer(this);
+        }
+        else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
+        {
+            GameManager.inatance.attackWithCurrentPlayer(this);
+        }
+
     }
 }

@@ -19,8 +19,8 @@ public class GameManager : MonoBehaviour
     List<List<Tile>> map = new List<List<Tile>>();
     //List<List<HexTile>> map = new List<List<HexTile>>();
 
-    List<Player> players = new List<Player>();
-    int currentPlayerIndex = 0;
+    public List<Player> players = new List<Player>();
+    public int currentPlayerIndex = 0;
 
     void Awake()
     {
@@ -36,7 +36,19 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        players[currentPlayerIndex].TurnUpdate();
+        if (players[currentPlayerIndex].HP > 0)
+        {
+            players[currentPlayerIndex].TurnUpdate();
+        }
+        else
+        {
+            nextTurn();
+        }
+    }
+
+    private void OnGUI()
+    {
+        players[currentPlayerIndex].TurnOnGUI();
     }
 
     public void nextTurn()
@@ -53,7 +65,50 @@ public class GameManager : MonoBehaviour
 
     public void moveCurrentPlayer(Tile destTile)
     {
+        players[currentPlayerIndex].gridPosition = destTile.gridPostion;
         players[currentPlayerIndex].moveDestination = destTile.transform.position + 1.5f * Vector3.up;
+    }
+
+    public void attackWithCurrentPlayer(Tile destTile)
+    {
+        Player target = null;
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].gridPosition == destTile.gridPostion)
+            {
+                target = players[i];
+                break;
+            }
+        }
+
+        if (target != null)
+        {
+            //Debug.Log("p: (" + players[currentPlayerIndex].gridPosition.x + "," + players[currentPlayerIndex].gridPosition.y + ") t:(" + target.gridPosition.x + "," + target.gridPosition.y + ")");
+
+            if (players[currentPlayerIndex].gridPosition.x >= target.gridPosition.x - 1 && players[currentPlayerIndex].gridPosition.x <= target.gridPosition.x + 1 &&
+                players[currentPlayerIndex].gridPosition.y >= target.gridPosition.y - 1 && players[currentPlayerIndex].gridPosition.y <= target.gridPosition.y + 1)
+            {
+                players[currentPlayerIndex].actionPoint--;
+
+                bool hit = Random.Range(0f, 1f) <= players[currentPlayerIndex].attackChance;
+                if (hit)
+                {
+                    int amountOfDamage = (int)Mathf.Floor(players[currentPlayerIndex].damageBase + Random.Range(0, players[currentPlayerIndex].damageRollSides));
+
+                    target.HP -= amountOfDamage;
+
+                    Debug.Log(players[currentPlayerIndex].playerName + " successfuly hit " + target.playerName + " for " + amountOfDamage + " damage!");
+                }
+                else
+                {
+                    Debug.Log(players[currentPlayerIndex].playerName + " missed " + target.playerName + "!");
+                }
+            }
+            else
+            {
+                Debug.Log("Target is not adjacent!");
+            }
+        }
     }
 
     void genetareMap()
@@ -99,20 +154,26 @@ public class GameManager : MonoBehaviour
         UserPlayer player;
 
         player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapWeight / 2), 1.5f, -0 + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        player.gridPosition = new Vector2(0, 0);
+        player.playerName = "A";
 
         players.Add(player);
 
         player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((mapWeight - 1) - Mathf.Floor(mapWeight / 2), 1.5f, -(mapHeight - 1) + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        player.gridPosition = new Vector2(mapWeight - 1, mapHeight - 1);
+        player.playerName = "B";
 
         players.Add(player);
 
         player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((4-Mathf.Floor( mapWeight/2)), 1.5f, -4 + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        player.gridPosition = new Vector2(4, 4);
+        player.playerName = "C";
 
         players.Add(player);
 
-        AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(6 - Mathf.Floor(mapWeight / 2), 1.5f, -4 + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        //AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(6 - Mathf.Floor(mapWeight / 2), 1.5f, -4 + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
 
-        players.Add(aiplayer);
+        //players.Add(aiplayer);
 
     }
 }

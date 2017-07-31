@@ -22,7 +22,7 @@ public class HexTile : MonoBehaviour {
     {
         transform.GetComponent<Renderer>().material.color = Color.blue;
 
-        Debug.Log("Pos (" + hex.q + "," + hex.r + "," + hex.Z + ")");
+        //Debug.Log("Pos (" + hex.q + "," + hex.r + "," + hex.Z + ")");
     }
 
     private void OnMouseExit()

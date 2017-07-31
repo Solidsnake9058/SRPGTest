@@ -23,7 +23,7 @@ public class AIPlayer : Player
             if (Vector3.Distance(moveDestination, transform.position) <= 0.1f)
             {
                 transform.position = moveDestination;
-                GameManager.inatance.nextTurn();
+                actionPoint--;
             }
         }
         else
@@ -32,5 +32,12 @@ public class AIPlayer : Player
         }
 
         base.TurnUpdate();
+    }
+
+    public override void TurnOnGUI()
+    {
+
+
+        base.TurnOnGUI();
     }
 }
