@@ -31,6 +31,9 @@ public class UserPlayer : Player
 
     public override void TurnUpdate()
     {
+        //highlight
+
+
         if (Vector3.Distance(moveDestination, transform.position) > 0.1f)
         {
             transform.position += (moveDestination - transform.position).normalized * moveSpeed * Time.deltaTime;
@@ -57,13 +60,16 @@ public class UserPlayer : Player
         {
             if (!moving)
             {
+                GameManager.inatance.removeHighlightTiles();
                 moving = true;
                 attacking = false;
+                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint);
             }
             else
             {
                 moving = false;
                 attacking = false;
+                GameManager.inatance.removeHighlightTiles();
             }
         }
         //attack button
@@ -73,13 +79,16 @@ public class UserPlayer : Player
         {
             if (!attacking)
             {
+                GameManager.inatance.removeHighlightTiles();
                 moving = false;
                 attacking = true;
+                GameManager.inatance.highlightTileAt(gridPosition, Color.red, movementPerActionPoint);
             }
             else
             {
                 moving = false;
                 attacking = false;
+                GameManager.inatance.removeHighlightTiles();
             }
         }
         //end turn button
@@ -87,6 +96,7 @@ public class UserPlayer : Player
 
         if (GUI.Button(buttonRect,"End Turn"))
         {
+            GameManager.inatance.removeHighlightTiles();
             actionPoint = 2;
             moving = false;
             attacking = false;

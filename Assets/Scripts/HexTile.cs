@@ -20,14 +20,14 @@ public class HexTile : MonoBehaviour {
 
     private void OnMouseEnter()
     {
-        transform.GetComponent<Renderer>().material.color = Color.blue;
+        //transform.GetComponent<Renderer>().material.color = Color.blue;
 
         //Debug.Log("Pos (" + hex.q + "," + hex.r + "," + hex.Z + ")");
     }
 
     private void OnMouseExit()
     {
-        transform.GetComponent<Renderer>().material.color = Color.white;
+        //transform.GetComponent<Renderer>().material.color = Color.white;
 
     }
 

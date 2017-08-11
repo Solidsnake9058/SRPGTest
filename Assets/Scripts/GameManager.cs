@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
 
     public float cubeSize = 1;
 
-    List<List<Tile>> map = new List<List<Tile>>();
+    public List<List<Tile>> map = new List<List<Tile>>();
     //List<List<HexTile>> map = new List<List<HexTile>>();
 
     public List<Player> players = new List<Player>();
@@ -65,12 +65,25 @@ public class GameManager : MonoBehaviour
 
     public void moveCurrentPlayer(Tile destTile)
     {
-        players[currentPlayerIndex].gridPosition = destTile.gridPostion;
-        players[currentPlayerIndex].moveDestination = destTile.transform.position + 1.5f * Vector3.up;
+        if (destTile.GetComponent<Renderer>().material.color !=Color.white)
+        {
+            players[currentPlayerIndex].gridPosition = destTile.gridPostion;
+            players[currentPlayerIndex].moveDestination = destTile.transform.position + 1.5f * Vector3.up;
+        }
+        else
+        {
+            Debug.Log("destination invalid");
+        }
     }
 
     public void attackWithCurrentPlayer(Tile destTile)
     {
+        if (destTile.GetComponent<Renderer>().material.color == Color.white)
+        {
+            Debug.Log("destination invalid");
+            return;
+        }
+
         Player target = null;
         for (int i = 0; i < players.Count; i++)
         {
@@ -107,6 +120,27 @@ public class GameManager : MonoBehaviour
             else
             {
                 Debug.Log("Target is not adjacent!");
+            }
+        }
+    }
+
+    public void highlightTileAt(Vector2 originPosition, Color highlightColor ,int distance)
+    {
+        List<Tile> highlightTiles = TileHighlight.FindHighlight(map[(int)originPosition.x][(int)originPosition.y], distance);
+
+        foreach (Tile t in highlightTiles)
+        {
+            t.transform.GetComponent<Renderer>().material.color = highlightColor;
+        }
+    }
+
+    public void removeHighlightTiles()
+    {
+        for (int i = 0; i < mapWeight; i++)
+        {
+            for (int j = 0; j < mapHeight; j++)
+            {
+                map[i][j].transform.GetComponent<Renderer>().material.color = Color.white;
             }
         }
     }

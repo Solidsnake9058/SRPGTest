@@ -8,6 +8,9 @@ public class Player : MonoBehaviour
     public Vector3 moveDestination;
     public float moveSpeed = 10f;
 
+    public int movementPerActionPoint = 5;
+    public int attackRange = 1;
+
     public bool moving = false;
     public bool attacking = false;
 
