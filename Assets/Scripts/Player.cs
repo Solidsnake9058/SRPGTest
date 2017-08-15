@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Player : MonoBehaviour
 {
@@ -23,6 +24,10 @@ public class Player : MonoBehaviour
     public float damageRollSides = 6;
 
     public int actionPoint = 2;
+
+    //movement animation
+    public List<Vector3> positionQueue = new List<Vector3>();
+    //
 
     private void Awake()
     {

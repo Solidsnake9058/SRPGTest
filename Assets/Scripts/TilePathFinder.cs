@@ -2,15 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class TileHighlight
+public class TilePathFinder : MonoBehaviour
 {
-    public TileHighlight()
+
+    public TilePathFinder()
     {
 
     }
 
-    public static List<Tile> FindHighlight(Tile originTile,int movementPoints)
+    public static TilePath FindPath(Tile originTile, Tile desinationTile)
     {
+        //Debug.Log("Ori:(" + originTile.gridPostion.x + "," + originTile.gridPostion.y + "), Des:(" + desinationTile.gridPostion.x + "," + desinationTile.gridPostion.y + ")");
+
         List<Tile> closed = new List<Tile>();
         List<TilePath> open = new List<TilePath>();
 
@@ -28,25 +31,26 @@ public class TileHighlight
             {
                 continue;
             }
-            if (current.costOfPath > movementPoints + 1)
+            if (current.lastTile == desinationTile)
             {
-                continue;
+                return current;
             }
 
             closed.Add(current.lastTile);
 
             foreach (Tile t in current.lastTile.neighbors)
             {
+                TilePath newTilePath = new TilePath(current);
                 if (t.impassible)
                 {
                     continue;
                 }
-                TilePath newTilePath = new TilePath(current);
                 newTilePath.addTile(t);
                 open.Add(newTilePath);
             }
         }
         closed.Remove(originTile);
-        return closed;
+        return null;
     }
+
 }

@@ -65,10 +65,20 @@ public class GameManager : MonoBehaviour
 
     public void moveCurrentPlayer(Tile destTile)
     {
-        if (destTile.GetComponent<Renderer>().material.color !=Color.white)
+        if (destTile.GetComponent<Renderer>().material.color !=Color.white && !destTile.impassible)
         {
+            removeHighlightTiles();
+            players[currentPlayerIndex].moving = false;
+            foreach (Tile t in TilePathFinder.FindPath(map[(int)(players[currentPlayerIndex].gridPosition.x)][(int)(players[currentPlayerIndex].gridPosition.y)], destTile).listOfTiles)
+            {
+                //Debug.Log("move (" + t.gridPostion.x + "," + t.gridPostion.y + ") ,position (" + map[(int)t.gridPostion.x][(int)t.gridPostion.y].transform.position.ToString() + ")");
+
+                players[currentPlayerIndex].positionQueue.Add(map[(int)t.gridPostion.x][(int)t.gridPostion.y].transform.position + 1.5f * Vector3.up);
+                //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
+            }
             players[currentPlayerIndex].gridPosition = destTile.gridPostion;
-            players[currentPlayerIndex].moveDestination = destTile.transform.position + 1.5f * Vector3.up;
+            players[currentPlayerIndex].positionQueue.RemoveAt(0);
+            //players[currentPlayerIndex].positionQueue.Reverse();
         }
         else
         {
@@ -78,7 +88,7 @@ public class GameManager : MonoBehaviour
 
     public void attackWithCurrentPlayer(Tile destTile)
     {
-        if (destTile.GetComponent<Renderer>().material.color == Color.white)
+        if (destTile.GetComponent<Renderer>().material.color == Color.white && !destTile.impassible)
         {
             Debug.Log("destination invalid");
             return;
@@ -140,7 +150,10 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < mapHeight; j++)
             {
-                map[i][j].transform.GetComponent<Renderer>().material.color = Color.white;
+                if (!map[i][j].impassible)
+                {
+                    map[i][j].transform.GetComponent<Renderer>().material.color = Color.white;
+                }
             }
         }
     }

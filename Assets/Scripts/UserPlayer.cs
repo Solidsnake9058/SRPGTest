@@ -33,15 +33,21 @@ public class UserPlayer : Player
     {
         //highlight
 
-
-        if (Vector3.Distance(moveDestination, transform.position) > 0.1f)
+        if (positionQueue.Count > 0)
         {
-            transform.position += (moveDestination - transform.position).normalized * moveSpeed * Time.deltaTime;
-
-            if (Vector3.Distance(moveDestination, transform.position) <= 0.1f)
+            if (Vector3.Distance(positionQueue[0], transform.position) > 0.1f)
             {
-                transform.position = moveDestination;
-                actionPoint--;
+                transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
+
+                if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+                {
+                    transform.position = positionQueue[0];
+                    positionQueue.RemoveAt(0);
+                    if (positionQueue.Count == 0)
+                    {
+                        actionPoint--;
+                    }
+                }
             }
         }
 
@@ -82,7 +88,7 @@ public class UserPlayer : Player
                 GameManager.inatance.removeHighlightTiles();
                 moving = false;
                 attacking = true;
-                GameManager.inatance.highlightTileAt(gridPosition, Color.red, movementPerActionPoint);
+                GameManager.inatance.highlightTileAt(gridPosition, Color.red, attackRange);
             }
             else
             {
