@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class TilePathFinder : MonoBehaviour
 {
@@ -11,6 +12,10 @@ public class TilePathFinder : MonoBehaviour
     }
 
     public static TilePath FindPath(Tile originTile, Tile desinationTile)
+    {
+        return FindPath(originTile, desinationTile, new Vector2[0]);
+    }
+    public static TilePath FindPath(Tile originTile, Tile desinationTile, Vector2[] occupied)
     {
         //Debug.Log("Ori:(" + originTile.gridPostion.x + "," + originTile.gridPostion.y + "), Des:(" + desinationTile.gridPostion.x + "," + desinationTile.gridPostion.y + ")");
 
@@ -41,7 +46,7 @@ public class TilePathFinder : MonoBehaviour
             foreach (Tile t in current.lastTile.neighbors)
             {
                 TilePath newTilePath = new TilePath(current);
-                if (t.impassible)
+                if (t.impassible || occupied.Contains(t.gridPostion))
                 {
                     continue;
                 }

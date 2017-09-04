@@ -41,9 +41,13 @@ public class Player : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    public virtual void Update()
     {
-
+        if (HP <= 0)
+        {
+            transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
+            transform.GetComponent<Renderer>().material.color = Color.gray;
+        }
     }
 
     public virtual void TurnUpdate()
@@ -60,5 +64,15 @@ public class Player : MonoBehaviour
     public virtual void TurnOnGUI()
     {
 
+    }
+
+    public void OnGUI()
+    {
+        //display HP
+        Vector3 location = Camera.main.WorldToScreenPoint(transform.position);// + Vector3.up * 35;
+        GUIStyle style = new GUIStyle();
+        style.normal.textColor = Color.black;
+        GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), HP.ToString(), style);
+        //Debug.Log(playerName + ":(" + location.x + "," + location.y + "," + location.z + ")");
     }
 }

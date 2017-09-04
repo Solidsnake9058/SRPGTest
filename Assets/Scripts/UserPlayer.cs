@@ -11,7 +11,7 @@ public class UserPlayer : Player
     }
 
     // Update is called once per frame
-    void Update()
+    public override void Update()
     {
         if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex] == this)
         {
@@ -22,11 +22,7 @@ public class UserPlayer : Player
             transform.GetComponent<Renderer>().material.color = Color.white;
         }
 
-        if (HP <= 0)
-        {
-            transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
-            transform.GetComponent<Renderer>().material.color = Color.gray;
-        }
+        base.Update();
     }
 
     public override void TurnUpdate()
@@ -35,18 +31,15 @@ public class UserPlayer : Player
 
         if (positionQueue.Count > 0)
         {
-            if (Vector3.Distance(positionQueue[0], transform.position) > 0.1f)
-            {
-                transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
+            transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
 
-                if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+            if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+            {
+                transform.position = positionQueue[0];
+                positionQueue.RemoveAt(0);
+                if (positionQueue.Count == 0)
                 {
-                    transform.position = positionQueue[0];
-                    positionQueue.RemoveAt(0);
-                    if (positionQueue.Count == 0)
-                    {
-                        actionPoint--;
-                    }
+                    actionPoint--;
                 }
             }
         }
@@ -69,7 +62,7 @@ public class UserPlayer : Player
                 GameManager.inatance.removeHighlightTiles();
                 moving = true;
                 attacking = false;
-                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint);
+                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
             }
             else
             {
