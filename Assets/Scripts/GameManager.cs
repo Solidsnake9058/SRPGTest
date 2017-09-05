@@ -66,10 +66,10 @@ public class GameManager : MonoBehaviour
             players[currentPlayerIndex].moving = false;
             foreach (Tile t in TilePathFinder.FindPath(map[(int)(players[currentPlayerIndex].gridPosition.x)][(int)(players[currentPlayerIndex].gridPosition.y)], destTile, players.Where(x => x.gridPosition != players[currentPlayerIndex].gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
             {
-                players[currentPlayerIndex].positionQueue.Add(map[(int)t.gridPostion.x][(int)t.gridPostion.y].transform.position + 1.5f * Vector3.up);
+                players[currentPlayerIndex].positionQueue.Add(map[(int)t.gridPosition.x][(int)t.gridPosition.y].transform.position + 1.5f * Vector3.up);
                 //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
             }
-            players[currentPlayerIndex].gridPosition = destTile.gridPostion;
+            players[currentPlayerIndex].gridPosition = destTile.gridPosition;
         }
         else
         {
@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
         Player target = null;
         for (int i = 0; i < players.Count; i++)
         {
-            if (players[i].gridPosition == destTile.gridPostion)
+            if (players[i].gridPosition == destTile.gridPosition)
             {
                 target = players[i];
                 break;
@@ -191,7 +191,7 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < mapHeight; j++)
             {
                 Tile tile = ((GameObject)Instantiate(tilePrefab, new Vector3(i - Mathf.Floor(mapWeight / 2), 0, -j + Mathf.Floor(mapHeight / 2)), Quaternion.Euler(new Vector3()))).GetComponent<Tile>();
-                tile.gridPostion = new Vector2(i, j);
+                tile.gridPosition = new Vector2(i, j);
                 row.Add(tile);
             }
             map.Add(row);

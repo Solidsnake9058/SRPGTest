@@ -13,9 +13,20 @@ public class TilePathFinder : MonoBehaviour
 
     public static TilePath FindPath(Tile originTile, Tile desinationTile)
     {
-        return FindPath(originTile, desinationTile, new Vector2[0]);
+        return FindPath(originTile, desinationTile, new Vector2[0], false);
     }
+
+    public static TilePath FindPath(Tile originTile, Tile desinationTile, bool ignorePlayer)
+    {
+        return FindPath(originTile, desinationTile, new Vector2[0], ignorePlayer);
+    }
+
     public static TilePath FindPath(Tile originTile, Tile desinationTile, Vector2[] occupied)
+    {
+        return FindPath(originTile, desinationTile, occupied, false);
+    }
+
+    public static TilePath FindPath(Tile originTile, Tile desinationTile, Vector2[] occupied, bool ignorePlayers)
     {
         //Debug.Log("Ori:(" + originTile.gridPostion.x + "," + originTile.gridPostion.y + "), Des:(" + desinationTile.gridPostion.x + "," + desinationTile.gridPostion.y + ")");
 
@@ -46,7 +57,8 @@ public class TilePathFinder : MonoBehaviour
             foreach (Tile t in current.lastTile.neighbors)
             {
                 TilePath newTilePath = new TilePath(current);
-                if (t.impassible || occupied.Contains(t.gridPostion))
+                List<Player> playerTiles = GameManager.inatance.players.Where(x => x.gridPosition == t.gridPosition).ToList();
+                if (t.impassible || occupied.Contains(t.gridPosition) || (!ignorePlayers && playerTiles.Count > 0))
                 {
                     continue;
                 }

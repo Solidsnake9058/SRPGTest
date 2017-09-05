@@ -42,7 +42,7 @@ public class TileHighlight
 
             foreach (Tile t in current.lastTile.neighbors)
             {
-                if (t.impassible || occupied.Contains(t.gridPostion))
+                if (t.impassible || occupied.Contains(t.gridPosition))
                 {
                     continue;
                 }

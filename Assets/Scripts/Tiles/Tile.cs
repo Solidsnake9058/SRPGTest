@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class Tile : MonoBehaviour
 {
 
-    public Vector2 gridPostion = Vector2.zero;
+    public Vector2 gridPosition = Vector2.zero;
 
     public int movementCost = 1;
     public bool impassible = false;
@@ -23,29 +23,29 @@ public class Tile : MonoBehaviour
         neighbors = new List<Tile>();
 
         //up
-        if (gridPostion.y > 0)
+        if (gridPosition.y > 0)
         {
-            Vector2 n = new Vector2(gridPostion.x, gridPostion.y - 1);
+            Vector2 n = new Vector2(gridPosition.x, gridPosition.y - 1);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
         //down
-        if (gridPostion.y < GameManager.inatance.mapHeight - 1)
+        if (gridPosition.y < GameManager.inatance.mapHeight - 1)
         {
-            Vector2 n = new Vector2(gridPostion.x, gridPostion.y + 1);
+            Vector2 n = new Vector2(gridPosition.x, gridPosition.y + 1);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //left
-        if (gridPostion.x > 0)
+        if (gridPosition.x > 0)
         {
-            Vector2 n = new Vector2(gridPostion.x - 1, gridPostion.y);
+            Vector2 n = new Vector2(gridPosition.x - 1, gridPosition.y);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //right
-        if (gridPostion.x < GameManager.inatance.mapWeight - 1)
+        if (gridPosition.x < GameManager.inatance.mapWeight - 1)
         {
-            Vector2 n = new Vector2(gridPostion.x + 1, gridPostion.y);
+            Vector2 n = new Vector2(gridPosition.x + 1, gridPosition.y);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
