@@ -91,7 +91,7 @@ public class AIPlayer : Player
                 GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
 
                 //List<Tile> path = TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.inatance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
-                GameManager.inatance.moveCurrentPlayer(opponentPaths[0].listOfTiles[opponentPaths[0].listOfTiles.Count - 1]);
+                GameManager.inatance.moveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, movementPerActionPoint)]);
             }
             //move toward nearest opponent
             else if (movementTilesInRange.Where(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)

@@ -1,9 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using UnityEngine.SceneManagement;
 
 public class Tile : MonoBehaviour
 {
+    GameObject Prefab;
+    public GameObject visual;
+
+    public TileType type = TileType.Normal;
 
     public Vector2 gridPosition = Vector2.zero;
 
@@ -15,7 +21,10 @@ public class Tile : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        generateNeighbors();
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            generateNeighbors();
+        }
     }
 
     void generateNeighbors()
@@ -29,7 +38,7 @@ public class Tile : MonoBehaviour
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
         //down
-        if (gridPosition.y < GameManager.inatance.mapHeight - 1)
+        if (gridPosition.y < GameManager.inatance.mapSizeY - 1)
         {
             Vector2 n = new Vector2(gridPosition.x, gridPosition.y + 1);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
@@ -43,7 +52,7 @@ public class Tile : MonoBehaviour
         }
 
         //right
-        if (gridPosition.x < GameManager.inatance.mapWeight - 1)
+        if (gridPosition.x < GameManager.inatance.mapSizeX - 1)
         {
             Vector2 n = new Vector2(gridPosition.x + 1, gridPosition.y);
             neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
@@ -59,6 +68,10 @@ public class Tile : MonoBehaviour
 
     private void OnMouseEnter()
     {
+        if (SceneManager.GetActiveScene().name == "MapCreatorScene"&&Input.GetMouseButton(0))
+        {
+            setType(MapCreatorManager.instance.pallerSelection);
+        }
         //string msg = "";
         //foreach (Tile t in neighbors)
         //{
@@ -86,25 +99,74 @@ public class Tile : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
+        if (SceneManager.GetActiveScene().name == "GameScene")
         {
-            GameManager.inatance.moveCurrentPlayer(this);
-        }
-        else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
-        {
-            GameManager.inatance.attackWithCurrentPlayer(this);
-        }
-        else
-        {
-            impassible = impassible ? false : true;
-            if (impassible)
+            if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
             {
-                transform.GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+                GameManager.inatance.moveCurrentPlayer(this);
+            }
+            else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
+            {
+                GameManager.inatance.attackWithCurrentPlayer(this);
             }
             else
             {
-                transform.GetComponent<Renderer>().material.color = Color.white;
+                impassible = impassible ? false : true;
+                if (impassible)
+                {
+                    transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+                }
+                else
+                {
+                    transform.GetComponentInChildren<Renderer>().material.color = Color.white;
+                }
             }
         }
+        else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+        {
+            setType(MapCreatorManager.instance.pallerSelection);
+        }
+    }
+
+    public void setType(TileType t)
+    {
+        type = t;
+        //definition of TileType properties
+        switch (t)
+        {
+            case TileType.Normal:
+                movementCost = 1;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_Normal_prefab;
+                break;
+            case TileType.Difficult:
+                movementCost = 2;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_Difficult_prefab;
+                break;
+            case TileType.VeryDifficult:
+                movementCost = 4;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_VeryDifficult_prefab;
+                break;
+            case TileType.Impassible:
+                movementCost = 9999;
+                impassible = true;
+                Prefab = PrefabHolder.instance.tile_Impassible_prefab;
+                break;
+        }
+
+        generateVisuals();
+    }
+
+    public void generateVisuals()
+    {
+        GameObject container = transform.Find("Visuals").gameObject;
+        for (int i = 0; i < container.transform.childCount; i++)
+        {
+            Destroy(container.transform.GetChild(i).gameObject);
+        }
+        GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Quaternion.Euler(new Vector3(0,0,0)));
+        newVisual.transform.parent = container.transform;
     }
 }
