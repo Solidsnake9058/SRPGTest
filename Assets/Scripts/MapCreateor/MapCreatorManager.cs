@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -16,13 +17,14 @@ public class MapCreatorManager : MonoBehaviour
 
     public TileType pallerSelection = TileType.Normal;
     Transform mapTransform;
-
+    public Text tileTypeName;
+    public InputField fileName;
     // Use this for initialization
     void Awake()
     {
         instance = this;
         mapTransform = transform.Find("Map");
-        genetareBlankMap(38, 32);
+        generateBlankMap(38, 32);
     }
 
     // Update is called once per frame
@@ -31,7 +33,35 @@ public class MapCreatorManager : MonoBehaviour
 
     }
 
-    void genetareBlankMap(int mSizeX, int mSizeY)
+    public void NextType()
+    {
+        int temp = (int)pallerSelection;
+        temp++;
+        temp = temp % Enum.GetNames(typeof(TileType)).Length;
+        pallerSelection = (TileType)temp;
+        tileTypeName.text = pallerSelection.ToString();
+    }
+
+	public void LastType()
+	{
+		int temp = (int)pallerSelection;
+		temp--;
+        temp = (temp + Enum.GetNames(typeof(TileType)).Length) % Enum.GetNames(typeof(TileType)).Length;
+		pallerSelection = (TileType)temp;
+		tileTypeName.text = pallerSelection.ToString();
+	}
+
+    public void TrimFileName()
+    {
+        fileName.text = fileName.text.Trim();
+    }
+
+    public void generateBlankMapDefault()
+    {
+        generateBlankMap(38, 32);
+    }
+
+    private void generateBlankMap(int mSizeX, int mSizeY)
     {
         mapSizeX = mSizeX;
         mapSizeY = mSizeY;
@@ -45,6 +75,7 @@ public class MapCreatorManager : MonoBehaviour
         map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
 
+        //Hexagons
         for (int i = 0; i < mapSizeY; i++)
         {
             int offset = i >> 1;
@@ -72,6 +103,7 @@ public class MapCreatorManager : MonoBehaviour
             mapHex.Add(row);
         }
 
+        //Rectangle
         //for (int i = 0; i < mapSizeX; i++)
         //{
         //    List<Tile> row = new List<Tile>();
@@ -87,14 +119,31 @@ public class MapCreatorManager : MonoBehaviour
         //}
     }
 
-    private void saveMapFromXml()
+    public void saveMapFromXml()
     {
-        MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), "map.xml");
+        if (String.IsNullOrEmpty(fileName.text))
+        {
+            Debug.Log("File name cannot be empty!");
+            return;
+        }
+
+        //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
+        MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
     }
 
-    private void loadMapFromXml()
+    public void loadMapFromXml()
     {
-        MapXmlContainer container = MapSaveLoad.Load("map.xml");
+		if (String.IsNullOrEmpty(fileName.text))
+		{
+			Debug.Log("File name cannot be empty!");
+			return;
+		}
+        if (!System.IO.File.Exists(fileName.text + ".xml"))
+		{
+            Debug.Log("File is not exist!");
+            return;
+		}
+        MapXmlContainer container = MapSaveLoad.Load(fileName.text + ".xml");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
 
@@ -105,27 +154,37 @@ public class MapCreatorManager : MonoBehaviour
 
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
-        //map = new List<List<HexTile>>();
+        mapHex = new List<List<HexTile>>();
 
-        //for (int i = 0; i < mapHeight; i++)
-        //{
-        //    int offset = i >> 1;
-        //    List<HexTile> row = new List<HexTile>();
-        //    for (int j = -offset; j < mapWeight - offset; j++)
-        //    {
-        //        int Z = -i - j;
-        //        pos.x = ((float)(j - Z) / 2.0f);
-        //        pos.z = -i;
+        //Hexagons
+        for (int i = 0; i < mapSizeY; i++)
+        {
+            int offset = i >> 1;
+            List<HexTile> row = new List<HexTile>();
+            for (int j = -offset; j < mapSizeX - offset; j++)
+            {
+                //int Z = -i - j;
+                //pos.x = ((float)(j - Z) / 2.0f);
+                //pos.z = -i;
 
-        //        HexTile tile = ((GameObject)Instantiate(tilePrefab, cubeSize * pos, Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
+                if (i % 2 == 1 && j == mapSizeX - offset - 1)
+                {
+                    continue;
+                }
+                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
+                tile.transform.parent = mapTransform;
+                tile.hex.q = j;
+                tile.hex.r = i;
+                tile.mapSizeX = mapSizeX;
+                tile.mapSizeY = mapSizeY;
+                tile.gameObject.transform.localPosition = tile.HexTilePos();
+                tile.setType((TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id);
+                row.Add(tile);
+            }
+            mapHex.Add(row);
+        }
 
-        //        tile.hex.q = j;
-        //        tile.hex.r = i;
-        //        row.Add(tile);
-        //    }
-        //    map.Add(row);
-        //}
-
+        /*
         for (int i = 0; i < mapSizeX; i++)
         {
             List<Tile> row = new List<Tile>();
@@ -139,10 +198,12 @@ public class MapCreatorManager : MonoBehaviour
             }
             map.Add(row);
         }
+        */
     }
 
     private void OnGUI()
     {
+        /*
         Rect rect = new Rect(10, Screen.height - 80, 100, 60);
 
         if (GUI.Button(rect,"Normal"))
@@ -189,6 +250,7 @@ public class MapCreatorManager : MonoBehaviour
         {
             saveMapFromXml();
         }
+        */
     }
 
 }

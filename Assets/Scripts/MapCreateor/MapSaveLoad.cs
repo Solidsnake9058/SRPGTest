@@ -54,6 +54,26 @@ public static class MapSaveLoad
         };
     }
 
+    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map)
+	{
+		List<TileXml> tiles = new List<TileXml>();
+
+		for (int i = 0; i < map.Count; i++)
+		{
+			for (int j = 0; j < map[i].Count; j++)
+			{
+				tiles.Add(MapSaveLoad.CreateTileXml(map[i][j]));
+			}
+		}
+
+		return new MapXmlContainer()
+		{
+			sizeX = map[0].Count,
+			sizeY = map.Count,
+			tiles = tiles
+		};
+	}
+
     public static TileXml CreateTileXml(Tile tile)
     {
         return new TileXml()
@@ -63,6 +83,16 @@ public static class MapSaveLoad
             locY = (int)tile.gridPosition.y
         };
     }
+
+    public static TileXml CreateTileXml(HexTile tile)
+	{
+        return new TileXml()
+        {
+            id = (int)tile.type,
+            locX = (int)tile.hex.q,
+            locY = (int)tile.hex.r
+        };
+	}
 
     public static void Save(MapXmlContainer mapContainer, string filename)
     {

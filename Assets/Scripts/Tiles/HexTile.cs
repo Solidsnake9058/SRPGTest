@@ -100,9 +100,10 @@ public class HexTile : MonoBehaviour {
 
     private void OnMouseEnter()
     {
-        //transform.GetComponent<Renderer>().material.color = Color.blue;
-
-        //Debug.Log("Pos (" + hex.q + "," + hex.r + "," + hex.Z + ")");
+		if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
+		{
+			setType(MapCreatorManager.instance.pallerSelection);
+		}
     }
 
     private void OnMouseExit()
@@ -113,7 +114,33 @@ public class HexTile : MonoBehaviour {
 
     private void OnMouseDown()
     {
-        //GameManager.inatance.moveCurrentPlayer(this);
+		if (SceneManager.GetActiveScene().name == "GameScene")
+		{
+			if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
+			{
+				//GameManager.instance.moveCurrentPlayer(this);
+			}
+			else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
+			{
+				//GameManager.instance.attackWithCurrentPlayer(this);
+			}
+			else
+			{
+				impassible = impassible ? false : true;
+				if (impassible)
+				{
+					transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+				}
+				else
+				{
+					transform.GetComponentInChildren<Renderer>().material.color = Color.white;
+				}
+			}
+		}
+		else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+		{
+			setType(MapCreatorManager.instance.pallerSelection);
+		}
     }
 
     public void setType(TileType t)
