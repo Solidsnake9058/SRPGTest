@@ -5,7 +5,7 @@ using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager inatance;
+    public static GameManager instance;
 
     public GameObject tilePrefab;
     public GameObject userPlayerPrefab;
@@ -18,14 +18,14 @@ public class GameManager : MonoBehaviour
     public float cubeSize = 1;
 
     public List<List<Tile>> map = new List<List<Tile>>();
-    //List<List<HexTile>> map = new List<List<HexTile>>();
+    public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
     public List<Player> players = new List<Player>();
     public int currentPlayerIndex = 0;
 
     void Awake()
     {
-        inatance = this;
+        instance = this;
         mapTransform = transform.Find("Map");
 
     }

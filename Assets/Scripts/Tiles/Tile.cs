@@ -35,27 +35,27 @@ public class Tile : MonoBehaviour
         if (gridPosition.y > 0)
         {
             Vector2 n = new Vector2(gridPosition.x, gridPosition.y - 1);
-            neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
         //down
-        if (gridPosition.y < GameManager.inatance.mapSizeY - 1)
+        if (gridPosition.y < GameManager.instance.mapSizeY - 1)
         {
             Vector2 n = new Vector2(gridPosition.x, gridPosition.y + 1);
-            neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //left
         if (gridPosition.x > 0)
         {
             Vector2 n = new Vector2(gridPosition.x - 1, gridPosition.y);
-            neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //right
-        if (gridPosition.x < GameManager.inatance.mapSizeX - 1)
+        if (gridPosition.x < GameManager.instance.mapSizeX - 1)
         {
             Vector2 n = new Vector2(gridPosition.x + 1, gridPosition.y);
-            neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
     }
@@ -68,7 +68,7 @@ public class Tile : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        if (SceneManager.GetActiveScene().name == "MapCreatorScene"&&Input.GetMouseButton(0))
+        if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
         {
             setType(MapCreatorManager.instance.pallerSelection);
         }
@@ -79,11 +79,11 @@ public class Tile : MonoBehaviour
         //}
         //Debug.Log("Pos: (" + gridPostion.x + "," + gridPostion.y + ") ,Neighbors: " + msg);
 
-        //if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
+        //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
         //{
         //    transform.GetComponent<Renderer>().material.color = Color.blue;
         //}
-        //else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
+        //else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
         //{
         //    transform.GetComponent<Renderer>().material.color = Color.red;
         //}
@@ -101,13 +101,13 @@ public class Tile : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
-            if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].moving)
+            if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
             {
-                GameManager.inatance.moveCurrentPlayer(this);
+                GameManager.instance.moveCurrentPlayer(this);
             }
-            else if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex].attacking)
+            else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
             {
-                GameManager.inatance.attackWithCurrentPlayer(this);
+                GameManager.instance.attackWithCurrentPlayer(this);
             }
             else
             {

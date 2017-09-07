@@ -57,7 +57,7 @@ public class TilePathFinder : MonoBehaviour
             foreach (Tile t in current.lastTile.neighbors)
             {
                 TilePath newTilePath = new TilePath(current);
-                List<Player> playerTiles = GameManager.inatance.players.Where(x => x.gridPosition == t.gridPosition).ToList();
+                List<Player> playerTiles = GameManager.instance.players.Where(x => x.gridPosition == t.gridPosition).ToList();
                 if (t.impassible || occupied.Contains(t.gridPosition) || (!ignorePlayers && playerTiles.Count > 0))
                 {
                     continue;

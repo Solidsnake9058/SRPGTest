@@ -14,7 +14,7 @@ public class AIPlayer : Player
     // Update is called once per frame
     public override void Update()
     {
-        //if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex] == this)
+        //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
         //{
         //    transform.GetComponent<Renderer>().material.color = Color.green;
         //}
@@ -45,24 +45,24 @@ public class AIPlayer : Player
         else
         {
             //priority queue
-            List<Tile> attackTilesInRange = TileHighlight.FindHighlight(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], attackRange);
-            List<Tile> moveToAttackTilesInRange = TileHighlight.FindHighlight(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], movementPerActionPoint + attackRange);
-            List<Tile> movementTilesInRange = TileHighlight.FindHighlight(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], movementPerActionPoint + 1000);
+            List<Tile> attackTilesInRange = TileHighlight.FindHighlight(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], attackRange);
+            List<Tile> moveToAttackTilesInRange = TileHighlight.FindHighlight(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], movementPerActionPoint + attackRange);
+            List<Tile> movementTilesInRange = TileHighlight.FindHighlight(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], movementPerActionPoint + 1000);
 
             //attack if in range and with lowest HP
-            if (attackTilesInRange.Where(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
+            if (attackTilesInRange.Where(x => GameManager.instance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
             {
-                List<Player> opponentsInRange = attackTilesInRange.Select(x => GameManager.inatance.players.Where(y => y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
+                List<Player> opponentsInRange = attackTilesInRange.Select(x => GameManager.instance.players.Where(y => y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
                 opponentsInRange.RemoveAll(x => x == null);
                 Player opponents = opponentsInRange.OrderBy(x => -x.HP).First();
 
-                GameManager.inatance.highlightTileAt(gridPosition, Color.red, attackRange);
-                GameManager.inatance.attackWithCurrentPlayer(GameManager.inatance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y]);
+                GameManager.instance.highlightTileAt(gridPosition, Color.red, attackRange);
+                GameManager.instance.attackWithCurrentPlayer(GameManager.instance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y]);
             }
             //move toward nearest attack range if opponent
-            else if (moveToAttackTilesInRange.Where(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
+            else if (moveToAttackTilesInRange.Where(x => GameManager.instance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
             {
-                List<Player> opponentsInRange = moveToAttackTilesInRange.Select(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
+                List<Player> opponentsInRange = moveToAttackTilesInRange.Select(x => GameManager.instance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
                 opponentsInRange.RemoveAll(x => x == null);
 
                 List<Tile> opponentTiles = new List<Tile>();
@@ -72,9 +72,9 @@ public class AIPlayer : Player
                 {
                     for (int i = 0; i < opponentsInRange.Count; i++)
                     {
-                        opponentTiles.AddRange(TileHighlight.FindHighlight(GameManager.inatance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y], searchRange));
+                        opponentTiles.AddRange(TileHighlight.FindHighlight(GameManager.instance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y], searchRange));
                     }
-                    opponentTiles.RemoveAll(x => GameManager.inatance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
+                    opponentTiles.RemoveAll(x => GameManager.instance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
                     opponentTiles = opponentTiles.Intersect(moveToAttackTilesInRange).ToList();
                     searchRange++;
                 }
@@ -82,21 +82,21 @@ public class AIPlayer : Player
                 List<TilePath> opponentPaths = new List<TilePath>();
                 for (int i = 0; i < opponentTiles.Count; i++)
                 {
-                    opponentPaths.Add(TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)opponentTiles[i].gridPosition.x][(int)opponentTiles[i].gridPosition.y]));
+                    opponentPaths.Add(TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponentTiles[i].gridPosition.x][(int)opponentTiles[i].gridPosition.y]));
                 }
                 opponentPaths = opponentPaths.OrderBy(x => x.listOfTiles.Count).ToList();
 
-                //Player opponents = opponentsInRange.OrderBy(x => -x.HP).OrderBy(x => -TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)x.gridPosition.x][(int)x.gridPosition.y], true).listOfTiles.Count).FirstOrDefault();
+                //Player opponents = opponentsInRange.OrderBy(x => -x.HP).OrderBy(x => -TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)x.gridPosition.x][(int)x.gridPosition.y], true).listOfTiles.Count).FirstOrDefault();
 
-                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
 
-                //List<Tile> path = TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.inatance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
-                GameManager.inatance.moveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, movementPerActionPoint)]);
+                //List<Tile> path = TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.instance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
+                GameManager.instance.moveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, movementPerActionPoint)]);
             }
             //move toward nearest opponent
-            else if (movementTilesInRange.Where(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
+            else if (movementTilesInRange.Where(x => GameManager.instance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
             {
-                List<Player> opponentsInRange = movementTilesInRange.Select(x => GameManager.inatance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
+                List<Player> opponentsInRange = movementTilesInRange.Select(x => GameManager.instance.players.Where(y => y.GetType() != typeof(AIPlayer) && y.HP > 0 && y != this && y.gridPosition == x.gridPosition).FirstOrDefault()).ToList();
                 opponentsInRange.RemoveAll(x => x == null);
 
                 List<Tile> opponentTiles = new List<Tile>();
@@ -106,39 +106,39 @@ public class AIPlayer : Player
                 {
                     for (int i = 0; i < opponentsInRange.Count; i++)
                     {
-                        opponentTiles.AddRange(TileHighlight.FindHighlight(GameManager.inatance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y], searchRange));
+                        opponentTiles.AddRange(TileHighlight.FindHighlight(GameManager.instance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y], searchRange));
                     }
-                    opponentTiles.RemoveAll(x => GameManager.inatance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
+                    opponentTiles.RemoveAll(x => GameManager.instance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
                     //opponentTiles = opponentTiles.Intersect(moveToAttackTilesInRange).ToList();
                     searchRange++;
                 }
                 //for (int i = 0; i < opponentsInRange.Count; i++)
                 //{
-                //    opponentTiles.AddRange(GameManager.inatance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y].neighbors);
+                //    opponentTiles.AddRange(GameManager.instance.map[(int)opponentsInRange[i].gridPosition.x][(int)opponentsInRange[i].gridPosition.y].neighbors);
                 //}
-                //opponentTiles.RemoveAll(x => GameManager.inatance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
+                //opponentTiles.RemoveAll(x => GameManager.instance.players.Where(y => y.gridPosition == x.gridPosition).Count() > 0);
                 //opponentTiles = opponentTiles.Intersect(moveToAttackTilesInRange).ToList();
 
-                //Player opponents = opponentsInRange.OrderBy(x => -x.HP).OrderBy(x => -TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)x.gridPosition.x][(int)x.gridPosition.y]).listOfTiles.Count).FirstOrDefault();
+                //Player opponents = opponentsInRange.OrderBy(x => -x.HP).OrderBy(x => -TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)x.gridPosition.x][(int)x.gridPosition.y]).listOfTiles.Count).FirstOrDefault();
                 List<TilePath> opponentPaths = new List<TilePath>();
                 for (int i = 0; i < opponentTiles.Count; i++)
                 {
-                    opponentPaths.Add(TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)opponentTiles[i].gridPosition.x][(int)opponentTiles[i].gridPosition.y]));
+                    opponentPaths.Add(TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponentTiles[i].gridPosition.x][(int)opponentTiles[i].gridPosition.y]));
                 }
                 opponentPaths = opponentPaths.OrderBy(x => x.listOfTiles.Count).ToList();
-                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
 
-                //List<Tile> path = TilePathFinder.FindPath(GameManager.inatance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.inatance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.inatance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
-                GameManager.inatance.moveCurrentPlayer(opponentPaths[0].listOfTiles[(int)Mathf.Min(Mathf.Max(opponentPaths[0].listOfTiles.Count - 1 - 1, 0), movementPerActionPoint)]);
+                //List<Tile> path = TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.instance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
+                GameManager.instance.moveCurrentPlayer(opponentPaths[0].listOfTiles[(int)Mathf.Min(Mathf.Max(opponentPaths[0].listOfTiles.Count - 1 - 1, 0), movementPerActionPoint)]);
             }
             //end turn if nothing can do
             else
             {
-                GameManager.inatance.removeHighlightTiles();
+                GameManager.instance.removeHighlightTiles();
                 actionPoint = 2;
                 moving = false;
                 attacking = false;
-                GameManager.inatance.nextTurn();
+                GameManager.instance.nextTurn();
             }
         }
 

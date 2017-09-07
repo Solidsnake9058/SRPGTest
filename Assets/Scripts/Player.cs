@@ -57,7 +57,7 @@ public class Player : MonoBehaviour
             actionPoint = 2;
             moving = false;
             attacking = false;
-            GameManager.inatance.nextTurn();
+            GameManager.instance.nextTurn();
         }
     }
 

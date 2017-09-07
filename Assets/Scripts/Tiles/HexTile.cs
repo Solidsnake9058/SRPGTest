@@ -2,20 +2,100 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityEngine.SceneManagement;
 
 public class HexTile : MonoBehaviour {
 
     public HexCoord hex = new HexCoord();
+
+    GameObject Prefab;
+    public GameObject visual;
+
+    public TileType type = TileType.Normal;
+
+    public Vector2 gridPosition = Vector2.zero;
+
+    public int movementCost = 1;
+    public bool impassible = false;
+
+    public List<HexTile> neighbors = new List<HexTile>();
+
+    public int mapSizeX;
+    public int mapSizeY;
+
 
     public HexTile(int q, int r)
     {
         hex = new HexCoord(q, r);
     }
 
+    public Vector3 HexTilePos()
+    {
+        return new Vector3((float)((hex.q - hex.Z) / 2.0f), 0, -hex.r);
+    }
+
+    private void generateNeighbors()
+    {
+        neighbors = new List<HexTile>();
+
+        //[+1,0][-1,0][0,+1][0,-1][+1,-1][-1,+1]
+        Vector2[] neighborsIndex = { new Vector2(1, 0), new Vector2(-1, 0), new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, -1), new Vector2(-1, 1) };
+        for (int i = 0; i < neighborsIndex.Length; i++)
+        {
+            Vector2 n = new Vector2(hex.q, hex.r) + neighborsIndex[i];
+            int X = Mathf.FloorToInt((2*n.x + n.y)/2.0f);
+            int Y = (int)n.y;
+
+            int offset = (int)n.y >> 1;
+            if (X < 0 || X > mapSizeX - 1 - (Y % 2) || Y < 0 || Y > mapSizeY - 1)
+            {
+                continue;
+            }
+            if (SceneManager.GetActiveScene().name == "GameScene")
+            {
+                neighbors.Add(GameManager.instance.mapHex[Y][X]);
+            }
+            else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+            {
+                neighbors.Add(MapCreatorManager.instance.mapHex[Y][X]);
+            }
+
+        }
+
+        //up
+        //if (gridPosition.y > 0)
+        //{
+        //    Vector2 n = new Vector2(gridPosition.x, gridPosition.y - 1);
+        //    neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+        //}
+        ////down
+        //if (gridPosition.y < GameManager.inatance.mapSizeY - 1)
+        //{
+        //    Vector2 n = new Vector2(gridPosition.x, gridPosition.y + 1);
+        //    neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+        //}
+
+        ////left
+        //if (gridPosition.x > 0)
+        //{
+        //    Vector2 n = new Vector2(gridPosition.x - 1, gridPosition.y);
+        //    neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+        //}
+
+        ////right
+        //if (gridPosition.x < GameManager.inatance.mapSizeX - 1)
+        //{
+        //    Vector2 n = new Vector2(gridPosition.x + 1, gridPosition.y);
+        //    neighbors.Add(GameManager.inatance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+        //}
+
+    }
+
+
     private void Start()
     {
+        generateNeighbors();
         transform.name = "Tile [" + hex.q + "," + hex.r + "," + hex.Z + "]";
-
     }
 
     private void OnMouseEnter()
@@ -35,6 +115,49 @@ public class HexTile : MonoBehaviour {
     {
         //GameManager.inatance.moveCurrentPlayer(this);
     }
+
+    public void setType(TileType t)
+    {
+        type = t;
+        //definition of TileType properties
+        switch (t)
+        {
+            case TileType.Normal:
+                movementCost = 1;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_Normal_prefab;
+                break;
+            case TileType.Difficult:
+                movementCost = 2;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_Difficult_prefab;
+                break;
+            case TileType.VeryDifficult:
+                movementCost = 4;
+                impassible = false;
+                Prefab = PrefabHolder.instance.tile_VeryDifficult_prefab;
+                break;
+            case TileType.Impassible:
+                movementCost = 9999;
+                impassible = true;
+                Prefab = PrefabHolder.instance.tile_Impassible_prefab;
+                break;
+        }
+
+        generateVisuals();
+    }
+
+    public void generateVisuals()
+    {
+        GameObject container = transform.Find("Visuals").gameObject;
+        for (int i = 0; i < container.transform.childCount; i++)
+        {
+            Destroy(container.transform.GetChild(i).gameObject);
+        }
+        GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Quaternion.Euler(new Vector3(0, 0, 0)));
+        newVisual.transform.parent = container.transform;
+    }
+
 
     [Serializable]
     public struct HexCoord

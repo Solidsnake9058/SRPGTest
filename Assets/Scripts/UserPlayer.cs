@@ -13,7 +13,7 @@ public class UserPlayer : Player
     // Update is called once per frame
     public override void Update()
     {
-        if (GameManager.inatance.players[GameManager.inatance.currentPlayerIndex] == this)
+        if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
         {
             transform.GetComponent<Renderer>().material.color = Color.green;
         }
@@ -59,16 +59,16 @@ public class UserPlayer : Player
         {
             if (!moving)
             {
-                GameManager.inatance.removeHighlightTiles();
+                GameManager.instance.removeHighlightTiles();
                 moving = true;
                 attacking = false;
-                GameManager.inatance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
             }
             else
             {
                 moving = false;
                 attacking = false;
-                GameManager.inatance.removeHighlightTiles();
+                GameManager.instance.removeHighlightTiles();
             }
         }
         //attack button
@@ -78,16 +78,16 @@ public class UserPlayer : Player
         {
             if (!attacking)
             {
-                GameManager.inatance.removeHighlightTiles();
+                GameManager.instance.removeHighlightTiles();
                 moving = false;
                 attacking = true;
-                GameManager.inatance.highlightTileAt(gridPosition, Color.red, attackRange);
+                GameManager.instance.highlightTileAt(gridPosition, Color.red, attackRange);
             }
             else
             {
                 moving = false;
                 attacking = false;
-                GameManager.inatance.removeHighlightTiles();
+                GameManager.instance.removeHighlightTiles();
             }
         }
         //end turn button
@@ -95,11 +95,11 @@ public class UserPlayer : Player
 
         if (GUI.Button(buttonRect,"End Turn"))
         {
-            GameManager.inatance.removeHighlightTiles();
+            GameManager.instance.removeHighlightTiles();
             actionPoint = 2;
             moving = false;
             attacking = false;
-            GameManager.inatance.nextTurn();
+            GameManager.instance.nextTurn();
         }
 
         base.TurnOnGUI();

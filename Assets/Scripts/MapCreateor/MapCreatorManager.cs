@@ -12,6 +12,7 @@ public class MapCreatorManager : MonoBehaviour
     public int mapSizeY;
 
     public List<List<Tile>> map = new List<List<Tile>>();
+    public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
     public TileType pallerSelection = TileType.Normal;
     Transform mapTransform;
@@ -21,7 +22,7 @@ public class MapCreatorManager : MonoBehaviour
     {
         instance = this;
         mapTransform = transform.Find("Map");
-        genetareBlankMap(32, 38);
+        genetareBlankMap(38, 32);
     }
 
     // Update is called once per frame
@@ -42,40 +43,48 @@ public class MapCreatorManager : MonoBehaviour
 
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
-        //map = new List<List<HexTile>>();
+        mapHex = new List<List<HexTile>>();
 
-        //for (int i = 0; i < mapHeight; i++)
+        for (int i = 0; i < mapSizeY; i++)
+        {
+            int offset = i >> 1;
+            List<HexTile> row = new List<HexTile>();
+            for (int j = -offset; j < mapSizeX - offset; j++)
+            {
+                //int Z = -i - j;
+                //pos.x = ((float)(j - Z) / 2.0f);
+                //pos.z = -i;
+
+                if (i % 2 == 1 && j == mapSizeX - offset - 1)
+                {
+                    continue;
+                }
+                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
+                tile.transform.parent = mapTransform;
+                tile.setType(TileType.Normal);
+                tile.hex.q = j;
+                tile.hex.r = i;
+                tile.mapSizeX = mapSizeX;
+                tile.mapSizeY = mapSizeY;
+                tile.gameObject.transform.localPosition = tile.HexTilePos();
+                row.Add(tile);
+            }
+            mapHex.Add(row);
+        }
+
+        //for (int i = 0; i < mapSizeX; i++)
         //{
-        //    int offset = i >> 1;
-        //    List<HexTile> row = new List<HexTile>();
-        //    for (int j = -offset; j < mapWeight - offset; j++)
+        //    List<Tile> row = new List<Tile>();
+        //    for (int j = 0; j < mapSizeY; j++)
         //    {
-        //        int Z = -i - j;
-        //        pos.x = ((float)(j - Z) / 2.0f);
-        //        pos.z = -i;
-
-        //        HexTile tile = ((GameObject)Instantiate(tilePrefab, cubeSize * pos, Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-
-        //        tile.hex.q = j;
-        //        tile.hex.r = i;
+        //        Tile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(i - Mathf.Floor(mapSizeX / 2), 0, -j + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<Tile>();
+        //        tile.gridPosition = new Vector2(i, j);
+        //        tile.transform.parent = mapTransform;
+        //        tile.setType(TileType.Normal);
         //        row.Add(tile);
         //    }
         //    map.Add(row);
         //}
-
-        for (int i = 0; i < mapSizeX; i++)
-        {
-            List<Tile> row = new List<Tile>();
-            for (int j = 0; j < mapSizeY; j++)
-            {
-                Tile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(i - Mathf.Floor(mapSizeX / 2), 0, -j + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<Tile>();
-                tile.gridPosition = new Vector2(i, j);
-                tile.transform.parent = mapTransform;
-                tile.setType(TileType.Normal);
-                row.Add(tile);
-            }
-            map.Add(row);
-        }
     }
 
     private void saveMapFromXml()
