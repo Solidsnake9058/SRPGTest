@@ -90,7 +90,7 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     continue;
                 }
-                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
+                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
                 tile.transform.parent = mapTransform;
                 tile.setType(TileType.Normal);
                 tile.hex.q = j;
@@ -171,7 +171,7 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     continue;
                 }
-                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
+                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
                 tile.transform.parent = mapTransform;
                 tile.hex.q = j;
                 tile.hex.r = i;

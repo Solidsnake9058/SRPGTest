@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="big5"?>
+<ObjectCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Items>
+    <ItemXml itemid="0" itemType="0" itemname="aaa" itemhp="0" itematk="0" itemdef="0" itemwis="0" itemdex="0" itemaddHp="0" itemgold="0" itemprice="0" itemuseCharType="-1" itemnewCharType="-1" itemsell="false" />
+  </Items>
+  <Weapons />
+  <CharacterTypes />
+  <CharacterTemplates />
+</ObjectCollection>

@@ -3,25 +3,37 @@ using System.Collections;
 
 public class UserPlayer : Player
 {
-
+    public Vector2 originalMapHexIndex
+    {
+        get
+        {
+            return new Vector2(originalGridPosition.x + (((int)originalGridPosition.y) >> 1), originalGridPosition.y);
+        }
+    }
     // Use this for initialization
     void Start()
     {
 
     }
 
+    public override void SetOriginalPos()
+    {
+        originalGridPosition = gridPosition;
+        base.SetOriginalPos();
+    }
+
     // Update is called once per frame
     public override void Update()
     {
-        if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
-        {
-            transform.GetComponent<Renderer>().material.color = Color.green;
-        }
-        else
-        {
-            transform.GetComponent<Renderer>().material.color = Color.white;
-        }
-
+        //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
+        //{
+        //    transform.GetComponent<Renderer>().material.color = Color.green;
+        //}
+        //else
+        //{
+        //    transform.GetComponent<Renderer>().material.color = Color.white;
+        //}
+        TurnUpdate();
         base.Update();
     }
 
@@ -40,6 +52,7 @@ public class UserPlayer : Player
                 if (positionQueue.Count == 0)
                 {
                     actionPoint--;
+                    GameManager.instance.ShowConfirmMenu();
                 }
             }
         }
@@ -59,16 +72,16 @@ public class UserPlayer : Player
         {
             if (!moving)
             {
-                GameManager.instance.removeHighlightTiles();
+                GameManager.instance.RemoveHighlightTiles();
                 moving = true;
                 attacking = false;
-                GameManager.instance.highlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
             }
             else
             {
                 moving = false;
                 attacking = false;
-                GameManager.instance.removeHighlightTiles();
+                GameManager.instance.RemoveHighlightTiles();
             }
         }
         //attack button
@@ -78,16 +91,16 @@ public class UserPlayer : Player
         {
             if (!attacking)
             {
-                GameManager.instance.removeHighlightTiles();
+                GameManager.instance.RemoveHighlightTiles();
                 moving = false;
                 attacking = true;
-                GameManager.instance.highlightTileAt(gridPosition, Color.red, attackRange);
+                GameManager.instance.HighlightTileAt(gridPosition, Color.red, attackRange);
             }
             else
             {
                 moving = false;
                 attacking = false;
-                GameManager.instance.removeHighlightTiles();
+                GameManager.instance.RemoveHighlightTiles();
             }
         }
         //end turn button
@@ -95,11 +108,11 @@ public class UserPlayer : Player
 
         if (GUI.Button(buttonRect,"End Turn"))
         {
-            GameManager.instance.removeHighlightTiles();
+            GameManager.instance.RemoveHighlightTiles();
             actionPoint = 2;
             moving = false;
             attacking = false;
-            GameManager.instance.nextTurn();
+            GameManager.instance.NextTurn();
         }
 
         base.TurnOnGUI();

@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using System.Linq;
 
-public class HexTile : MonoBehaviour {
+public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
 
     public HexCoord hex = new HexCoord();
 
@@ -23,6 +26,8 @@ public class HexTile : MonoBehaviour {
     public int mapSizeX;
     public int mapSizeY;
 
+    public Camera mainCamera;
+    public Image menuImage;
 
     public HexTile(int q, int r)
     {
@@ -34,6 +39,14 @@ public class HexTile : MonoBehaviour {
         return new Vector3((float)((hex.q - hex.Z) / 2.0f), 0, -hex.r);
     }
 
+    public Vector2 mapHexIndex
+    {
+        get
+        {
+            return new Vector2(gridPosition.x + (((int)gridPosition.y) >> 1), gridPosition.y);
+        }
+    }
+
     private void generateNeighbors()
     {
         neighbors = new List<HexTile>();
@@ -43,10 +56,9 @@ public class HexTile : MonoBehaviour {
         for (int i = 0; i < neighborsIndex.Length; i++)
         {
             Vector2 n = new Vector2(hex.q, hex.r) + neighborsIndex[i];
-            int X = Mathf.FloorToInt((2*n.x + n.y)/2.0f);
+            int X = Mathf.FloorToInt((2 * n.x + n.y) / 2.0f);
             int Y = (int)n.y;
 
-            int offset = (int)n.y >> 1;
             if (X < 0 || X > mapSizeX - 1 - (Y % 2) || Y < 0 || Y > mapSizeY - 1)
             {
                 continue;
@@ -95,15 +107,114 @@ public class HexTile : MonoBehaviour {
     private void Start()
     {
         generateNeighbors();
+        gridPosition = new Vector2(hex.q, hex.r);
         transform.name = "Tile [" + hex.q + "," + hex.r + "," + hex.Z + "]";
+        mainCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            menuImage = GameObject.Find("MapMenu").GetComponent<Image>();
+        }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        ClickEvent(eventData);
+    }
+
+    public void ClickEvent(PointerEventData eventData)
+    {
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
+            //{
+            //    GameManager.instance.moveCurrentPlayer(this);
+            //}
+            //else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
+            //{
+            //    GameManager.instance.attackWithCurrentPlayer(this);
+            //}
+            //else
+            //{
+            //    //impassible = impassible ? false : true;
+            //    //if (impassible)
+            //    //{
+            //    //	transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+            //    //}
+            //    //else
+            //    //{
+            //    //	transform.GetComponentInChildren<Renderer>().material.color = Color.white;
+            //    //}
+            //}
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                if (GameManager.instance.menu.alpha == 0 && GameManager.instance.endTurnConfirm.alpha == 0)
+                {
+                    if (GameManager.instance.moving)
+                    {
+                        GameManager.instance.MoveCurrentPlayer(this);
+                    }
+                    else if (GameManager.instance.attacking)
+                    {
+                        GameManager.instance.AttackWithCurrentPlayer(this);
+                    }
+                    else
+                    {
+                        if (GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            MenuType setType = MenuType.tileMenu;
+                            if (GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
+                            {
+                                Player player = GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
+                                setType = (player.hp > 0) ? player.isActable ? MenuType.playerMenu : MenuType.playerStandMenu : MenuType.playerDeadMenu;
+                                GameManager.instance.SetPlayerIndex(player.playerIndex);
+                            }
+                            GameManager.instance.ShowMenu();
+                            Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
+                            //Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
+                            Vector2 newSize = TileMenu.instance.SetMenu(setType);
+                            float newX = (pos.x + newSize.x) + 10f >= Screen.width ? (pos.x - newSize.x) - 10f : pos.x;
+                            float newY = (pos.y - newSize.y) - 10f <= 0 ? (pos.y + newSize.y) + 10f : pos.y;
+
+                            menuImage.rectTransform.position = new Vector3(newX, newY, 0);
+                        }
+                    }
+                }
+                else
+                {
+                    GameManager.instance.HideMenu();
+                    GameManager.instance.RemoveHighlightTiles();
+                }
+            }
+            else if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                GameManager.instance.CancelAction();
+            }
+
+        }
+        else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+        {
+            setType(MapCreatorManager.instance.pallerSelection);
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
+        {
+            setType(MapCreatorManager.instance.pallerSelection);
+        }
     }
 
     private void OnMouseEnter()
     {
-		if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
-		{
-			setType(MapCreatorManager.instance.pallerSelection);
-		}
+		//if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
+		//{
+		//	setType(MapCreatorManager.instance.pallerSelection);
+		//}
     }
 
     private void OnMouseExit()
@@ -112,36 +223,52 @@ public class HexTile : MonoBehaviour {
 
     }
 
-    private void OnMouseDown()
-    {
-		if (SceneManager.GetActiveScene().name == "GameScene")
-		{
-			if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
-			{
-				//GameManager.instance.moveCurrentPlayer(this);
-			}
-			else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
-			{
-				//GameManager.instance.attackWithCurrentPlayer(this);
-			}
-			else
-			{
-				impassible = impassible ? false : true;
-				if (impassible)
-				{
-					transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
-				}
-				else
-				{
-					transform.GetComponentInChildren<Renderer>().material.color = Color.white;
-				}
-			}
-		}
-		else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
-		{
-			setType(MapCreatorManager.instance.pallerSelection);
-		}
-    }
+  //  private void OnMouseDown()
+  //  {
+		//if (SceneManager.GetActiveScene().name == "GameScene")
+		//{
+		//	if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
+		//	{
+  //              GameManager.instance.moveCurrentPlayer(this);
+  //          }
+		//	else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
+		//	{
+  //              GameManager.instance.attackWithCurrentPlayer(this);
+  //          }
+		//	else
+		//	{
+		//		//impassible = impassible ? false : true;
+		//		//if (impassible)
+		//		//{
+		//		//	transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+		//		//}
+		//		//else
+		//		//{
+		//		//	transform.GetComponentInChildren<Renderer>().material.color = Color.white;
+		//		//}
+		//	}
+		//}
+		//else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+		//{
+  //          //setType(MapCreatorManager.instance.pallerSelection);
+
+  //          if (menu.alpha==0)
+  //          {
+  //              menu.alpha = 1;
+  //              menu.interactable = true;
+  //              menu.blocksRaycasts = true;
+  //              Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
+  //              Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
+  //              menuImage.rectTransform.position = mainCamera.WorldToScreenPoint(transform.position);
+  //          }
+  //          else
+  //          {
+  //              menu.alpha = 0;
+  //              menu.interactable = false;
+  //              menu.blocksRaycasts = false;
+  //          }
+  //      }
+  //  }
 
     public void setType(TileType t)
     {
@@ -184,7 +311,6 @@ public class HexTile : MonoBehaviour {
         GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Quaternion.Euler(new Vector3(0, 0, 0)));
         newVisual.transform.parent = container.transform;
     }
-
 
     [Serializable]
     public struct HexCoord
