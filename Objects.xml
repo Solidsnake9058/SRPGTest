@@ -1,9 +1,28 @@
 <?xml version="1.0" encoding="big5"?>
 <ObjectCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
-    <ItemXml itemid="0" itemType="0" itemname="aaa" itemhp="0" itematk="0" itemdef="0" itemwis="0" itemdex="0" itemaddHp="0" itemgold="0" itemprice="0" itemuseCharType="-1" itemnewCharType="-1" itemsell="false" />
+    <ItemXml itemid="0" itemType="0" itemname="Herb" itemhp="20" itematk="0" itemdef="0" itemwis="0" itemdex="0" itemaddHp="0" itemgold="0" itemprice="0" itemuseCharType="-1" itemnewCharType="-1" itemsell="false" />
   </Items>
-  <Weapons />
-  <CharacterTypes />
+  <Weapons>
+    <WeaponXml weaponid="0" weaponname="Knife" weapondirectAtk="8" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="50" weaponsell="true" weaponatkTwice="false" weaponatkPoint="1" />
+    <WeaponXml weaponid="1" weaponname="Short Sword" weapondirectAtk="10" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="100" weaponsell="true" weaponatkTwice="false" weaponatkPoint="1" />
+    <WeaponXml weaponid="2" weaponname="Long Sword" weapondirectAtk="14" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="800" weaponsell="false" weaponatkTwice="false" weaponatkPoint="1" />
+  </Weapons>
+  <CharacterTypes>
+    <CharacterTypeXml charTypeid="0" charTypename="Lord" charTypecanFly="false" charTypecanHeal="false">
+      <charTypeEquipWeapons>
+        <int>0</int>
+        <int>1</int>
+        <int>2</int>
+      </charTypeEquipWeapons>
+    </CharacterTypeXml>
+    <CharacterTypeXml charTypeid="1" charTypename="Fighter" charTypecanFly="false" charTypecanHeal="false">
+      <charTypeEquipWeapons>
+        <int>0</int>
+        <int>1</int>
+        <int>2</int>
+      </charTypeEquipWeapons>
+    </CharacterTypeXml>
+  </CharacterTypes>
   <CharacterTemplates />
 </ObjectCollection>
