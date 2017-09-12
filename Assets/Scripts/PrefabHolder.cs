@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PrefabHolder : MonoBehaviour
 {
-    public static PrefabHolder instance;
+    public static PrefabHolder instance { get; private set; }
 
     public GameObject base_tile_prefab;
     public GameObject base_hex_tile_prefab;

@@ -834,11 +834,11 @@ public class ObjectCreatorManager : MonoBehaviour
             int equipWeapon = charWeapon.value;
 
             int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
-            if (characterLevels.Where(x => x.level == level).Count() > 0)
-            {
-                Debug.LogError("Level exist");
-                return false;
-            }
+            //if (characterLevels.Where(x => x.level == level).Count() > 0)
+            //{
+            //    Debug.LogError("Level exist");
+            //    return false;
+            //}
 
             CharacterLevelTemplate newLevel = new CharacterLevelTemplate(id, level, exp, hp, atk, def, wis, dex, mdef, equipWeapon);
 
@@ -985,12 +985,12 @@ public class ObjectCreatorManager : MonoBehaviour
             #region Character
             for (int i = 0; i < container.charTemplates.Count; i++)
             {
+                Debug.Log("Char ID" + container.charTemplates[i].id);
 
-
-                string name        = container.charTemplates[i].name;
-                int race           = container.charTemplates[i].race;
-                uint move          = container.charTemplates[i].move;
-                int id             = container.charTemplates[i].id;
+                string name = container.charTemplates[i].name;
+                int race = container.charTemplates[i].race;
+                uint move = container.charTemplates[i].move;
+                int id = container.charTemplates[i].id;
                 bool enemy = container.charTemplates[i].enemy;
                 List<CharacterLevelTemplate> charLvs = new List<CharacterLevelTemplate>();
 
@@ -999,7 +999,7 @@ public class ObjectCreatorManager : MonoBehaviour
                     charLvs.Add(new CharacterLevelTemplate(lv.id, lv.level, lv.exp, lv.hp, lv.atk, lv.def, lv.wis, lv.dex, lv.mdef, lv.equipWeapon));
                 }
 
-                CharacterTemplate newCharacter = new CharacterTemplate(id, name, race, move, enemy, characterLevels);
+                CharacterTemplate newCharacter = new CharacterTemplate(id, name, race, move, enemy, charLvs);
                 characters.Add(newCharacter);
 
             }

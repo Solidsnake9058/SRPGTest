@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="big5"?>
+<?xml version="1.0" encoding="us-ascii"?>
 <ObjectCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
     <ItemXml itemid="0" itemType="0" itemname="Herb" itemhp="20" itematk="0" itemdef="0" itemwis="0" itemdex="0" itemaddHp="0" itemgold="0" itemprice="0" itemuseCharType="-1" itemnewCharType="-1" itemsell="false" />
@@ -7,6 +7,7 @@
     <WeaponXml weaponid="0" weaponname="Knife" weapondirectAtk="8" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="50" weaponsell="true" weaponatkTwice="false" weaponatkPoint="1" />
     <WeaponXml weaponid="1" weaponname="Short Sword" weapondirectAtk="10" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="100" weaponsell="true" weaponatkTwice="false" weaponatkPoint="1" />
     <WeaponXml weaponid="2" weaponname="Long Sword" weapondirectAtk="14" weaponindirectAtk="0" weapondirectWis="0" weaponindirectWis="0" weaponprice="800" weaponsell="false" weaponatkTwice="false" weaponatkPoint="1" />
+    <WeaponXml weaponid="3" weaponname="Rance" weapondirectAtk="12" weaponindirectAtk="10" weapondirectWis="0" weaponindirectWis="0" weaponprice="200" weaponsell="true" weaponatkTwice="false" weaponatkPoint="1" />
   </Weapons>
   <CharacterTypes>
     <CharacterTypeXml charTypeid="0" charTypename="Lord" charTypecanFly="false" charTypecanHeal="false">
@@ -23,11 +24,31 @@
         <int>2</int>
       </charTypeEquipWeapons>
     </CharacterTypeXml>
+    <CharacterTypeXml charTypeid="2" charTypename="Knight" charTypecanFly="false" charTypecanHeal="false">
+      <charTypeEquipWeapons>
+        <int>3</int>
+      </charTypeEquipWeapons>
+    </CharacterTypeXml>
   </CharacterTypes>
   <CharacterTemplates>
     <CharacterTemplateXml charTempid="0" charTempname="Ark" charTemprace="0" charTempmove="10" charTempEnemy="false">
       <charTempLevelDatas>
         <CharacterLevelTemplateXml charlvid="0" charlvlevel="1" charlvexp="0" charlvhp="42" charlvatk="13" charlvdef="7" charlvwis="6" charlvdex="8" charlvmdef="4" charlvequipWeapon="2" />
+      </charTempLevelDatas>
+    </CharacterTemplateXml>
+    <CharacterTemplateXml charTempid="1" charTempname="Rantia" charTemprace="2" charTempmove="10" charTempEnemy="false">
+      <charTempLevelDatas>
+        <CharacterLevelTemplateXml charlvid="3" charlvlevel="1" charlvexp="0" charlvhp="48" charlvatk="16" charlvdef="8" charlvwis="6" charlvdex="8" charlvmdef="4" charlvequipWeapon="0" />
+      </charTempLevelDatas>
+    </CharacterTemplateXml>
+    <CharacterTemplateXml charTempid="2" charTempname="Devil Solider" charTemprace="1" charTempmove="8" charTempEnemy="true">
+      <charTempLevelDatas>
+        <CharacterLevelTemplateXml charlvid="3" charlvlevel="1" charlvexp="24" charlvhp="24" charlvatk="10" charlvdef="6" charlvwis="2" charlvdex="8" charlvmdef="2" charlvequipWeapon="1" />
+      </charTempLevelDatas>
+    </CharacterTemplateXml>
+    <CharacterTemplateXml charTempid="3" charTempname="Devil Captain" charTemprace="2" charTempmove="8" charTempEnemy="true">
+      <charTempLevelDatas>
+        <CharacterLevelTemplateXml charlvid="3" charlvlevel="1" charlvexp="48" charlvhp="36" charlvatk="16" charlvdef="7" charlvwis="6" charlvdex="6" charlvmdef="6" charlvequipWeapon="0" />
       </charTempLevelDatas>
     </CharacterTemplateXml>
   </CharacterTemplates>

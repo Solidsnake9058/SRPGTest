@@ -193,11 +193,10 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
             {
                 GameManager.instance.CancelAction();
             }
-
         }
         else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
         {
-            setType(MapCreatorManager.instance.pallerSelection);
+			setType(MapCreatorManager.instance.pallerSelection);
         }
     }
 

@@ -15,23 +15,144 @@ public class MapCreatorManager : MonoBehaviour
     public List<List<Tile>> map = new List<List<Tile>>();
     public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
+    public CanvasGroup tileGroup;
+	public CanvasGroup playerGroup;
+	public CanvasGroup enemyGroup;
+
+    public MapSettingType settingSelection = MapSettingType.Tile;
     public TileType pallerSelection = TileType.Normal;
+
+    public int playerIndex = 0;
+    public int enemyIndex = 0;
+	public int enemyAIIndex = 0;
     Transform mapTransform;
-    public Text tileTypeName;
+
+    [Header("Tile UI")]
+	public Text tileTypeName;
+
+	[Header("Player UI")]
+	public Text playerTypeName;
+
+	[Header("Enemy UI")]
+	public Text enemyTypeName;
+	public Text enemyLevelName;
+	public Text enemyAIName;
+    public EnemyAIType aiTypeSelection = EnemyAIType.Attacker;
+
+	[Header("System UI")]
+    public Text settingTypeName;
     public InputField fileName;
+
+    private GameElement gameElement;
+    private List<CharacterTemplate> playerTypes;
+	private List<CharacterTemplate> enemyTypes;
+    private List<CharacterLevelTemplate> enemyLevels;
+
     // Use this for initialization
     void Awake()
     {
         instance = this;
         mapTransform = transform.Find("Map");
         generateBlankMap(38, 32);
-    }
+        ControlGroup();
+        LoadGameElements();
+
+        if (playerTypes.Count > 0)
+        {
+            playerTypeName.text = playerTypes[playerIndex].name;
+        }
+		if (enemyTypes.Count > 0)
+		{
+			enemyTypeName.text = enemyTypes[enemyIndex].name;
+            SetEnemyLevels();
+		}
+
+
+	}
 
     // Update is called once per frame
     void Update()
     {
 
     }
+
+	public void NextSettingType()
+	{
+		int temp = (int)settingSelection;
+		temp++;
+		temp = temp % Enum.GetNames(typeof(MapSettingType)).Length;
+		settingSelection = (MapSettingType)temp;
+		settingTypeName.text = settingSelection.ToString();
+        ControlGroup();
+	}
+
+	public void LastSettingType()
+	{
+		int temp = (int)settingSelection;
+		temp--;
+		temp = (temp + Enum.GetNames(typeof(MapSettingType)).Length) % Enum.GetNames(typeof(MapSettingType)).Length;
+		settingSelection = (MapSettingType)temp;
+		settingTypeName.text = settingSelection.ToString();
+        ControlGroup();
+	}
+
+    public void NextPlayerType()
+    {
+        int temp = playerIndex;
+        temp++;
+        temp = temp % playerTypes.Count;
+        playerIndex = temp;
+        if (playerTypes.Count > 0)
+        {
+            playerTypeName.text = playerTypes[playerIndex].name;
+        }
+    }
+
+	public void LastPlayerType()
+	{
+		int temp = playerIndex;
+		temp--;
+		temp = (temp + playerTypes.Count) % playerTypes.Count;
+		playerIndex =temp;
+        if (playerTypes.Count > 0)
+        {
+            playerTypeName.text = playerTypes[playerIndex].name;
+        }
+	}
+
+
+	private void ControlGroup()
+    {
+        DisableGroup(tileGroup);
+        DisableGroup(playerGroup);
+        DisableGroup(enemyGroup);
+        switch (settingSelection)
+        {
+            case MapSettingType.Tile:
+                EnableGroup(tileGroup);
+                break;
+            case MapSettingType.Player:
+                EnableGroup(playerGroup);
+				break;
+            case MapSettingType.Enemy:
+                EnableGroup(enemyGroup);
+				break;
+        }
+    }
+
+	public void DisableGroup(CanvasGroup group)
+	{
+		group.alpha = 0;
+		group.interactable = false;
+		group.blocksRaycasts = false;
+	}
+
+	public void EnableGroup(CanvasGroup group)
+	{
+		group.alpha = 1;
+		group.interactable = true;
+		group.blocksRaycasts = true;
+	}
 
     public void NextType()
     {
@@ -50,6 +171,84 @@ public class MapCreatorManager : MonoBehaviour
 		pallerSelection = (TileType)temp;
 		tileTypeName.text = pallerSelection.ToString();
 	}
+
+
+	public void NextAIType()
+	{
+		int temp = (int)aiTypeSelection;
+		temp++;
+		temp = temp % Enum.GetNames(typeof(EnemyAIType)).Length;
+		aiTypeSelection = (EnemyAIType)temp;
+		enemyAIName.text = aiTypeSelection.ToString();
+	}
+
+	public void LastAIType()
+	{
+		int temp = (int)aiTypeSelection;
+		temp--;
+		temp = (temp + Enum.GetNames(typeof(EnemyAIType)).Length) % Enum.GetNames(typeof(EnemyAIType)).Length;
+		aiTypeSelection = (EnemyAIType)temp;
+		enemyAIName.text = aiTypeSelection.ToString();
+	}
+
+	public void NextEnemyType()
+	{
+		int temp = enemyIndex;
+		temp++;
+        temp = temp % enemyTypes.Count;
+		enemyIndex = temp;
+		if (enemyTypes.Count > 0)
+		{
+			enemyTypeName.text = enemyTypes[enemyIndex].name;
+            SetEnemyLevels();
+		}
+	}
+
+	public void LastEnemyType()
+	{
+		int temp = enemyIndex;
+		temp--;
+		temp = (temp + enemyTypes.Count) % enemyTypes.Count;
+		enemyIndex = temp;
+		if (enemyTypes.Count > 0)
+		{
+			enemyTypeName.text = enemyTypes[enemyIndex].name;
+            SetEnemyLevels();
+		}
+	}
+
+    private void SetEnemyLevels()
+    {
+        if (enemyTypes != null && enemyTypes.Count > 0)
+        {
+            enemyAIIndex = 0;
+            enemyLevels = enemyTypes[enemyIndex].levelData;
+            enemyLevelName.text = string.Format("Lv {0}", enemyLevels[enemyAIIndex].level);
+        }
+    }
+
+	private void LoadGameElements()
+    {
+        if (!System.IO.File.Exists("Objects.xml"))
+        {
+            Debug.Log("File is not exist!");
+            return;
+        }
+        try
+        {
+            ObjectXmlContainer container = ObjectSaveLoad.XmlLoad<ObjectXmlContainer>("Objects.xml");
+            gameElement = ObjectSaveLoad.CreateGameElements(container);
+
+            playerTypes = gameElement.characters.Where(x => !x.enemy).ToList();
+            playerTypes.Sort((x,y)=>{ return x.id.CompareTo(y.id); });
+            enemyTypes = gameElement.characters.Where(x => x.enemy).ToList();
+            enemyTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+        }
+    }
 
     public void TrimFileName()
     {

@@ -306,6 +306,94 @@ public class ObjectSaveLoad
         };
     }
 
+    public static GameElement CreateGameElements(ObjectXmlContainer container)
+    {
+        List<Item> items = new List<Item>();
+		List<Weapon> weapons = new List<Weapon>();
+		List<CharacterType> races = new List<CharacterType>();
+		List<CharacterTemplate> characters = new List<CharacterTemplate>();
+
+		#region Item
+		for (int i = 0; i < container.items.Count; i++)
+		{
+			string name = container.items[i].name;
+			int hp = container.items[i].hp;
+			int atk = container.items[i].atk;
+			int def = container.items[i].def;
+			int wis = container.items[i].wis;
+			int dex = container.items[i].dex;
+			int addHp = container.items[i].addHp;
+			int gold = container.items[i].gold;
+			int price = container.items[i].price;
+			int itemType = container.items[i].itemType;
+			int useCharType = container.items[i].useCharType;
+			int newCharType = container.items[i].newCharType;
+			bool sell = container.items[i].sell;
+			int id = container.items[i].id;
+
+			Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, addHp, gold, price, useCharType, newCharType, sell);
+			items.Add(newItem);
+		}
+		#endregion
+
+		#region Weapon
+		for (int i = 0; i < container.weapons.Count; i++)
+		{
+			string name = container.weapons[i].name;
+			int directAtk = container.weapons[i].directAtk;
+			int indirectAtk = container.weapons[i].indirectAtk;
+			int directWis = container.weapons[i].directWis;
+			int indirectWis = container.weapons[i].indirectWis;
+			int price = container.weapons[i].price;
+			bool sell = container.weapons[i].sell;
+			bool atkTwice = container.weapons[i].atkTwice;
+			int id = container.weapons[i].id;
+
+			Weapon newWeapon = new Weapon(id, name, directAtk, indirectAtk, directWis, indirectWis, price, sell, atkTwice);
+			weapons.Add(newWeapon);
+		}
+		#endregion
+
+		#region Race
+		for (int i = 0; i < container.charTyps.Count; i++)
+		{
+			string name = container.charTyps[i].name;
+			List<int> equipWeapons = container.charTyps[i].equipWeapons;
+			bool canFly = container.charTyps[i].canFly;
+			bool canHeal = container.charTyps[i].canHeal;
+			int id = container.charTyps[i].id;
+
+			CharacterType newRace = new CharacterType(id, name, equipWeapons, canFly, canHeal);
+			races.Add(newRace);
+		}
+		#endregion
+
+		#region Character
+		for (int i = 0; i < container.charTemplates.Count; i++)
+		{
+
+
+			string name = container.charTemplates[i].name;
+			int race = container.charTemplates[i].race;
+			uint move = container.charTemplates[i].move;
+			int id = container.charTemplates[i].id;
+			bool enemy = container.charTemplates[i].enemy;
+			List<CharacterLevelTemplate> charLvs = new List<CharacterLevelTemplate>();
+
+			foreach (var lv in container.charTemplates[i].levelDatas)
+			{
+				charLvs.Add(new CharacterLevelTemplate(lv.id, lv.level, lv.exp, lv.hp, lv.atk, lv.def, lv.wis, lv.dex, lv.mdef, lv.equipWeapon));
+			}
+
+			CharacterTemplate newCharacter = new CharacterTemplate(id, name, race, move, enemy, charLvs);
+			characters.Add(newCharacter);
+
+		}
+        #endregion
+
+        return new GameElement(items, weapons, races, characters);
+    }
+
     public static void XmlSave<T>(T objectContainer, string filename)
     {
         var serializer = new XmlSerializer(typeof(T));
