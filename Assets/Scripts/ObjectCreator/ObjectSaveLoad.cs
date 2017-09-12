@@ -144,10 +144,13 @@ public class CharacterTemplateXml
     public string name;
 
     [XmlAttribute("charTemprace")]
-    public string race;
+    public int race;
 
     [XmlAttribute("charTempmove")]
     public uint move;
+
+    [XmlAttribute("charTempEnemy")]
+    public bool enemy;
 
     [XmlArray("charTempLevelDatas")]
     [XmlArrayItem("CharacterLevelTemplateXml")]
@@ -298,6 +301,7 @@ public class ObjectSaveLoad
             name = characterTemplate.name,
             race = characterTemplate.race,
             move = characterTemplate.move,
+            enemy = characterTemplate.enemy,
             levelDatas = CreateItemXmls(characterTemplate.levelData),
         };
     }

@@ -77,6 +77,9 @@ public class ObjectCreatorManager : MonoBehaviour
     public RectTransform charLevelList;
     public GameObject charLevelSelectPrefab;
 
+    public Button charAddLevel;
+    public Button charClearLevel;
+
     //private
     private CreateType createType = CreateType.none;
     private List<Item> items;
@@ -165,9 +168,13 @@ public class ObjectCreatorManager : MonoBehaviour
                 }
                 break;
             case CreateType.character:
+                if (AddCharacter())
+                {
+                    ResetCharacter();
+                    LoadCharacterObjects();
+                }
                 break;
         }
-
     }
 
     public void Delete()
@@ -185,8 +192,10 @@ public class ObjectCreatorManager : MonoBehaviour
                 break;
             case CreateType.race:
                 RemoveRace();
+                SetRace();
                 break;
             case CreateType.character:
+                RemoveCharacter();
                 break;
         }
         ReloadObjects();
@@ -210,6 +219,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 SetRace();
                 break;
             case CreateType.character:
+                UpdateCharacter();
                 break;
         }
         ReloadObjects();
@@ -258,9 +268,9 @@ public class ObjectCreatorManager : MonoBehaviour
                 LoadRaceObjects();
                 break;
             case CreateType.character:
+                ResetCharacter();
                 EnableGroup(charGroup);
-
-                ClearObjectList();
+                LoadCharacterObjects();
                 break;
         }
     }
@@ -279,6 +289,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 LoadRace(id);
                 break;
             case CreateType.character:
+                LoadCharacter(id);
                 break;
         }
     }
@@ -358,23 +369,20 @@ public class ObjectCreatorManager : MonoBehaviour
             itemAddHP.text =temp.addHp.ToString();
             itemGold.text = temp.gold.ToString();
             itemPrice.text = temp.price.ToString();
-            itemItemType.value = itemUseRace.options.FindIndex(x => x.text == dicItemType[(int)temp.itemType]);
+            itemItemType.value = itemItemType.options.FindIndex(x => x.text == dicItemType[(int)temp.itemType]);
             itemUseRace.value = itemUseRace.options.FindIndex(x => x.text == dicRace[temp.useCharType]);
             itemNewRace.value = itemNewRace.options.FindIndex(x => x.text == dicRace[temp.newCharType]); 
             itemCanSell.isOn = temp.sell;
+
+            itemItemType.RefreshShownValue();
+            itemUseRace.RefreshShownValue();
+            itemNewRace.RefreshShownValue();
         }
     }
 
     private void RemoveItem()
     {
-        for (int i = 0; i < items.Count; i++)
-        {
-            if (items[i].id == itemId)
-            {
-                items.RemoveAt(i);
-                break;
-            }
-        }
+        items.Remove(items.Where(x => x.id == itemId).FirstOrDefault());
         itemId = -1;
     }
 
@@ -479,14 +487,13 @@ public class ObjectCreatorManager : MonoBehaviour
 
     private void RemoveWeapon()
     {
-        for (int i = 0; i < weapons.Count; i++)
+        if (races.Where(x => x.equipWeapon.Contains(weaponId)).Count() > 0)
         {
-            if (weapons[i].id == weaponId)
-            {
-                weapons.RemoveAt(i);
-                break;
-            }
+            Debug.Log("Weapon is using");
+            return;
         }
+
+        weapons.Remove(weapons.Where(x => x.id == weaponId).FirstOrDefault());
         weaponId = -1;
     }
 
@@ -572,8 +579,8 @@ public class ObjectCreatorManager : MonoBehaviour
         if (temp != null)
         {
             raceId = temp.id;
-            raceWeapons = temp.equipWeapon;
             raceName.text = temp.name;
+            raceWeapons = temp.equipWeapon;
             raceCanFly.isOn = temp.canFly;
             raceCanHeal.isOn = temp.canHeal;
             ReloadWeaponRace();
@@ -582,14 +589,13 @@ public class ObjectCreatorManager : MonoBehaviour
 
     private void RemoveRace()
     {
-        for (int i = 0; i < races.Count; i++)
+        if (characters.Where(x => x.race == raceId).Count() > 0 || items.Where(x => x.useCharType == raceId).Count() > 0 || items.Where(x => x.newCharType == raceId).Count() > 0)
         {
-            if (races[i].id == raceId)
-            {
-                races.RemoveAt(i);
-                break;
-            }
+            Debug.Log("Race is using");
+            return;
         }
+
+        races.Remove(races.Where(x => x.id == raceId).FirstOrDefault());
         raceId = -1;
     }
 
@@ -640,6 +646,12 @@ public class ObjectCreatorManager : MonoBehaviour
 
     public void RemoveWeaponRaceList(string id)
     {
+        if (characters.Where(x => x.race == raceId && x.levelData.Where(y => y.equipWeapon.ToString() == id).Count() > 0).Count() > 0)
+        {
+            Debug.Log("Race weapon is using");
+            return;
+        }
+
         raceWeapons.Remove(Convert.ToInt32(id));
 
         ReloadWeaponRace();
@@ -665,6 +677,229 @@ public class ObjectCreatorManager : MonoBehaviour
         for (int i = 0; i < raceWeaponList.transform.childCount; i++)
         {
             Destroy(raceWeaponList.transform.GetChild(i).gameObject);
+        }
+    }
+
+    #endregion
+
+    #region Character
+
+    private void ResetCharacter()
+    {
+        charId = -1;
+        charName.text = "";
+        charRace.value = 0;
+        charMove.text = "";
+        charLevel.text = "";
+        charExp.text = "";
+        charHP.text = "";
+        charAtk.text = "";
+        charDef.text = "";
+        charWis.text = "";
+        charDex.text = "";
+        charMdef.text = "";
+        charWeapon.value = 0;
+        charIsEnemy.isOn = false;
+        characterLevels = new List<CharacterLevelTemplate>();
+        ClearCharacterLevelList();
+        ChangeCharacterEnemy();
+    }
+
+    private bool AddCharacter(int newId = -1)
+    {
+        if (string.IsNullOrEmpty(charName.text))
+        {
+            return false;
+        }
+        try
+        {
+            string name = charName.text.Trim();
+            int race = dicRace.Where(x => x.Value == charRace.options[charRace.value].text).FirstOrDefault().Key;
+            uint move = Convert.ToUInt32(string.IsNullOrEmpty(charMove.text) ? "0" : charMove.text);
+            int id = newId == -1 ? (characters.Count > 0 ? characters.Select(x => x.id).Max() + 1 : 0) : newId;
+            bool enemy = charIsEnemy.isOn;
+            if (characters.Where(x => x.name == name).Count() > 0)
+            {
+                Debug.LogError("Character exist");
+                return false;
+            }
+
+            if (!charIsEnemy.isOn && !AddLevelList(newId))
+            {
+                return false;
+            }
+
+            CharacterTemplate newCharacter = new CharacterTemplate( id,  name,  race,  move, enemy,  characterLevels);
+            characters.Add(newCharacter);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+            return false;
+        }
+        return true;
+    }
+
+    private void LoadCharacter(string id)
+    {
+        CharacterTemplate temp = characters.Where(x => x.id.ToString() == id).First();
+        if (temp != null)
+        {
+            charId = temp.id;
+            charName.text = temp.name;
+            charRace.value = charRace.options.FindIndex(x => x.text == dicRace[(int)temp.race]);
+            charMove.text = temp.move.ToString();
+            charIsEnemy.isOn = temp.enemy;
+
+            SetCharWeapon();
+            if (charIsEnemy.isOn)
+            {
+                characterLevels = temp.levelData;
+            }
+            else
+            {
+                charLevel.text = temp.levelData[0].level.ToString();
+                charExp.text = temp.levelData[0].exp.ToString();
+                charHP.text = temp.levelData[0].hp.ToString();
+                charAtk.text = temp.levelData[0].atk.ToString();
+                charDef.text = temp.levelData[0].def.ToString();
+                charWis.text = temp.levelData[0].wis.ToString();
+                charDex.text = temp.levelData[0].dex.ToString();
+                charMdef.text = temp.levelData[0].mdef.ToString();
+                charWeapon.value = charWeapon.options.FindIndex(x => x.text == dicWeapon[(int)temp.levelData[0].equipWeapon]);
+
+                charWeapon.RefreshShownValue();
+            }
+            ReloadCharacterLevel();
+        }
+    }
+
+    private void RemoveCharacter()
+    {
+        characters.Remove(characters.Where(x => x.id == charId).FirstOrDefault());
+        charId = -1;
+    }
+
+    private void UpdateCharacter()
+    {
+        int tempId = charId;
+        CharacterTemplate tempChar = new CharacterTemplate();
+        for (int i = 0; i < races.Count; i++)
+        {
+            if (races[i].id == tempId)
+            {
+                tempChar = characters[i];
+                characters.RemoveAt(i);
+                break;
+            }
+        }
+        if (!AddCharacter(tempId))
+        {
+            characters.Add(tempChar);
+        }
+    }
+
+    private void LoadCharacterObjects()
+    {
+        ClearObjectList();
+        characters.Sort((x, y) => { return x.id.CompareTo(y.id); });
+
+        for (int i = 0; i < characters.Count; i++)
+        {
+            GameObject newObject = (GameObject)Instantiate(objectSelectPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
+            newObject.GetComponent<Button>().name = characters[i].id.ToString();
+            newObject.GetComponent<Button>().GetComponentInChildren<Text>().text = characters[i].name;
+            newObject.transform.SetParent(objectList);
+        }
+    }
+
+
+    public void AddLevelList()
+    {
+        AddLevelList(-1);
+    }
+
+    private bool AddLevelList(int newId)
+    {
+        try
+        {
+            uint level = Convert.ToUInt32(string.IsNullOrEmpty(charLevel.text) ? "0" : charLevel.text);
+            uint exp = Convert.ToUInt32(string.IsNullOrEmpty(charExp.text) ? "0" : charExp.text);
+            uint hp = Convert.ToUInt32(string.IsNullOrEmpty(charHP.text) ? "0" : charHP.text);
+            uint atk = Convert.ToUInt32(string.IsNullOrEmpty(charAtk.text) ? "0" : charAtk.text);
+            uint def = Convert.ToUInt32(string.IsNullOrEmpty(charDef.text) ? "0" : charDef.text);
+            uint wis = Convert.ToUInt32(string.IsNullOrEmpty(charWis.text) ? "0" : charWis.text);
+            uint dex = Convert.ToUInt32(string.IsNullOrEmpty(charDex.text) ? "0" : charDex.text);
+            uint mdef = Convert.ToUInt32(string.IsNullOrEmpty(charMdef.text) ? "0" : charMdef.text);
+            int equipWeapon = charWeapon.value;
+
+            int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
+            if (characterLevels.Where(x => x.level == level).Count() > 0)
+            {
+                Debug.LogError("Level exist");
+                return false;
+            }
+
+            CharacterLevelTemplate newLevel = new CharacterLevelTemplate(id, level, exp, hp, atk, def, wis, dex, mdef, equipWeapon);
+
+            characterLevels.Add(newLevel);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+            return false;
+        }
+        Debug.Log("Add Level");
+
+        ReloadCharacterLevel();
+
+        return true;
+    }
+
+    public void RemoveCharacterLevelList(string id)
+    {
+        characterLevels.Remove(characterLevels.Where(x => x.id.ToString() == id).FirstOrDefault());
+
+        ReloadCharacterLevel();
+    }
+
+    public void ClearCharacterLevel()
+    {
+        characterLevels = new List<CharacterLevelTemplate>();
+        ReloadCharacterLevel();
+    }
+
+    private void ReloadCharacterLevel()
+    {
+        //Lv1 HP30 Exp500 Atk10 Def10 Wis10 Dex10 Mded10 Wp:Short Sword
+        ClearCharacterLevelList();
+        foreach (var t in characterLevels)
+        {
+            GameObject newObject = (GameObject)Instantiate(charLevelSelectPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
+            newObject.GetComponentInChildren<Button>().name = t.id.ToString();
+            newObject.transform.Find("LevelInfo").GetComponent<Text>().text = string.Format("Lv{0} HP{1} Exp{2} Atk{3} Def{4} Wis{5} Dex{6} Mded{7} Weapon:{8}", t.level, t.hp, t.exp, t.atk, t.def, t.wis, t.dex, t.mdef, weapons.Where(x => x.id == t.equipWeapon).FirstOrDefault().name);
+            newObject.transform.SetParent(charLevelList);
+        }
+    }
+
+    private void ClearCharacterLevelList()
+    {
+        for (int i = 0; i < charLevelList.transform.childCount; i++)
+        {
+            Destroy(charLevelList.transform.GetChild(i).gameObject);
+        }
+    }
+
+    public void ChangeCharacterEnemy()
+    {
+        if (charIsEnemy.isOn)
+        {
+            charAddLevel.interactable = charClearLevel.interactable = true;
+        }
+        else
+        {
+            charAddLevel.interactable = charClearLevel.interactable = false;
+            ClearCharacterLevel();
         }
     }
 
@@ -747,6 +982,30 @@ public class ObjectCreatorManager : MonoBehaviour
             }
             #endregion
 
+            #region Character
+            for (int i = 0; i < container.charTemplates.Count; i++)
+            {
+
+
+                string name        = container.charTemplates[i].name;
+                int race           = container.charTemplates[i].race;
+                uint move          = container.charTemplates[i].move;
+                int id             = container.charTemplates[i].id;
+                bool enemy = container.charTemplates[i].enemy;
+                List<CharacterLevelTemplate> charLvs = new List<CharacterLevelTemplate>();
+
+                foreach (var lv in container.charTemplates[i].levelDatas)
+                {
+                    charLvs.Add(new CharacterLevelTemplate(lv.id, lv.level, lv.exp, lv.hp, lv.atk, lv.def, lv.wis, lv.dex, lv.mdef, lv.equipWeapon));
+                }
+
+                CharacterTemplate newCharacter = new CharacterTemplate(id, name, race, move, enemy, characterLevels);
+                characters.Add(newCharacter);
+
+            }
+            #endregion
+
+            SetItemType();
             SetWeapon();
             SetRace();
 
@@ -775,12 +1034,6 @@ public class ObjectCreatorManager : MonoBehaviour
         SetWeapon();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     private void SetItemType()
     {
         dicItemType.Add((int)ItemType.cure, "Cure");
@@ -798,12 +1051,13 @@ public class ObjectCreatorManager : MonoBehaviour
 
     private void SetRace()
     {
+        dicRace = new Dictionary<int, string>();
+
         dicRace.Add(-1, "None");
 
         itemUseRace.options.Clear();
         itemNewRace.options.Clear();
         charRace.options.Clear();
-        dicRace = new Dictionary<int, string>();
 
         itemUseRace.options.Add(new Dropdown.OptionData() { text = "None" });
         itemNewRace.options.Add(new Dropdown.OptionData() { text = "None" });

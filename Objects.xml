@@ -24,5 +24,11 @@
       </charTypeEquipWeapons>
     </CharacterTypeXml>
   </CharacterTypes>
-  <CharacterTemplates />
+  <CharacterTemplates>
+    <CharacterTemplateXml charTempid="0" charTempname="Ark" charTemprace="0" charTempmove="10" charTempEnemy="false">
+      <charTempLevelDatas>
+        <CharacterLevelTemplateXml charlvid="0" charlvlevel="1" charlvexp="0" charlvhp="42" charlvatk="13" charlvdef="7" charlvwis="6" charlvdex="8" charlvmdef="4" charlvequipWeapon="2" />
+      </charTempLevelDatas>
+    </CharacterTemplateXml>
+  </CharacterTemplates>
 </ObjectCollection>

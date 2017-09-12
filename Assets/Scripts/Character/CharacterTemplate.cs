@@ -5,17 +5,19 @@ public class CharacterTemplate
 {
     public int id { get; private set; }
     public string name { get; private set; }
-    public string race { get; private set; }
+    public int race { get; private set; }
     public uint move { get; private set; }
+    public bool enemy { get; private set; }
     public List<CharacterLevelTemplate> levelData { get; private set; }
 
     public CharacterTemplate() { }
 
-    public CharacterTemplate(int id, string name, string race, uint move, List<CharacterLevelTemplate> levelData)
+    public CharacterTemplate(int id, string name, int race, uint move, bool enemy, List<CharacterLevelTemplate> levelData)
     {
         this.name = name;
         this.race = race;
         this.move = move;
+        this.enemy = enemy;
         this.levelData = levelData;
     }
 }
