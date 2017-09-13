@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 
 public class CharacterType
@@ -15,10 +16,15 @@ public class CharacterType
     //dwarf,    spartan,
     //valkyrie,
     //siren,    bird,
+    [JsonProperty]
     public int id { get; private set; }
+    [JsonProperty]
     public string name { get; private set; }
+    [JsonProperty]
     public List<int> equipWeapon { get; private set; }
+    [JsonProperty]
     public bool canFly { get; private set; }
+    [JsonProperty]
     public bool canHeal { get; private set; }
 
     public CharacterType() { }

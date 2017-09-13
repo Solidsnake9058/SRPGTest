@@ -75,7 +75,7 @@ public class UserPlayer : Player
                 GameManager.instance.RemoveHighlightTiles();
                 moving = true;
                 attacking = false;
-                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
             }
             else
             {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="us-ascii"?>
+<?xml version="1.0" encoding="big5"?>
 <ObjectCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
     <ItemXml itemid="0" itemType="0" itemname="Herb" itemhp="20" itematk="0" itemdef="0" itemwis="0" itemdex="0" itemaddHp="0" itemgold="0" itemprice="0" itemuseCharType="-1" itemnewCharType="-1" itemsell="false" />
@@ -44,6 +44,7 @@
     <CharacterTemplateXml charTempid="2" charTempname="Devil Solider" charTemprace="1" charTempmove="8" charTempEnemy="true">
       <charTempLevelDatas>
         <CharacterLevelTemplateXml charlvid="3" charlvlevel="1" charlvexp="24" charlvhp="24" charlvatk="10" charlvdef="6" charlvwis="2" charlvdex="8" charlvmdef="2" charlvequipWeapon="1" />
+        <CharacterLevelTemplateXml charlvid="3" charlvlevel="1" charlvexp="30" charlvhp="30" charlvatk="10" charlvdef="7" charlvwis="2" charlvdex="8" charlvmdef="2" charlvequipWeapon="1" />
       </charTempLevelDatas>
     </CharacterTemplateXml>
     <CharacterTemplateXml charTempid="3" charTempname="Devil Captain" charTemprace="2" charTempmove="8" charTempEnemy="true">

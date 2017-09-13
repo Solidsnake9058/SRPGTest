@@ -25,35 +25,54 @@ public class MapCreatorManager : MonoBehaviour
     public int playerIndex = 0;
     public int enemyIndex = 0;
 	public int enemyAIIndex = 0;
+    public int enemyLevelIndex = 0;
+
     Transform mapTransform;
+    Transform playerTransform;
 
     [Header("Tile UI")]
 	public Text tileTypeName;
 
 	[Header("Player UI")]
 	public Text playerTypeName;
+    public Toggle isNewPlayer;
 
 	[Header("Enemy UI")]
 	public Text enemyTypeName;
 	public Text enemyLevelName;
 	public Text enemyAIName;
     public EnemyAIType aiTypeSelection = EnemyAIType.Attacker;
+    public InputField searchRange;
 
-	[Header("System UI")]
+    [Header("System UI")]
     public Text settingTypeName;
     public InputField fileName;
+    public InputField inputMapSizeX;
+    public InputField inputMapSizeY;
 
     private GameElement gameElement;
     private List<CharacterTemplate> playerTypes;
 	private List<CharacterTemplate> enemyTypes;
     private List<CharacterLevelTemplate> enemyLevels;
+    private List<PlayerRecord> userPlayerRecords;
+    private List<PlayerRecord> enemyPlayerRecords;
+
+    private string userPlayerNameFormat = "UserPlayer{0}";
+    private string enemyPlayerNameFormat = "EnemyPlayer{0}";
+
+    private string gameElementfilename = "ObjectJson.txt";
 
     // Use this for initialization
     void Awake()
     {
         instance = this;
         mapTransform = transform.Find("Map");
-        generateBlankMap(38, 32);
+        playerTransform = transform.Find("Players");
+	}
+
+    private void Start()
+    {
+        generateBlankMap(Convert.ToInt32(inputMapSizeX.text), Convert.ToInt32(inputMapSizeY.text));
         ControlGroup();
         LoadGameElements();
 
@@ -61,14 +80,12 @@ public class MapCreatorManager : MonoBehaviour
         {
             playerTypeName.text = playerTypes[playerIndex].name;
         }
-		if (enemyTypes.Count > 0)
-		{
-			enemyTypeName.text = enemyTypes[enemyIndex].name;
+        if (enemyTypes.Count > 0)
+        {
+            enemyTypeName.text = enemyTypes[enemyIndex].name;
             SetEnemyLevels();
-		}
-
-
-	}
+        }
+    }
 
     // Update is called once per frame
     void Update()
@@ -76,7 +93,8 @@ public class MapCreatorManager : MonoBehaviour
 
     }
 
-	public void NextSettingType()
+    #region UI Control
+    public void NextSettingType()
 	{
 		int temp = (int)settingSelection;
 		temp++;
@@ -217,27 +235,122 @@ public class MapCreatorManager : MonoBehaviour
 		}
 	}
 
+    public void NextLevelType()
+    {
+        int temp = enemyLevelIndex;
+        temp++;
+        temp = temp % enemyLevels.Count;
+        enemyLevelIndex = temp;
+        if (enemyLevels.Count > 0)
+        {
+            enemyLevelName.text = string.Format("Lv {0} HP {1}", enemyLevels[enemyLevelIndex].level, enemyLevels[enemyLevelIndex].hp);
+        }
+    }
+
+    public void LastLevelType()
+    {
+        int temp = enemyLevelIndex;
+        temp--;
+        temp = (temp + enemyTypes.Count) % enemyTypes.Count;
+        enemyLevelIndex = temp;
+        if (enemyLevels.Count > 0)
+        {
+            enemyLevelName.text = string.Format("Lv {0} HP {1}", enemyLevels[enemyLevelIndex].level, enemyLevels[enemyLevelIndex].hp);
+        }
+    }
+
+    #endregion
+
+    public void SetPlayer(Vector2 gridPosion, Vector3 pos,bool isDelete = false)
+    {
+        if (isDelete)
+        {
+            PlayerRecord prtemp = userPlayerRecords.Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).FirstOrDefault();
+            if (prtemp != null)
+            {
+                Transform temp = playerTransform.Find(string.Format(userPlayerNameFormat, prtemp.id));
+                Destroy(temp.gameObject);
+                userPlayerRecords.Remove(prtemp);
+            }
+        }
+        else
+        {
+            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
+            {
+                if (userPlayerRecords.Where(x => x.characterId == playerIndex).Count() > 0)
+                {
+                    PlayerRecord prtemp = userPlayerRecords.Where(x => x.characterId == playerIndex).FirstOrDefault();
+                    Transform temp = playerTransform.Find(string.Format(userPlayerNameFormat, prtemp.id));
+                    Destroy(temp.gameObject);
+                    userPlayerRecords.Remove(prtemp);
+                }
+
+                int id = userPlayerRecords.Count > 0 ? userPlayerRecords.Max(x => x.id) + 1 : 0;
+                userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerIndex, 0, aiTypeSelection, 0));
+
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+                newPlayer.name = string.Format(userPlayerNameFormat, id);
+                newPlayer.transform.SetParent(playerTransform);
+                newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
+            }
+        }
+    }
+
+    public void SetEnemyPlayer(Vector2 gridPosion, Vector3 pos, bool isDelete = false)
+    {
+        if (isDelete)
+        {
+            PlayerRecord prtemp = enemyPlayerRecords.Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).FirstOrDefault();
+            if (prtemp != null)
+            {
+                Transform temp = playerTransform.Find(string.Format(enemyPlayerNameFormat, prtemp.id));
+                Destroy(temp.gameObject);
+                enemyPlayerRecords.Remove(prtemp);
+            }
+        }
+        else
+        {
+            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
+            {
+                int intSearchRang = string.IsNullOrEmpty(searchRange.text) ? 0 : Convert.ToInt32(searchRange.text);
+                if (aiTypeSelection == EnemyAIType.Defanser && intSearchRang <= 0)
+                {
+                    Debug.Log("Search range invalid");
+                    return;
+                }
+
+                int id = enemyPlayerRecords.Count > 0 ? enemyPlayerRecords.Max(x => x.id) + 1 : 0;
+                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyLevelIndex, aiTypeSelection, 0));
+
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+                newPlayer.name = string.Format(enemyPlayerNameFormat, id);
+                newPlayer.transform.SetParent(playerTransform);
+                newPlayer.GetComponent<AIPlayer>().gridPosition = gridPosion;
+            }
+        }
+    }
+
+
     private void SetEnemyLevels()
     {
         if (enemyTypes != null && enemyTypes.Count > 0)
         {
-            enemyAIIndex = 0;
+            enemyLevelIndex = 0;
             enemyLevels = enemyTypes[enemyIndex].levelData;
-            enemyLevelName.text = string.Format("Lv {0}", enemyLevels[enemyAIIndex].level);
+            enemyLevelName.text = string.Format("Lv {0} HP {1}", enemyLevels[enemyLevelIndex].level, enemyLevels[enemyLevelIndex].hp);
         }
     }
 
 	private void LoadGameElements()
     {
-        if (!System.IO.File.Exists("Objects.xml"))
+        if (!System.IO.File.Exists(gameElementfilename))
         {
             Debug.Log("File is not exist!");
             return;
         }
         try
         {
-            ObjectXmlContainer container = ObjectSaveLoad.XmlLoad<ObjectXmlContainer>("Objects.xml");
-            gameElement = ObjectSaveLoad.CreateGameElements(container);
+            gameElement = ObjectSaveLoad.JsonLoad<GameElement>(gameElementfilename);
 
             playerTypes = gameElement.characters.Where(x => !x.enemy).ToList();
             playerTypes.Sort((x,y)=>{ return x.id.CompareTo(y.id); });
@@ -257,7 +370,11 @@ public class MapCreatorManager : MonoBehaviour
 
     public void generateBlankMapDefault()
     {
-        generateBlankMap(38, 32);
+        if (Convert.ToInt32(inputMapSizeX.text) <= 0 || Convert.ToInt32(inputMapSizeY.text) <= 0)
+        {
+            Debug.LogError("Map size invalid");
+        }
+        generateBlankMap(Convert.ToInt32(inputMapSizeX.text), Convert.ToInt32(inputMapSizeY.text));
     }
 
     private void generateBlankMap(int mSizeX, int mSizeY)
@@ -273,6 +390,10 @@ public class MapCreatorManager : MonoBehaviour
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
+
+
+        userPlayerRecords = new List<PlayerRecord>();
+        enemyPlayerRecords = new List<PlayerRecord>();
 
         //Hexagons
         for (int i = 0; i < mapSizeY; i++)
@@ -301,6 +422,7 @@ public class MapCreatorManager : MonoBehaviour
             }
             mapHex.Add(row);
         }
+        ScreenController.instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         //Rectangle
         //for (int i = 0; i < mapSizeX; i++)
@@ -327,7 +449,9 @@ public class MapCreatorManager : MonoBehaviour
         }
 
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
-        MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
+        //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
+
+        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex,userPlayerRecords,enemyPlayerRecords), fileName.text + ".txt");
     }
 
     public void loadMapFromXml()
@@ -337,23 +461,36 @@ public class MapCreatorManager : MonoBehaviour
 			Debug.Log("File name cannot be empty!");
 			return;
 		}
-        if (!System.IO.File.Exists(fileName.text + ".xml"))
+        if (!System.IO.File.Exists(fileName.text + ".txt"))
 		{
             Debug.Log("File is not exist!");
             return;
 		}
-        MapXmlContainer container = MapSaveLoad.Load(fileName.text + ".xml");
+        MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>(fileName.text + ".txt");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
+
+        inputMapSizeX.text = mapSizeX.ToString();
+        inputMapSizeY.text = mapSizeY.ToString();
 
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
             Destroy(mapTransform.transform.GetChild(i).gameObject);
         }
 
+        for (int i = 0; i < playerTransform.transform.childCount; i++)
+        {
+            Destroy(playerTransform.transform.GetChild(i).gameObject);
+        }
+
+        ScreenController.instance.SetCameraPos(new Vector3((float)mapSizeX /2, 0, -(float)mapSizeY / 2));
+
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
+
+        userPlayerRecords = container.userPlayerRecords;
+        enemyPlayerRecords = container.enemyPlayerRecords;
 
         //Hexagons
         for (int i = 0; i < mapSizeY; i++)
@@ -383,6 +520,7 @@ public class MapCreatorManager : MonoBehaviour
             mapHex.Add(row);
         }
 
+        LoadPlayers();
         /*
         for (int i = 0; i < mapSizeX; i++)
         {
@@ -398,6 +536,34 @@ public class MapCreatorManager : MonoBehaviour
             map.Add(row);
         }
         */
+
+
+    }
+
+    private void LoadPlayers()
+    {
+        for (int i = 0; i < userPlayerRecords.Count; i++)
+        {
+            int id = userPlayerRecords[i].id;
+
+            Vector3 pos = mapHex[userPlayerRecords[i].locY][userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1)].HexTilePos();
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+            newPlayer.name = string.Format(userPlayerNameFormat, id);
+            newPlayer.transform.SetParent(playerTransform);
+            newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
+        }
+
+        for (int i = 0; i < enemyPlayerRecords.Count; i++)
+        {
+            int id = enemyPlayerRecords[i].id;
+
+            Vector3 pos = mapHex[enemyPlayerRecords[i].locY][enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1)].HexTilePos();
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+            newPlayer.name = string.Format(enemyPlayerNameFormat, id);
+            newPlayer.transform.SetParent(playerTransform);
+            newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
+        }
+
     }
 
     private void OnGUI()

@@ -47,10 +47,10 @@ public class AIPlayer : Player
         {
             //priority queue
             List<HexTile> attackTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], attackRange, true);
-            List<HexTile> moveToAttackTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], movementPerActionPoint + attackRange, true);
-            List<HexTile> movementTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], movementPerActionPoint + 1000, true);
+            List<HexTile> moveToAttackTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], (int)(movementPerActionPoint + attackRange), true);
+            List<HexTile> movementTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], (int)(movementPerActionPoint + 1000), true);
 
-            List<HexTile> movementTilesRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], movementPerActionPoint);
+            List<HexTile> movementTilesRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], (int)movementPerActionPoint);
 
             //attack if in range and with lowest HP
             if (isAttackable && attackTilesInRange.Where(x => GameManager.instance.userPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0)
@@ -100,7 +100,7 @@ public class AIPlayer : Player
 
                 //Player opponents = opponentsInRange.OrderBy(x => -x.HP).OrderBy(x => -TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)x.gridPosition.x][(int)x.gridPosition.y], true).listOfTiles.Count).FirstOrDefault();
 
-                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
 
                 //List<Tile> path = TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.instance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
                 for (int i = 0; i < opponentPaths.Count; i++)
@@ -108,7 +108,7 @@ public class AIPlayer : Player
                     opponentPaths[i].listOfTiles = opponentPaths[i].listOfTiles.Intersect(movementTilesRange).ToList();
                 }
 
-                GameManager.instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, movementPerActionPoint)]);
+                GameManager.instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, (int)movementPerActionPoint)]);
                 isMovable = false;
             }
             //move toward nearest opponent
@@ -150,7 +150,7 @@ public class AIPlayer : Player
                     opponentPaths.Add(HexTilePathFinder.FindPath(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], GameManager.instance.mapHex[(int)opponentTiles[i].mapHexIndex.y][(int)opponentTiles[i].mapHexIndex.x]));
                 }
                 opponentPaths = opponentPaths.OrderBy(x => x.listOfTiles.Count).ToList();
-                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, movementPerActionPoint, false);
+                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
 
                 //List<Tile> path = TilePathFinder.FindPath(GameManager.instance.map[(int)gridPosition.x][(int)gridPosition.y], GameManager.instance.map[(int)opponents.gridPosition.x][(int)opponents.gridPosition.y], GameManager.instance.players.Where(x => x.gridPosition != gridPosition && x.gridPosition != opponents.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles;
                 for (int i = 0; i < opponentPaths.Count; i++)

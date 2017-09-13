@@ -30,6 +30,14 @@ public class MapXmlContainer
     [XmlArray("Tiles")]
     [XmlArrayItem("Tile")]
     public List<TileXml> tiles = new List<TileXml>();
+
+    [XmlArray("UserPlayerRecords")]
+    [XmlArrayItem("UserPlayerRecord")]
+    public List<PlayerRecord> userPlayerRecords = new List<PlayerRecord>();
+
+    [XmlArray("EnemyPlayerRecords")]
+    [XmlArrayItem("EnemyPlayerRecord")]
+    public List<PlayerRecord> enemyPlayerRecords = new List<PlayerRecord>();
 }
 
 public static class MapSaveLoad
@@ -50,29 +58,32 @@ public static class MapSaveLoad
         {
             sizeX = map.Count,
             sizeY = map[0].Count,
-            tiles = tiles
+            tiles = tiles,
         };
     }
 
-    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map)
-	{
-		List<TileXml> tiles = new List<TileXml>();
+    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords)
+    {
+        List<TileXml> tiles = new List<TileXml>();
 
-		for (int i = 0; i < map.Count; i++)
-		{
-			for (int j = 0; j < map[i].Count; j++)
-			{
-				tiles.Add(MapSaveLoad.CreateTileXml(map[i][j]));
-			}
-		}
+        for (int i = 0; i < map.Count; i++)
+        {
+            for (int j = 0; j < map[i].Count; j++)
+            {
+                tiles.Add(MapSaveLoad.CreateTileXml(map[i][j]));
+            }
+        }
 
-		return new MapXmlContainer()
-		{
-			sizeX = map[0].Count,
-			sizeY = map.Count,
-			tiles = tiles
-		};
-	}
+        return new MapXmlContainer()
+        {
+            sizeX = map[0].Count,
+            sizeY = map.Count,
+            tiles = tiles,
+            userPlayerRecords = userPlayerRecords,
+            enemyPlayerRecords = enemyPlayerRecords
+
+        };
+    }
 
     public static TileXml CreateTileXml(Tile tile)
     {

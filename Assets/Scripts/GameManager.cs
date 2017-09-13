@@ -9,10 +9,11 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance { get; private set; }
 
-    public GameObject tilePrefab;
-    public GameObject userPlayerPrefab;
-    public GameObject aiPlayerPrefab;
+    //public GameObject tilePrefab;
+    //public GameObject userPlayerPrefab;
+    //public GameObject aiPlayerPrefab;
     Transform mapTransform;
+    Transform playerTransform;
 
     public CanvasGroup blockUI;
     public Image menuImage;
@@ -29,9 +30,17 @@ public class GameManager : MonoBehaviour
     public List<List<Tile>> map = new List<List<Tile>>();
     public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
+    private List<PlayerRecord> saveUserPlayerRecords;
+    private List<PlayerRecord> userPlayerRecords;
+    private List<PlayerRecord> enemyPlayerRecords;
     public List<Player> players = new List<Player>();
     public List<Player> userPlayers = new List<Player>();
     public List<Player> enemyPlayers = new List<Player>();
+
+    private GameElement gameElement;
+    private List<CharacterTemplate> playerTypes;
+    private List<CharacterTemplate> enemyTypes;
+
     private bool isPlayerTurn = true;
     private bool isWaitingAct = false;
     private bool isWaitingMsg = false;
@@ -47,6 +56,11 @@ public class GameManager : MonoBehaviour
     delegate void ButtonAction(int inputPlayerIndex);
     ButtonAction buttonAction;
 
+    private string userPlayerNameFormat = "UserPlayer{0}";
+    private string enemyPlayerNameFormat = "EnemyPlayer{0}";
+
+    private string gameElementfilename = "ObjectJson.txt";
+
     public bool moving = false;
     public bool attacking = false;
 
@@ -54,10 +68,12 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
         mapTransform = transform.Find("Map");
+        playerTransform = transform.Find("Players");
     }
 
     private void Start()
     {
+        saveUserPlayerRecords = new List<PlayerRecord>();
         InitialStage();
         ShowStageInfo(false);
     }
@@ -110,6 +126,7 @@ public class GameManager : MonoBehaviour
         moving = false;
         attacking = false;
 
+        LoadGameElements();
         GenetareMap();
         GenetarePlayers();
         SetStopWaiting();
@@ -232,6 +249,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("destination invalid");
         }
     }
+
     public void ShowConfirmMenu()
     {
         Player player = userPlayers[playerIndex];
@@ -390,9 +408,31 @@ public class GameManager : MonoBehaviour
         //}
     }
 
+    private void LoadGameElements()
+    {
+        if (!System.IO.File.Exists(gameElementfilename))
+        {
+            Debug.Log("File is not exist!");
+            return;
+        }
+        try
+        {
+            gameElement = ObjectSaveLoad.JsonLoad<GameElement>(gameElementfilename);
+
+            playerTypes = gameElement.characters.Where(x => !x.enemy).ToList();
+            playerTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
+            enemyTypes = gameElement.characters.Where(x => x.enemy).ToList();
+            enemyTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+        }
+    }
+
     private void LoadMapFromXml()
     {
-        MapXmlContainer container = MapSaveLoad.Load("test.xml");
+        MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>("test.txt");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
 
@@ -404,6 +444,9 @@ public class GameManager : MonoBehaviour
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
+
+        userPlayerRecords = container.userPlayerRecords;
+        enemyPlayerRecords = container.enemyPlayerRecords;
 
         //Hexagons
         for (int i = 0; i < mapSizeY; i++)
@@ -464,7 +507,7 @@ public class GameManager : MonoBehaviour
             RemoveHighlightTiles();
             moving = true;
             attacking = false;
-            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, Color.blue, userPlayers[inputPlayerIndex].movementPerActionPoint, false);
+            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, Color.blue, (int)userPlayers[inputPlayerIndex].movementPerActionPoint, false);
         }
         else
         {
@@ -584,119 +627,191 @@ public class GameManager : MonoBehaviour
 
     void GenetarePlayers()
     {
-        UserPlayer player;
+        for (int i = 0; i < userPlayerRecords.Count; i++)
+        {
+            UserPlayer player;
+            int x = userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1);
+            int y = userPlayerRecords[i].locY;
+            Vector3 tilePOs = mapHex[y][x].HexTilePos();
+            CharacterTemplate playerData = playerTypes[userPlayerRecords[i].characterId];
+            CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
+            PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
+            //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player.gameObject.name = string.Format(userPlayerNameFormat, i);
+            player.transform.SetParent(playerTransform);
 
-        int q = 0;
-        int r = 0;
-        int x = q + (r >> 1);
-        int y = r;
-        Vector3 tilePOs = mapHex[y][x].HexTilePos();
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        player.gridPosition = new Vector2(q, r);
-        player.playerName = "A";
-        player.playerIndex = 0;
+            player.gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
 
-        userPlayers.Add(player);
+            player.playerName = playerData.name;
+            player.race = playerData.race;
+            player.movementPerActionPoint = playerData.move;
 
-        r = mapSizeY - 1;
-        q = mapSizeX - 1 - (r >> 1) - ((mapSizeY - 1) % 2);
-        x = q + (r >> 1);
-        y = r;
-        HexTile temp = mapHex[y][x];
-        tilePOs = mapHex[y][x].HexTilePos();
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((mapSizeX - 1) - Mathf.Floor(mapSizeX / 2), 1.5f, -(mapSizeY - 1) + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(mapSizeX - 1, mapSizeY - 1);
-        player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        player.gridPosition = new Vector2(q, r);
-        player.playerName = "B";
-        player.playerIndex = 1;
+            if (userPlayerRecords[i].isNewPlayer || record == null)
+            {
+                player.level = (int)playerLvData.level;
+                player.exp = (int)playerLvData.exp;
+                player.hp = player.maxHP = (int)playerLvData.hp;
+                player.atk = (int)playerLvData.atk;
+                player.def = (int)playerLvData.def;
+                player.wis = (int)playerLvData.wis;
+                player.dex = (int)playerLvData.dex;
+                player.mdef = (int)playerLvData.mdef;
+                player.equipWeapon = playerLvData.equipWeapon;
+            }
+            else
+            {
+                player.level = (int)record.level;
+                player.exp = (int)record.exp;
+                player.hp = player.maxHP = (int)record.hp;
+                player.atk = (int)record.atk;
+                player.def = (int)record.def;
+                player.wis = (int)record.wis;
+                player.dex = (int)record.dex;
+                player.mdef = (int)record.mdef;
+                player.equipWeapon = record.equipWeapon;
+            }
 
-        userPlayers.Add(player);
+            player.playerIndex = i;
 
-        q = 4;
-        r = 4;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((4-Mathf.Floor(mapSizeX / 2)), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(4, 4);
-        player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        player.gridPosition = new Vector2(q, r);
-        player.playerName = "C";
-        player.playerIndex = 2;
+            userPlayers.Add(player);
 
-        userPlayers.Add(player);
+        }
 
-        q = 8;
-        r = 8;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((8 - Mathf.Floor(mapSizeX / 2)), 1.5f, -8 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(8, 8);
-        player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        player.gridPosition = new Vector2(q, r);
-        player.playerName = "D";
-        player.playerIndex = 3;
+        for (int i = 0; i < enemyPlayerRecords.Count; i++)
+        {
+            AIPlayer player;
+            int x = enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1);
+            int y = enemyPlayerRecords[i].locY;
+            Vector3 tilePOs = mapHex[y][x].HexTilePos();
+            CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
+            CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[0];
+            //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+            player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
+            player.transform.SetParent(playerTransform);
 
-        userPlayers.Add(player);
+            player.gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
 
-        q = 6;
-        r = 4;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(6 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(6, 4);
-        AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        aiplayer.gridPosition = new Vector2(q, r);
-        aiplayer.name = "Enemy1";
-        aiplayer.playerIndex = 0;
+            player.playerName = playerData.name;
+            player.race = playerData.race;
+            player.movementPerActionPoint = playerData.move;
 
-        enemyPlayers.Add(aiplayer);
+            player.level = (int)playerLvData.level;
+            player.exp = (int)playerLvData.exp;
+            player.hp = player.maxHP = (int)playerLvData.hp;
+            player.atk = (int)playerLvData.atk;
+            player.def = (int)playerLvData.def;
+            player.wis = (int)playerLvData.wis;
+            player.dex = (int)playerLvData.dex;
+            player.mdef = (int)playerLvData.mdef;
+            player.equipWeapon = playerLvData.equipWeapon;
 
-        q = 8;
-        r = 4;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(8 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(8, 4);
-        aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        aiplayer.gridPosition = new Vector2(q, r);
-        aiplayer.name = "Enemy2";
-        aiplayer.playerIndex = 1;
+            player.playerIndex = i;
 
-        enemyPlayers.Add(aiplayer);
+            enemyPlayers.Add(player);
 
-        q = 11;
-        r = 0;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(11 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(11, 0);
-        aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        aiplayer.gridPosition = new Vector2(q, r);
-        aiplayer.name = "Enemy3";
-        aiplayer.playerIndex = 2;
+        }
 
-        enemyPlayers.Add(aiplayer);
 
-        q = 18;
-        r = 8;
-        x = q + (r >> 1);
-        y = r;
-        tilePOs = mapHex[y][x].HexTilePos();
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(18 - Mathf.Floor(mapSizeY / 2), 1.5f, -8 + Mathf.Floor(mapSizeX / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(18, 8);
-        aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        aiplayer.gridPosition = new Vector2(q, r);
-        aiplayer.name = "Enemy4";
-        aiplayer.playerIndex = 3;
+        //r = mapSizeY - 1;
+        //q = mapSizeX - 1 - (r >> 1) - ((mapSizeY - 1) % 2);
+        //x = q + (r >> 1);
+        //y = r;
+        //HexTile temp = mapHex[y][x];
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((mapSizeX - 1) - Mathf.Floor(mapSizeX / 2), 1.5f, -(mapSizeY - 1) + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        ////player.gridPosition = new Vector2(mapSizeX - 1, mapSizeY - 1);
+        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        //player.gridPosition = new Vector2(q, r);
+        //player.playerName = "B";
+        //player.playerIndex = 1;
 
-        enemyPlayers.Add(aiplayer);
+        //userPlayers.Add(player);
+
+        //q = 4;
+        //r = 4;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((4-Mathf.Floor(mapSizeX / 2)), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        ////player.gridPosition = new Vector2(4, 4);
+        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        //player.gridPosition = new Vector2(q, r);
+        //player.playerName = "C";
+        //player.playerIndex = 2;
+
+        //userPlayers.Add(player);
+
+        //q = 8;
+        //r = 8;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((8 - Mathf.Floor(mapSizeX / 2)), 1.5f, -8 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        ////player.gridPosition = new Vector2(8, 8);
+        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+        //player.gridPosition = new Vector2(q, r);
+        //player.playerName = "D";
+        //player.playerIndex = 3;
+
+        //userPlayers.Add(player);
+
+        //q = 6;
+        //r = 4;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(6 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        ////aiplayer.gridPosition = new Vector2(6, 4);
+        //AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        //aiplayer.gridPosition = new Vector2(q, r);
+        //aiplayer.name = "Enemy1";
+        //aiplayer.playerIndex = 0;
+
+        //enemyPlayers.Add(aiplayer);
+
+        //q = 8;
+        //r = 4;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(8 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        ////aiplayer.gridPosition = new Vector2(8, 4);
+        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        //aiplayer.gridPosition = new Vector2(q, r);
+        //aiplayer.name = "Enemy2";
+        //aiplayer.playerIndex = 1;
+
+        //enemyPlayers.Add(aiplayer);
+
+        //q = 11;
+        //r = 0;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(11 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        ////aiplayer.gridPosition = new Vector2(11, 0);
+        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        //aiplayer.gridPosition = new Vector2(q, r);
+        //aiplayer.name = "Enemy3";
+        //aiplayer.playerIndex = 2;
+
+        //enemyPlayers.Add(aiplayer);
+
+        //q = 18;
+        //r = 8;
+        //x = q + (r >> 1);
+        //y = r;
+        //tilePOs = mapHex[y][x].HexTilePos();
+        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(18 - Mathf.Floor(mapSizeY / 2), 1.5f, -8 + Mathf.Floor(mapSizeX / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        ////aiplayer.gridPosition = new Vector2(18, 8);
+        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        //aiplayer.gridPosition = new Vector2(q, r);
+        //aiplayer.name = "Enemy4";
+        //aiplayer.playerIndex = 3;
+
+        //enemyPlayers.Add(aiplayer);
 
     }
 }

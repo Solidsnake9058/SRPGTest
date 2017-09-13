@@ -38,7 +38,7 @@ public class HexTileHighlight
             {
                 continue;
             }
-            if (current.costOfPath > movementPoints + 1)
+            if (current.costOfPath > movementPoints + originTile.movementCost)
             {
                 continue;
             }

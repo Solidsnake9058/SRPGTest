@@ -18,13 +18,15 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
 
     public Vector2 gridPosition = Vector2.zero;
 
-    public int movementCost = 1;
+    public float movementCost = 1f;
     public bool impassible = false;
 
     public List<HexTile> neighbors = new List<HexTile>();
 
     public int mapSizeX;
     public int mapSizeY;
+
+    public float defenseRAte = 0;
 
     public Camera mainCamera;
     public Image menuImage;
@@ -38,6 +40,12 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
     {
         return new Vector3((float)((hex.q - hex.Z) / 2.0f), 0, -hex.r);
     }
+
+    public static Vector3 HexTilePos(float x,float y)
+    {
+        return new Vector3((((2 * x) - y) / 2.0f), 0, -y);
+    }
+
 
     public Vector2 mapHexIndex
     {
@@ -196,7 +204,32 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
         }
         else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
         {
-			setType(MapCreatorManager.instance.pallerSelection);
+            switch (MapCreatorManager.instance.settingSelection)
+            {
+                case MapSettingType.Tile:
+                    setType(MapCreatorManager.instance.pallerSelection);
+                    break;
+                case MapSettingType.Player:
+                    if (eventData.button == PointerEventData.InputButton.Left)
+                    {
+                        MapCreatorManager.instance.SetPlayer(gridPosition, transform.position);
+                    }
+                    else if (eventData.button == PointerEventData.InputButton.Right)
+                    {
+                        MapCreatorManager.instance.SetPlayer(gridPosition, transform.position, true);
+                    }
+                    break;
+                case MapSettingType.Enemy:
+                    if (eventData.button == PointerEventData.InputButton.Left)
+                    {
+                        MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position);
+                    }
+                    else if (eventData.button == PointerEventData.InputButton.Right)
+                    {
+                        MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position, true);
+                    }
+                    break;
+            }
         }
     }
 
@@ -204,7 +237,17 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
     {
         if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
         {
-            setType(MapCreatorManager.instance.pallerSelection);
+            switch (MapCreatorManager.instance.settingSelection)
+            {
+                case MapSettingType.Tile:
+                    setType(MapCreatorManager.instance.pallerSelection);
+                    break;
+                case MapSettingType.Player:
+                    break;
+                case MapSettingType.Enemy:
+                    break;
+            }
+
         }
     }
 

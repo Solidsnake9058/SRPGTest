@@ -7,7 +7,7 @@ public class HexTilePath
 {
     public List<HexTile> listOfTiles = new List<HexTile>();
 
-    public int costOfPath = 0;
+    public float costOfPath = 0f;
 
     public HexTile lastTile;
 

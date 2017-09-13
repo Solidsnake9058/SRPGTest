@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 
 public class Weapon
@@ -12,15 +13,25 @@ public class Weapon
     //rapier,    estoc,    sylpheed,    laFlare,    titaniaSword,    gungnir,
     //spear,    javelin,    trident,    thunderSpear,    odinSpear,
     //harp,    lute,    lira
+    [JsonProperty]
     public int id { get; private set; }
+    [JsonProperty]
     public string name { get; private set; }
+    [JsonProperty]
     public int directAtk { get; private set; }
+    [JsonProperty]
     public int indirectAtk { get; private set; }
+    [JsonProperty]
     public int directWis { get; private set; }
+    [JsonProperty]
     public int indirectWis { get; private set; }
+    [JsonProperty]
     public int price { get; private set; }
+    [JsonProperty]
     public bool sell { get; private set; }
+    [JsonProperty]
     public bool atkTwice { get; private set; }
+    [JsonProperty]
     public int atkPoint { get; private set; }
 
     public Weapon() { }

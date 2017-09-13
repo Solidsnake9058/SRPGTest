@@ -1,19 +1,27 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 
 public class CharacterTemplate
 {
+    [JsonProperty]
     public int id { get; private set; }
+    [JsonProperty]
     public string name { get; private set; }
+    [JsonProperty]
     public int race { get; private set; }
+    [JsonProperty]
     public uint move { get; private set; }
+    [JsonProperty]
     public bool enemy { get; private set; }
+    [JsonProperty]
     public List<CharacterLevelTemplate> levelData { get; private set; }
 
     public CharacterTemplate() { }
 
     public CharacterTemplate(int id, string name, int race, uint move, bool enemy, List<CharacterLevelTemplate> levelData)
     {
+        this.id = id;
         this.name = name;
         this.race = race;
         this.move = move;
@@ -24,15 +32,25 @@ public class CharacterTemplate
 
 public class CharacterLevelTemplate
 {
+    [JsonProperty]
     public int id { get; private set; }
+    [JsonProperty]
     public uint level { get; private set; }
+    [JsonProperty]
     public uint exp { get; private set; }
+    [JsonProperty]
     public uint hp { get; private set; }
+    [JsonProperty]
     public uint atk { get; private set; }
+    [JsonProperty]
     public uint def { get; private set; }
+    [JsonProperty]
     public uint wis { get; private set; }
+    [JsonProperty]
     public uint dex { get; private set; }
+    [JsonProperty]
     public uint mdef { get; private set; }
+    [JsonProperty]
     public int equipWeapon { get; private set; }
 
     public CharacterLevelTemplate() { }

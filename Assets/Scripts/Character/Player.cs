@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour, IPointerClickHandler
 {
@@ -12,7 +13,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public float moveSpeed = 10f;
     public int playerIndex;
 
-    public int movementPerActionPoint = 5;
+    public uint movementPerActionPoint = 5;
     public int attackRange = 1;
 
     public bool moving = false;
@@ -24,6 +25,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public string playerName;
 
+    public int race;
     public int level = 1;
     public int maxHP = 25;
     public int hp = 25;
@@ -33,7 +35,9 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public int wis = 5;
     public int dex = 8;
     public int mdef = 5;
-
+    public int equipWeapon;
+    public EnemyAIType enemyAIType = EnemyAIType.Attacker;
+    public int searchRange = 5;
 
     public float attackChance = 0.75f;
     public float defenseReduction = 0.15f;
@@ -120,8 +124,16 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public virtual void OnPointerClick(PointerEventData eventData)
     {
-        HexTile attTile = GameManager.instance.mapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
-        attTile.ClickEvent(eventData);
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            HexTile attTile = GameManager.instance.mapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
+            attTile.ClickEvent(eventData);
+        }
+        else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+        {
+            HexTile attTile = MapCreatorManager.instance.mapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
+            attTile.ClickEvent(eventData);
+        }
     }
 
     public void OnGUI()
