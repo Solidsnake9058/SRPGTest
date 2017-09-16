@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Linq;
 
-public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
+public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler {
 
     public HexCoord hex = new HexCoord();
 
@@ -15,20 +15,21 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
     public GameObject visual;
 
     public TileType type = TileType.Normal;
+    public TileType2D type2D = TileType2D.Plain;
 
     public Vector2 gridPosition = Vector2.zero;
 
     public float movementCost = 1f;
     public bool impassible = false;
+    public int spriteIdex = 0;
 
     public List<HexTile> neighbors = new List<HexTile>();
 
     public int mapSizeX;
     public int mapSizeY;
 
-    public float defenseRAte = 0;
+    public float defenseRate = 0;
 
-    public Camera mainCamera;
     public Image menuImage;
 
     public HexTile(int q, int r)
@@ -41,10 +42,11 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
         return new Vector3((float)((hex.q - hex.Z) / 2.0f), 0, -hex.r);
     }
 
-    public static Vector3 HexTilePos(float x,float y)
+    public static Vector3 HexTilePos(float x, float y)
     {
         return new Vector3((((2 * x) - y) / 2.0f), 0, -y);
     }
+    public static Vector2[] cube_directions = { new Vector2(1, 0), new Vector2(1, -1), new Vector2(0, -1), new Vector2(-1, 0), new Vector2(-1, 1), new Vector2(0, 1) };
 
 
     public Vector2 mapHexIndex
@@ -55,29 +57,26 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
         }
     }
 
-    private void generateNeighbors()
+    private void GenerateNeighbors()
     {
         neighbors = new List<HexTile>();
 
         //[+1,0][-1,0][0,+1][0,-1][+1,-1][-1,+1]
-        Vector2[] neighborsIndex = { new Vector2(1, 0), new Vector2(-1, 0), new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, -1), new Vector2(-1, 1) };
-        for (int i = 0; i < neighborsIndex.Length; i++)
+        for (int i = 0; i < 6; i++)
         {
-            Vector2 n = new Vector2(hex.q, hex.r) + neighborsIndex[i];
-            int X = Mathf.FloorToInt((2 * n.x + n.y) / 2.0f);
-            int Y = (int)n.y;
+            Vector2 n = MapHexIndex(CubeNeighbor(new Vector2(hex.q, hex.r), i));
 
-            if (X < 0 || X > mapSizeX - 1 - (Y % 2) || Y < 0 || Y > mapSizeY - 1)
+            if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
             {
                 continue;
             }
             if (SceneManager.GetActiveScene().name == "GameScene")
             {
-                neighbors.Add(GameManager.instance.mapHex[Y][X]);
+                neighbors.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
             }
             else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
             {
-                neighbors.Add(MapCreatorManager.instance.mapHex[Y][X]);
+                neighbors.Add(MapCreatorManager.instance.mapHex[(int)n.y][(int)n.x]);
             }
 
         }
@@ -111,13 +110,97 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
 
     }
 
+    public static Vector2 CubeDirection(int direction)
+    {
+        return cube_directions[direction];
+    }
+
+    public static Vector2 CubeNeighbor(Vector2 cube, int direction)
+    {
+        return cube + CubeDirection(direction);
+    }
+
+    public static Vector2 Scale(Vector2 pos, int k)
+    {
+        return pos * k;
+    }
+
+    public static List<Vector2> CubeRing(Vector2 center, int radius)
+    {
+        List<Vector2> results = new List<Vector2>();
+        if (radius <= 0)
+        {
+            results.Add(center);
+            return results;
+        }
+
+        var cube = center + Scale(CubeDirection(4), radius);
+        for (int i = 0; i < 6; i++)
+        {
+            results.Add(cube);
+            cube = CubeNeighbor(cube, i);
+        }
+        return results;
+    }
+
+    public static List<HexTile> GetCubeRingTile(Vector2 center, int radius,int mapSizeX,int mapSizeY)
+    {
+        List<HexTile> cubeRingTile = new List<HexTile>();
+        List<Vector2> cubeRing = CubeRing(center, radius);
+
+        for (int i = 0; i < cubeRing.Count; i++)
+        {
+            Vector2 n = MapHexIndex(cubeRing[i]);
+
+            if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
+            {
+                continue;
+            }
+            if (SceneManager.GetActiveScene().name == "GameScene")
+            {
+                cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+            }
+        }
+        return cubeRingTile;
+    }
+
+    public static HexCoord Subtract(HexCoord a, HexCoord b)
+    {
+        return new HexCoord(a.q - b.q, a.r - b.r);
+    }
+
+    public static int Length(HexCoord hex)
+    {
+        return (int)((Math.Abs(hex.q) + Math.Abs(hex.r) + Math.Abs(hex.Z)) / 2);
+    }
+
+    public static int Distance(HexCoord a, HexCoord b)
+    {
+        return Length(Subtract(a, b));
+    }
+
+    public static Vector2 MapHexIndex(Vector2 pos)
+    {
+        return new Vector2(pos.x + (((int)pos.y) >> 1), pos.y);
+    }
+
+    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int q, int r, int mapSizeX, int mapSizeY)
+    {
+        transform.parent = mapTransform;
+        //SetType(tileType);
+        SetType2D(tileType2D, spriteIndex);
+        hex.q = q;
+        hex.r = r;
+        this.mapSizeX = mapSizeX;
+        this.mapSizeY = mapSizeY;
+        gameObject.transform.localPosition = HexTilePos();
+    }
 
     private void Start()
     {
-        generateNeighbors();
+        GenerateNeighbors();
         gridPosition = new Vector2(hex.q, hex.r);
         transform.name = "Tile [" + hex.q + "," + hex.r + "," + hex.Z + "]";
-        mainCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
             menuImage = GameObject.Find("MapMenu").GetComponent<Image>();
@@ -157,7 +240,7 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
             {
                 if (GameManager.instance.menu.alpha == 0 && GameManager.instance.endTurnConfirm.alpha == 0)
                 {
-                    if (GameManager.instance.moving)
+                    if (GameManager.instance.moving && !GameManager.instance.attacking)
                     {
                         GameManager.instance.MoveCurrentPlayer(this);
                     }
@@ -193,8 +276,11 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
                 }
                 else
                 {
-                    GameManager.instance.HideMenu();
-                    GameManager.instance.RemoveHighlightTiles();
+                    if (!GameManager.instance.moving&& !GameManager.instance.attacking)
+                    {
+                        GameManager.instance.HideMenu();
+                        GameManager.instance.RemoveHighlightTiles();
+                    }
                 }
             }
             else if (eventData.button == PointerEventData.InputButton.Right)
@@ -207,7 +293,9 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
             switch (MapCreatorManager.instance.settingSelection)
             {
                 case MapSettingType.Tile:
-                    setType(MapCreatorManager.instance.pallerSelection);
+                    //SetType(MapCreatorManager.instance.pallerSelection);
+                    SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
+
                     break;
                 case MapSettingType.Player:
                     if (eventData.button == PointerEventData.InputButton.Left)
@@ -240,7 +328,9 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
             switch (MapCreatorManager.instance.settingSelection)
             {
                 case MapSettingType.Tile:
-                    setType(MapCreatorManager.instance.pallerSelection);
+                    //SetType(MapCreatorManager.instance.pallerSelection);
+                    SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
+
                     break;
                 case MapSettingType.Player:
                     break;
@@ -312,7 +402,7 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
   //      }
   //  }
 
-    public void setType(TileType t)
+    public void SetType(TileType t)
     {
         type = t;
         //definition of TileType properties
@@ -340,19 +430,64 @@ public class HexTile : MonoBehaviour,IPointerClickHandler,IPointerEnterHandler {
                 break;
         }
 
-        generateVisuals();
+        GenerateVisuals();
     }
 
-    public void generateVisuals()
+    public void SetType2D(TileType2D t, int index)
+    {
+        type2D = t;
+        spriteIdex = index;
+        impassible = false;
+        switch (t)
+        {
+            case TileType2D.Impassible:
+                movementCost = 9999;
+                impassible = true;
+                Prefab = TilePrefabHolder.instance.tile_Impassible_prefab;
+                break;
+            case TileType2D.Road:
+                movementCost = 1;
+                defenseRate = 0;
+                Prefab = TilePrefabHolder.instance.tile_Road_prefab;
+                break;
+            case TileType2D.Plain:
+                movementCost = 1.5f;
+                defenseRate = 10;
+                Prefab = TilePrefabHolder.instance.tile_Plain_prefab;
+                break;
+            case TileType2D.Wasteland:
+                movementCost = 3;
+                defenseRate = 30;
+                Prefab = TilePrefabHolder.instance.tile_Wasteland_prefab;
+                break;
+            case TileType2D.Villa:
+                movementCost = 1;
+                defenseRate = 50;
+                Prefab = TilePrefabHolder.instance.tile_Villa_prefab;
+                break;
+            case TileType2D.Forest:
+                movementCost = 2;
+                defenseRate = 40;
+                Prefab = TilePrefabHolder.instance.tile_Forest_prefab;
+                break;
+        }
+        GenerateVisuals();
+
+    }
+
+    public void GenerateVisuals()
     {
         GameObject container = transform.Find("Visuals").gameObject;
         for (int i = 0; i < container.transform.childCount; i++)
         {
             Destroy(container.transform.GetChild(i).gameObject);
         }
-        GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Quaternion.Euler(new Vector3(0, 0, 0)));
+        GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Prefab.transform.rotation);
         newVisual.transform.parent = container.transform;
+        newVisual.GetComponent<SpriteMetarial>().SetSprite(spriteIdex);
     }
+
+
 
     [Serializable]
     public struct HexCoord

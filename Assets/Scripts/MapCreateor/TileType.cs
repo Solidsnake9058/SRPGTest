@@ -8,3 +8,19 @@ public enum TileType
     VeryDifficult,
     Impassible,
 }
+
+public enum TileType2D
+{
+    Impassible,
+    Road,
+    Plain,
+    Wasteland,
+    Villa,
+    Forest,
+    //Shoal,
+    //Water,
+    //Castle,
+    //Column,
+
+}
+

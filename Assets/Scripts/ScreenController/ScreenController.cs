@@ -9,16 +9,27 @@ public class ScreenController : MonoBehaviour
 
     public float mSpeed = 5;
 
+    public float zoomMin = 5f;
+    public float zoomMax = 13f;
+    public float zoomChange = 2f;
+
     public Image imageRight;
     public Image imageLeft;
     public Image imageUp;
     public Image imageDown;
     public Transform mainCamera;
+    private new Camera camera;
+
+    public Vector3 limitPointA;
+    public Vector3 limitPointB;
+    public Vector3 limitPointC;
+    public Vector3 limitPointD;
 
     private void Awake()
     {
         instance = this;
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
+        camera = GetComponentInChildren<Camera>();
     }
 
     // Update is called once per frame
@@ -31,6 +42,22 @@ public class ScreenController : MonoBehaviour
         imageUp.rectTransform.position = new Vector2(mPoint.x, imageUp.rectTransform.position.y);
         imageDown.rectTransform.position = new Vector2(mPoint.x, imageDown.rectTransform.position.y);
 
+    }
+
+    public void SetLimitPoint(Vector3 connerPointA, Vector3 connerPointB, Vector3 connerPointC, Vector3 connerPointD)
+    {
+        limitPointA = GetCrossPoint(connerPointA, connerPointB, 1, -1);
+        limitPointB = GetCrossPoint(connerPointB, connerPointC, -1, 1);
+        limitPointC = GetCrossPoint(connerPointC, connerPointD, 1, -1);
+        limitPointD = GetCrossPoint(connerPointD, connerPointA, -1, 1);
+    }
+
+    private Vector3 GetCrossPoint(Vector3 point1, Vector3 point2, float m1, float m2)
+    {
+        float x = ((point1.x * m1 - point2.x * m2) - point1.z + point2.z) / (m1 - m2);
+        float z = (x - point1.x) * m1 + point1.z;
+
+        return new Vector3(x, 0, z);
     }
 
     public void MoveCamera(PivotType pivot)
@@ -53,11 +80,56 @@ public class ScreenController : MonoBehaviour
                 break;
         }
 
-        mainCamera.localPosition += move * Time.deltaTime;
+        Vector3 newPoint = mainCamera.localPosition + move * Time.deltaTime;
+        if (!isContain(limitPointA, limitPointB, limitPointC, limitPointD, newPoint))
+        {
+            return;
+        }
+        mainCamera.localPosition = newPoint;
     }
 
     public void SetCameraPos(Vector3 pos)
     {
         mainCamera.localPosition = pos;
+    }
+
+    public bool isContain(Vector3 mp1, Vector3 mp2, Vector3 mp3, Vector3 mp4, Vector3 mp)
+    {
+        if (Multiply(mp1, mp2, mp) * Multiply(mp3, mp4, mp) >= 0 && Multiply(mp4, mp1, mp) * Multiply(mp2, mp3, mp) >= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private double Multiply(Vector3 p1, Vector3 p2, Vector3 p0)
+    {
+        return (p2.x - p1.x) * (p0.z - p1.z) - (p0.x - p1.x) * (p2.z - p1.z);
+    }
+
+    public void ZoomIn()
+    {
+        float newZoom = camera.orthographicSize - zoomChange;
+        if (newZoom < zoomMin)
+        {
+            camera.orthographicSize = zoomMin;
+        }
+        else
+        {
+            camera.orthographicSize = newZoom;
+        }
+    }
+
+    public void ZoomOut()
+    {
+        float newZoom = camera.orthographicSize + zoomChange;
+        if (newZoom > zoomMax)
+        {
+            camera.orthographicSize = zoomMax;
+        }
+        else
+        {
+            camera.orthographicSize = newZoom;
+        }
     }
 }

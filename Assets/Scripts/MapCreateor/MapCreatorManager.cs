@@ -21,6 +21,9 @@ public class MapCreatorManager : MonoBehaviour
 
     public MapSettingType settingSelection = MapSettingType.Tile;
     public TileType pallerSelection = TileType.Normal;
+    public TileType2D pallerSelection2D = TileType2D.Plain;
+    public int spriteIndex = 0;
+    public int spritesMax = 0;
 
     public int playerIndex = 0;
     public int enemyIndex = 0;
@@ -32,6 +35,7 @@ public class MapCreatorManager : MonoBehaviour
 
     [Header("Tile UI")]
 	public Text tileTypeName;
+    public Image tileSprite;
 
 	[Header("Player UI")]
 	public Text playerTypeName;
@@ -75,6 +79,7 @@ public class MapCreatorManager : MonoBehaviour
         generateBlankMap(Convert.ToInt32(inputMapSizeX.text), Convert.ToInt32(inputMapSizeY.text));
         ControlGroup();
         LoadGameElements();
+        ResetTileType();
 
         if (playerTypes.Count > 0)
         {
@@ -172,23 +177,110 @@ public class MapCreatorManager : MonoBehaviour
 		group.blocksRaycasts = true;
 	}
 
+    private void ResetTileType()
+    {
+        spriteIndex = 0;
+        GetSpriteSize();
+        SetSprite();
+        tileTypeName.text = pallerSelection2D.ToString();
+    }
+
     public void NextType()
     {
-        int temp = (int)pallerSelection;
+        int temp = (int)pallerSelection2D;
         temp++;
-        temp = temp % Enum.GetNames(typeof(TileType)).Length;
-        pallerSelection = (TileType)temp;
-        tileTypeName.text = pallerSelection.ToString();
+        temp = temp % Enum.GetNames(typeof(TileType2D)).Length;
+        pallerSelection2D = (TileType2D)temp;
+        ResetTileType();
     }
 
 	public void LastType()
 	{
-		int temp = (int)pallerSelection;
+		int temp = (int)pallerSelection2D;
 		temp--;
-        temp = (temp + Enum.GetNames(typeof(TileType)).Length) % Enum.GetNames(typeof(TileType)).Length;
-		pallerSelection = (TileType)temp;
-		tileTypeName.text = pallerSelection.ToString();
-	}
+        temp = (temp + Enum.GetNames(typeof(TileType2D)).Length) % Enum.GetNames(typeof(TileType2D)).Length;
+        pallerSelection2D = (TileType2D)temp;
+        spriteIndex = 0;
+        GetSpriteSize();
+        SetSprite();
+        tileTypeName.text = pallerSelection2D.ToString();
+        ResetTileType();
+    }
+
+    public void NextSprite()
+    {
+        int temp = spriteIndex;
+        temp++;
+        temp = temp % spritesMax;
+        spriteIndex = temp;
+        SetSprite();
+    }
+
+    public void LastSprite()
+    {
+        int temp = spriteIndex;
+        temp--;
+        temp = (temp + spritesMax) % spritesMax;
+        spriteIndex = temp;
+        SetSprite();
+    }
+
+
+    private void GetSpriteSize()
+    {
+        switch (pallerSelection2D)
+        {
+            case TileType2D.Impassible:
+                spritesMax = TilePrefabHolder.instance.tile_Impassible_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+            case TileType2D.Road:
+                spritesMax = TilePrefabHolder.instance.tile_Road_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+            case TileType2D.Plain:
+                spritesMax = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+            case TileType2D.Wasteland:
+                spritesMax = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+            case TileType2D.Villa:
+                spritesMax = TilePrefabHolder.instance.tile_Villa_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+            case TileType2D.Forest:
+                spritesMax = TilePrefabHolder.instance.tile_Forest_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                break;
+        }
+    }
+
+    private void SetSprite()
+    {
+        List<Sprite> temp = new List<Sprite>();
+        switch (pallerSelection2D)
+        {
+            case TileType2D.Impassible:
+                temp = TilePrefabHolder.instance.tile_Impassible_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+            case TileType2D.Road:
+                temp = TilePrefabHolder.instance.tile_Road_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+            case TileType2D.Plain:
+                temp = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+            case TileType2D.Wasteland:
+                temp = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+            case TileType2D.Villa:
+                temp = TilePrefabHolder.instance.tile_Villa_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+            case TileType2D.Forest:
+                temp = TilePrefabHolder.instance.tile_Forest_prefab.GetComponent<SpriteMetarial>().sprites;
+                break;
+        }
+
+        if (temp.Count > 0)
+        {
+            tileSprite.sprite = temp[spriteIndex];
+        }
+    }
 
 
 	public void NextAIType()
@@ -288,7 +380,7 @@ public class MapCreatorManager : MonoBehaviour
                 int id = userPlayerRecords.Count > 0 ? userPlayerRecords.Max(x => x.id) + 1 : 0;
                 userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerIndex, 0, aiTypeSelection, 0));
 
-                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1f, pos.z), Quaternion.Euler(new Vector3()));
                 newPlayer.name = string.Format(userPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
@@ -312,17 +404,17 @@ public class MapCreatorManager : MonoBehaviour
         {
             if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
             {
-                int intSearchRang = string.IsNullOrEmpty(searchRange.text) ? 0 : Convert.ToInt32(searchRange.text);
-                if (aiTypeSelection == EnemyAIType.Defanser && intSearchRang <= 0)
+                int intSearchRange = string.IsNullOrEmpty(searchRange.text) ? 0 : Convert.ToInt32(searchRange.text);
+                if (aiTypeSelection == EnemyAIType.Defanser && intSearchRange <= 0)
                 {
                     Debug.Log("Search range invalid");
                     return;
                 }
 
                 int id = enemyPlayerRecords.Count > 0 ? enemyPlayerRecords.Max(x => x.id) + 1 : 0;
-                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyLevelIndex, aiTypeSelection, 0));
+                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyLevelIndex, aiTypeSelection, intSearchRange));
 
-                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1f, pos.z), Quaternion.Euler(new Vector3()));
                 newPlayer.name = string.Format(enemyPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<AIPlayer>().gridPosition = gridPosion;
@@ -379,6 +471,11 @@ public class MapCreatorManager : MonoBehaviour
 
     private void generateBlankMap(int mSizeX, int mSizeY)
     {
+        Vector3 connerPointA = Vector3.zero;
+        Vector3 connerPointB = Vector3.zero;
+        Vector3 connerPointC = Vector3.zero;
+        Vector3 connerPointD = Vector3.zero;
+
         mapSizeX = mSizeX;
         mapSizeY = mSizeY;
 
@@ -402,26 +499,32 @@ public class MapCreatorManager : MonoBehaviour
             List<HexTile> row = new List<HexTile>();
             for (int j = -offset; j < mapSizeX - offset; j++)
             {
-                //int Z = -i - j;
-                //pos.x = ((float)(j - Z) / 2.0f);
-                //pos.z = -i;
-
                 if (i % 2 == 1 && j == mapSizeX - offset - 1)
                 {
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.transform.parent = mapTransform;
-                tile.setType(TileType.Normal);
-                tile.hex.q = j;
-                tile.hex.r = i;
-                tile.mapSizeX = mapSizeX;
-                tile.mapSizeY = mapSizeY;
-                tile.gameObject.transform.localPosition = tile.HexTilePos();
+                tile.TileInitializer(mapTransform, TileType.Normal, TileType2D.Plain, 0, j, i, mapSizeX, mapSizeY);
                 row.Add(tile);
+                if (i == 0)
+                {
+                    if (j == 0)
+                    {
+                        connerPointA = tile.HexTilePos();
+                    }
+                    else if (j == mapSizeX - offset - 1)
+                    {
+                        connerPointB = tile.HexTilePos();
+                    }
+                }
             }
             mapHex.Add(row);
         }
+        connerPointD = new Vector3(0, 0, -mapSizeY + 1);
+        connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
+
+        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+
         ScreenController.instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         //Rectangle
@@ -451,7 +554,7 @@ public class MapCreatorManager : MonoBehaviour
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
 
-        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex,userPlayerRecords,enemyPlayerRecords), fileName.text + ".txt");
+        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex,userPlayerRecords, enemyPlayerRecords), fileName.text + ".txt");
     }
 
     public void loadMapFromXml()
@@ -466,6 +569,12 @@ public class MapCreatorManager : MonoBehaviour
             Debug.Log("File is not exist!");
             return;
 		}
+
+        Vector3 connerPointA = Vector3.zero;
+        Vector3 connerPointB = Vector3.zero;
+        Vector3 connerPointC = Vector3.zero;
+        Vector3 connerPointD = Vector3.zero;
+
         MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>(fileName.text + ".txt");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
@@ -508,17 +617,26 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.transform.parent = mapTransform;
-                tile.hex.q = j;
-                tile.hex.r = i;
-                tile.mapSizeX = mapSizeX;
-                tile.mapSizeY = mapSizeY;
-                tile.gameObject.transform.localPosition = tile.HexTilePos();
-                tile.setType((TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id);
+                tile.TileInitializer(mapTransform, (TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, (TileType2D)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().spritIndex, j, i, mapSizeX, mapSizeY);
                 row.Add(tile);
+                if (i == 0)
+                {
+                    if (j == 0)
+                    {
+                        connerPointA = tile.HexTilePos();
+                    }
+                    else if (j == mapSizeX - offset - 1)
+                    {
+                        connerPointB = tile.HexTilePos();
+                    }
+                }
             }
             mapHex.Add(row);
         }
+        connerPointD = new Vector3(0, 0, -mapSizeY + 1);
+        connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
+
+        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
         LoadPlayers();
         /*
@@ -547,7 +665,7 @@ public class MapCreatorManager : MonoBehaviour
             int id = userPlayerRecords[i].id;
 
             Vector3 pos = mapHex[userPlayerRecords[i].locY][userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1)].HexTilePos();
-            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, 1f, pos.z), Quaternion.Euler(new Vector3()));
             newPlayer.name = string.Format(userPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
@@ -558,7 +676,7 @@ public class MapCreatorManager : MonoBehaviour
             int id = enemyPlayerRecords[i].id;
 
             Vector3 pos = mapHex[enemyPlayerRecords[i].locY][enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1)].HexTilePos();
-            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1.5f, pos.z), Quaternion.Euler(new Vector3()));
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, 1f, pos.z), Quaternion.Euler(new Vector3()));
             newPlayer.name = string.Format(enemyPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);

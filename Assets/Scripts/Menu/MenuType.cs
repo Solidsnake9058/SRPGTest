@@ -5,6 +5,7 @@ public enum MenuType
 {
     tileMenu,
     playerMenu,
+    playerMoveMenu,
     playerStandMenu,
     playerDeadMenu,
     playerMoveCanAtkMenu,

@@ -37,15 +37,18 @@ public class GameManager : MonoBehaviour
     public List<Player> userPlayers = new List<Player>();
     public List<Player> enemyPlayers = new List<Player>();
 
-    private GameElement gameElement;
+    public GameElement gameElement { get; private set; }
     private List<CharacterTemplate> playerTypes;
     private List<CharacterTemplate> enemyTypes;
+
+    public Color moveTileColor;
+    public Color attackTileColor;
 
     private bool isPlayerTurn = true;
     private bool isWaitingAct = false;
     private bool isWaitingMsg = false;
     private bool isShowStage = true;
-    private bool isSetCamera = false;
+    public bool isSetCamera = false;
 
     private int turnCount = 1;
 
@@ -210,6 +213,18 @@ public class GameManager : MonoBehaviour
             {
                 p.TurnActive();
             }
+            Vector2 index = userPlayers[0].mapHexIndex;
+            Vector3 pos = mapHex[(int)index.y][(int)index.x].transform.position;
+            ScreenController.instance.SetCameraPos(pos);
+            //isSetCamera = false;
+
+            List<Player> temp = enemyPlayers.Where(x => x.hp <= 0).ToList();
+            foreach (var p in temp)
+            {
+                enemyPlayers.Remove(p);
+                Destroy(p.gameObject);
+            }
+
             ShowStageInfo();
         }
         else
@@ -238,7 +253,7 @@ public class GameManager : MonoBehaviour
             }
             foreach (HexTile t in HexTilePathFinder.FindPath(mapHex[(int)targetPlayer.mapHexIndex.y][(int)targetPlayer.mapHexIndex.x], destTile, userPlayers.Union(enemyPlayers).Where(x => x.gridPosition != targetPlayer.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
             {
-                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + 1.5f * Vector3.up);
+                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + 1f * Vector3.up);
                 //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
             }
             targetPlayer.gridPosition = destTile.gridPosition;
@@ -281,6 +296,7 @@ public class GameManager : MonoBehaviour
 
         Player attacker = null;
         Player target = null;
+
         if (isPlayerTurn)
         {
             attacker = userPlayers[playerIndex];
@@ -308,6 +324,14 @@ public class GameManager : MonoBehaviour
 
         if (target != null)
         {
+            HexTile targetTile = mapHex[(int)attacker.mapHexIndex.y][(int)attacker.mapHexIndex.x];
+            bool isDirectAtk = HexTile.Distance(attacker.hex, target.hex) == 1;
+
+            int directAtk = 0;
+            int indirectAtk = 0;
+
+            attacker.GetWeaponAttack(ref directAtk, ref indirectAtk);
+
             if (attacker.gridPosition.x >= target.gridPosition.x - 1 && attacker.gridPosition.x <= target.gridPosition.x + 1 &&
                 attacker.gridPosition.y >= target.gridPosition.y - 1 && attacker.gridPosition.y <= target.gridPosition.y + 1)
             {
@@ -315,19 +339,71 @@ public class GameManager : MonoBehaviour
                 RemoveHighlightTiles();
                 attacking = false;
 
-                bool hit = UnityEngine.Random.Range(0f, 1f) <= attacker.attackChance;
-                if (hit)
+
+                //attack
+                int amountOfDamage = Mathf.FloorToInt((attacker.atk + (isDirectAtk ? directAtk : indirectAtk) - target.def) * (1f - (destTile.defenseRate / 10)));
+                target.hp -= amountOfDamage;
+
+                Debug.Log(attacker.playerName + (isDirectAtk ? " direct attack " : " indirect attack ") + target.playerName + " for " + amountOfDamage + " damage!");
+
+                //Counter
+                if (target.hp <= 0)
                 {
-                    int amountOfDamage = (int)Mathf.Floor(attacker.damageBase + UnityEngine.Random.Range(0, attacker.damageRollSides));
-
-                    target.hp -= amountOfDamage;
-
-                    Debug.Log(attacker.playerName + " successfuly hit " + target.playerName + " for " + amountOfDamage + " damage!");
+                    if (isPlayerTurn)
+                    {
+                        attacker.exp += target.exp;
+                        Debug.Log(attacker.playerName + " get exp " + target.exp + "!");
+                    }
+                    Debug.Log(attacker.playerName + " defeat " + target.playerName + "!");
                 }
                 else
                 {
-                    Debug.Log(attacker.playerName + " missed " + target.playerName + "!");
+                    if (isPlayerTurn)
+                    {
+                        attacker.exp += amountOfDamage;
+                        Debug.Log(attacker.playerName + " get exp " + amountOfDamage + "!");
+                    }
+                    if (isDirectAtk && target.GetIsCanAttack(true) || !isDirectAtk && target.GetIsCanAttack(false))
+                    {
+                        target.GetWeaponAttack(ref directAtk, ref indirectAtk);
+
+                        amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 10)));
+                        attacker.hp -= amountOfDamage;
+
+                        Debug.Log(target.playerName + " counter attack " + attacker.playerName + " for " + amountOfDamage + " damage!");
+                        if (attacker.hp <= 0)
+                        {
+                            if (!isPlayerTurn)
+                            {
+                                target.exp += target.exp;
+                                Debug.Log(target.playerName + " get exp " + target.exp + "!");
+                            }
+                            Debug.Log(target.playerName + " defeat " + attacker.playerName + "!");
+                        }
+                        else
+                        {
+                            if (!isPlayerTurn)
+                            {
+                                target.exp += amountOfDamage;
+                                Debug.Log(target.playerName + " get exp " + amountOfDamage + "!");
+                            }
+                        }
+                    }
                 }
+
+                //bool hit = UnityEngine.Random.Range(0f, 1f) <= attacker.attackChance;
+                //if (hit)
+                //{
+                //    int amountOfDamage = (int)Mathf.Floor(attacker.damageBase + UnityEngine.Random.Range(0, attacker.damageRollSides));
+
+                //    target.hp -= amountOfDamage;
+
+                //    Debug.Log(attacker.playerName + " successfuly hit " + target.playerName + " for " + amountOfDamage + " damage!");
+                //}
+                //else
+                //{
+                //    Debug.Log(attacker.playerName + " missed " + target.playerName + "!");
+                //}
             }
             else
             {
@@ -336,19 +412,26 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void HighlightTileAt(Vector2 originLocation, Color highlightColor, int distance, bool ignorePlayers = true)
+    public void HighlightTileAt(Vector2 originLocation, Color highlightColor, float distance, bool ignorePlayers = true)
     {
         List<HexTile> highlightTiles = new List<HexTile>();
-
         if (ignorePlayers)
         {
             highlightTiles = HexTileHighlight.FindHighlight(mapHex[(int)originLocation.y][(int)originLocation.x + (((int)originLocation.y) >> 1)], distance, true);
         }
         else
         {
-            highlightTiles = HexTileHighlight.FindHighlight(mapHex[(int)originLocation.y][(int)originLocation.x + (((int)originLocation.y) >> 1)], distance, userPlayers.Union(enemyPlayers).Where(x => x.gridPosition != originLocation).Select(x => x.gridPosition).ToArray());
+            highlightTiles = HexTileHighlight.FindHighlight(mapHex[(int)originLocation.y][(int)originLocation.x + (((int)originLocation.y) >> 1)], distance, userPlayers.Union(enemyPlayers)/*.Where(x => x.gridPosition != originLocation)*/.Select(x => x.gridPosition).ToArray());
         }
 
+        foreach (HexTile t in highlightTiles)
+        {
+            t.visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+        }
+    }
+
+    public void HighlightTileAt(Vector2 originLocation, Color highlightColor, List<HexTile> highlightTiles)
+    {
         foreach (HexTile t in highlightTiles)
         {
             t.visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
@@ -432,6 +515,11 @@ public class GameManager : MonoBehaviour
 
     private void LoadMapFromXml()
     {
+        Vector3 connerPointA = Vector3.zero;
+        Vector3 connerPointB = Vector3.zero;
+        Vector3 connerPointC = Vector3.zero;
+        Vector3 connerPointD = Vector3.zero;
+
         MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>("test.txt");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
@@ -458,23 +546,31 @@ public class GameManager : MonoBehaviour
                 //int Z = -i - j;
                 //pos.x = ((float)(j - Z) / 2.0f);
                 //pos.z = -i;
-
                 if (i % 2 == 1 && j == mapSizeX - offset - 1)
                 {
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.transform.parent = mapTransform;
-                tile.hex.q = j;
-                tile.hex.r = i;
-                tile.mapSizeX = mapSizeX;
-                tile.mapSizeY = mapSizeY;
-                tile.gameObject.transform.localPosition = tile.HexTilePos();
-                tile.setType((TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id);
+                tile.TileInitializer(mapTransform, (TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, (TileType2D)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().spritIndex, j, i, mapSizeX, mapSizeY);
                 row.Add(tile);
+                if (i == 0)
+                {
+                    if (j == 0)
+                    {
+                        connerPointA = tile.HexTilePos();
+                    }
+                    else if (j == mapSizeX - offset - 1)
+                    {
+                        connerPointB = tile.HexTilePos();
+                    }
+                }
             }
             mapHex.Add(row);
         }
+        connerPointD = new Vector3(0, 0, -mapSizeY + 1);
+        connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
+
+        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
         //for (int i = 0; i < mapSizeX; i++)
         //{
@@ -507,7 +603,7 @@ public class GameManager : MonoBehaviour
             RemoveHighlightTiles();
             moving = true;
             attacking = false;
-            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, Color.blue, (int)userPlayers[inputPlayerIndex].movementPerActionPoint, false);
+            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, moveTileColor, (int)userPlayers[inputPlayerIndex].movementPerActionPoint, false);
         }
         else
         {
@@ -523,7 +619,7 @@ public class GameManager : MonoBehaviour
         {
             RemoveHighlightTiles();
             attacking = true;
-            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, Color.red, userPlayers[inputPlayerIndex].attackRange);
+            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, attackTileColor, userPlayers[inputPlayerIndex].attackRange);
         }
         else
         {
@@ -538,7 +634,7 @@ public class GameManager : MonoBehaviour
         {
             userPlayers[inputPlayerIndex].gridPosition = userPlayers[inputPlayerIndex].originalGridPosition;
             Vector3 oriPos = mapHex[(int)userPlayers[inputPlayerIndex].mapHexIndex.y][(int)userPlayers[inputPlayerIndex].mapHexIndex.x].transform.position;
-            userPlayers[inputPlayerIndex].transform.position = new Vector3(oriPos.x, 1.5f, oriPos.z);
+            userPlayers[inputPlayerIndex].transform.position = new Vector3(oriPos.x, 1f, oriPos.z);
             moving = false;
             Move(inputPlayerIndex);
         }
@@ -591,6 +687,7 @@ public class GameManager : MonoBehaviour
         else if (moving || (attacking && !moving))
         {
             moving = false;
+            attacking = false;
             playerIndex = -1;
             RemoveHighlightTiles();
         }
@@ -637,7 +734,7 @@ public class GameManager : MonoBehaviour
             CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
             PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 1f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player.gameObject.name = string.Format(userPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -675,7 +772,10 @@ public class GameManager : MonoBehaviour
             player.playerIndex = i;
 
             userPlayers.Add(player);
-
+            if (i == 0)
+            {
+                ScreenController.instance.SetCameraPos(new Vector3(tilePOs.x, 0, tilePOs.z));
+            }
         }
 
         for (int i = 0; i < enemyPlayerRecords.Count; i++)
@@ -685,9 +785,9 @@ public class GameManager : MonoBehaviour
             int y = enemyPlayerRecords[i].locY;
             Vector3 tilePOs = mapHex[y][x].HexTilePos();
             CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
-            CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[0];
+            CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[enemyPlayerRecords[i].levelId];
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 1f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -706,112 +806,11 @@ public class GameManager : MonoBehaviour
             player.dex = (int)playerLvData.dex;
             player.mdef = (int)playerLvData.mdef;
             player.equipWeapon = playerLvData.equipWeapon;
-
+            player.enemyAIType = enemyPlayerRecords[i].aiType;
+            player.searchRange = enemyPlayerRecords[i].searchRange;
             player.playerIndex = i;
 
             enemyPlayers.Add(player);
-
         }
-
-
-        //r = mapSizeY - 1;
-        //q = mapSizeX - 1 - (r >> 1) - ((mapSizeY - 1) % 2);
-        //x = q + (r >> 1);
-        //y = r;
-        //HexTile temp = mapHex[y][x];
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((mapSizeX - 1) - Mathf.Floor(mapSizeX / 2), 1.5f, -(mapSizeY - 1) + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        ////player.gridPosition = new Vector2(mapSizeX - 1, mapSizeY - 1);
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(q, r);
-        //player.playerName = "B";
-        //player.playerIndex = 1;
-
-        //userPlayers.Add(player);
-
-        //q = 4;
-        //r = 4;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((4-Mathf.Floor(mapSizeX / 2)), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        ////player.gridPosition = new Vector2(4, 4);
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(q, r);
-        //player.playerName = "C";
-        //player.playerIndex = 2;
-
-        //userPlayers.Add(player);
-
-        //q = 8;
-        //r = 8;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3((8 - Mathf.Floor(mapSizeX / 2)), 1.5f, -8 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        ////player.gridPosition = new Vector2(8, 8);
-        //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-        //player.gridPosition = new Vector2(q, r);
-        //player.playerName = "D";
-        //player.playerIndex = 3;
-
-        //userPlayers.Add(player);
-
-        //q = 6;
-        //r = 4;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(6 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        ////aiplayer.gridPosition = new Vector2(6, 4);
-        //AIPlayer aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(q, r);
-        //aiplayer.name = "Enemy1";
-        //aiplayer.playerIndex = 0;
-
-        //enemyPlayers.Add(aiplayer);
-
-        //q = 8;
-        //r = 4;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(8 - Mathf.Floor(mapSizeX / 2), 1.5f, -4 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        ////aiplayer.gridPosition = new Vector2(8, 4);
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(q, r);
-        //aiplayer.name = "Enemy2";
-        //aiplayer.playerIndex = 1;
-
-        //enemyPlayers.Add(aiplayer);
-
-        //q = 11;
-        //r = 0;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(11 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        ////aiplayer.gridPosition = new Vector2(11, 0);
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(q, r);
-        //aiplayer.name = "Enemy3";
-        //aiplayer.playerIndex = 2;
-
-        //enemyPlayers.Add(aiplayer);
-
-        //q = 18;
-        //r = 8;
-        //x = q + (r >> 1);
-        //y = r;
-        //tilePOs = mapHex[y][x].HexTilePos();
-        ////aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(18 - Mathf.Floor(mapSizeY / 2), 1.5f, -8 + Mathf.Floor(mapSizeX / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        ////aiplayer.gridPosition = new Vector2(18, 8);
-        //aiplayer = ((GameObject)Instantiate(aiPlayerPrefab, new Vector3(tilePOs.x, 1.5f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //aiplayer.gridPosition = new Vector2(q, r);
-        //aiplayer.name = "Enemy4";
-        //aiplayer.playerIndex = 3;
-
-        //enemyPlayers.Add(aiplayer);
-
     }
 }

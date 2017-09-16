@@ -13,7 +13,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public float moveSpeed = 10f;
     public int playerIndex;
 
-    public uint movementPerActionPoint = 5;
+    public float movementPerActionPoint = 5;
     public int attackRange = 1;
 
     public bool moving = false;
@@ -44,8 +44,6 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public int damageBase = 5;
     public float damageRollSides = 6;
 
-    public int actionPoint = 2;
-
     //movement animation
     public List<Vector3> positionQueue = new List<Vector3>();
     //
@@ -53,6 +51,14 @@ public class Player : MonoBehaviour, IPointerClickHandler
     {
         get {
             return new Vector2(gridPosition.x + (((int)gridPosition.y) >> 1), gridPosition.y);
+        }
+    }
+
+    public HexTile.HexCoord hex
+    {
+        get
+        {
+            return new HexTile.HexCoord((int)gridPosition.x , (int)gridPosition.y);
         }
     }
 
@@ -81,13 +87,13 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public virtual void TurnUpdate()
     {
-        if (actionPoint <=0)
-        {
-            actionPoint = 2;
-            moving = false;
-            attacking = false;
-            GameManager.instance.NextTurn();
-        }
+        //if (actionPoint <=0)
+        //{
+        //    actionPoint = 2;
+        //    moving = false;
+        //    attacking = false;
+        //    GameManager.instance.NextTurn();
+        //}
     }
 
     public virtual void SetOriginalPos()
@@ -110,6 +116,27 @@ public class Player : MonoBehaviour, IPointerClickHandler
             isMovable = true;
             isAttackable = true;
         }
+    }
+
+    public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
+    {
+        Weapon weapon = GameManager.instance.gameElement.weapons[equipWeapon];
+        derictAtk = weapon.directAtk;
+        inderictAtk = weapon.indirectAtk;
+    }
+
+    public bool GetIsCanAttack(bool isDirect)
+    {
+        int directAtk = 0;
+        int indirectAtk = 0;
+
+        GetWeaponAttack(ref directAtk, ref indirectAtk);
+
+        if (isDirect)
+        {
+            return directAtk > 0;
+        }
+        return indirectAtk > 0;
     }
 
     public virtual void TurnOnGUI()

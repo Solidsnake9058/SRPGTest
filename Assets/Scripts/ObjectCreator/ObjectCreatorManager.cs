@@ -739,7 +739,7 @@ public class ObjectCreatorManager : MonoBehaviour
         {
             string name = charName.text.Trim();
             int race = dicRace.Where(x => x.Value == charRace.options[charRace.value].text).FirstOrDefault().Key;
-            uint move = Convert.ToUInt32(string.IsNullOrEmpty(charMove.text) ? "0" : charMove.text);
+            float move = (float)Convert.ToDouble(string.IsNullOrEmpty(charMove.text) ? "0" : charMove.text);
             int id = newId == -1 ? (characters.Count > 0 ? characters.Select(x => x.id).Max() + 1 : 0) : newId;
             bool enemy = charIsEnemy.isOn;
             if (characters.Where(x => x.name == name).Count() > 0)
@@ -808,9 +808,9 @@ public class ObjectCreatorManager : MonoBehaviour
     {
         int tempId = charId;
         CharacterTemplate tempChar = new CharacterTemplate();
-        for (int i = 0; i < races.Count; i++)
+        for (int i = 0; i < characters.Count; i++)
         {
-            if (races[i].id == tempId)
+            if (characters[i].id == tempId)
             {
                 tempChar = characters[i];
                 characters.RemoveAt(i);
@@ -855,7 +855,7 @@ public class ObjectCreatorManager : MonoBehaviour
             uint wis = Convert.ToUInt32(string.IsNullOrEmpty(charWis.text) ? "0" : charWis.text);
             uint dex = Convert.ToUInt32(string.IsNullOrEmpty(charDex.text) ? "0" : charDex.text);
             uint mdef = Convert.ToUInt32(string.IsNullOrEmpty(charMdef.text) ? "0" : charMdef.text);
-            int equipWeapon = charWeapon.value;
+            int equipWeapon = dicWeapon.Where(x => x.Value == charWeapon.options[charWeapon.value].text).FirstOrDefault().Key;
 
             int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
             //if (characterLevels.Where(x => x.level == level).Count() > 0)

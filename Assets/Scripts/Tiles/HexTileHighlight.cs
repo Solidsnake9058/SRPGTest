@@ -9,17 +9,17 @@ public class HexTileHighlight
     {
 
     }
-    public static List<HexTile> FindHighlight(HexTile originTile, int movementPoints, bool isAttack = false)
+    public static List<HexTile> FindHighlight(HexTile originTile, float movementPoints, bool isAttack = false)
     {
         return FindHighlight(originTile, movementPoints, new Vector2[0], isAttack);
     }
 
-    public static List<HexTile> FindHighlight(HexTile originTile, int movementPoints, Vector2[] occupied)
+    public static List<HexTile> FindHighlight(HexTile originTile, float movementPoints, Vector2[] occupied)
     {
         return FindHighlight(originTile, movementPoints, occupied, false);
     }
 
-    public static List<HexTile> FindHighlight(HexTile originTile,int movementPoints, Vector2[] occupied, bool isAttack)
+    public static List<HexTile> FindHighlight(HexTile originTile, float movementPoints, Vector2[] occupied, bool isAttack)
     {
         List<HexTile> closed = new List<HexTile>();
         List<HexTilePath> open = new List<HexTilePath>();
@@ -34,7 +34,12 @@ public class HexTileHighlight
             HexTilePath current = open[0];
             open.Remove(open[0]);
 
-            if (closed.Contains(current.lastTile))
+            if (open.Where(x => x.lastTile == current.lastTile && x.costOfPath <= current.costOfPath).Count() > 0)
+            {
+                continue;
+            }
+
+            if (closed.Contains(current.lastTile) || (current.lastTile != originTile && current.listOfTiles.GetRange(0, current.listOfTiles.Count - 2).Contains(current.lastTile)))
             {
                 continue;
             }
@@ -42,12 +47,11 @@ public class HexTileHighlight
             {
                 continue;
             }
-
             closed.Add(current.lastTile);
 
             foreach (HexTile t in current.lastTile.neighbors)
             {
-                if (t.impassible || occupied.Contains(t.gridPosition))
+                if (t.impassible || occupied.Contains(t.gridPosition) || current.listOfTiles.Contains(t))
                 {
                     continue;
                 }

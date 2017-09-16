@@ -43,7 +43,12 @@ public class HexTilePathFinder : MonoBehaviour
             HexTilePath current = open[0];
             open.Remove(open[0]);
 
-            if (closed.Contains(current.lastTile))
+            if (open.Where(x => x.lastTile == current.lastTile && x.costOfPath <= current.costOfPath).Count() > 0)
+            {
+                continue;
+            }
+
+            if (closed.Contains(current.lastTile) || (current.lastTile != originTile && current.listOfTiles.GetRange(0, current.listOfTiles.Count - 2).Contains(current.lastTile)))
             {
                 continue;
             }
@@ -58,7 +63,7 @@ public class HexTilePathFinder : MonoBehaviour
             {
                 HexTilePath newTilePath = new HexTilePath(current);
                 List<Player> playerTiles = GameManager.instance.players.Where(x => x.gridPosition == t.gridPosition).ToList();
-                if (t.impassible || occupied.Contains(t.gridPosition) || (!ignorePlayers && playerTiles.Count > 0))
+                if (t.impassible || occupied.Contains(t.gridPosition) || current.listOfTiles.Contains(t) || (!ignorePlayers && playerTiles.Count > 0))
                 {
                     continue;
                 }

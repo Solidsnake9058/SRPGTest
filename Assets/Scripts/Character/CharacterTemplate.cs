@@ -11,7 +11,7 @@ public class CharacterTemplate
     [JsonProperty]
     public int race { get; private set; }
     [JsonProperty]
-    public uint move { get; private set; }
+    public float move { get; private set; }
     [JsonProperty]
     public bool enemy { get; private set; }
     [JsonProperty]
@@ -19,7 +19,7 @@ public class CharacterTemplate
 
     public CharacterTemplate() { }
 
-    public CharacterTemplate(int id, string name, int race, uint move, bool enemy, List<CharacterLevelTemplate> levelData)
+    public CharacterTemplate(int id, string name, int race, float move, bool enemy, List<CharacterLevelTemplate> levelData)
     {
         this.id = id;
         this.name = name;

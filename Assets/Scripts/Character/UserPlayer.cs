@@ -51,7 +51,7 @@ public class UserPlayer : Player
                 positionQueue.RemoveAt(0);
                 if (positionQueue.Count == 0)
                 {
-                    actionPoint--;
+                    //actionPoint--;
                     GameManager.instance.ShowConfirmMenu();
                 }
             }
@@ -62,59 +62,59 @@ public class UserPlayer : Player
 
     public override void TurnOnGUI()
     {
-        float buttonHeight = 50;
-        float buttonWight = 150;
+        //float buttonHeight = 50;
+        //float buttonWight = 150;
 
-        Rect buttonRect = new Rect(0, Screen.height - buttonHeight * 3, buttonWight, buttonHeight);
+        //Rect buttonRect = new Rect(0, Screen.height - buttonHeight * 3, buttonWight, buttonHeight);
 
-        //move button
-        if (GUI.Button(buttonRect, "Move"))
-        {
-            if (!moving)
-            {
-                GameManager.instance.RemoveHighlightTiles();
-                moving = true;
-                attacking = false;
-                GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
-            }
-            else
-            {
-                moving = false;
-                attacking = false;
-                GameManager.instance.RemoveHighlightTiles();
-            }
-        }
-        //attack button
-        buttonRect = new Rect(0, Screen.height - buttonHeight * 2, buttonWight, buttonHeight);
+        ////move button
+        //if (GUI.Button(buttonRect, "Move"))
+        //{
+        //    if (!moving)
+        //    {
+        //        GameManager.instance.RemoveHighlightTiles();
+        //        moving = true;
+        //        attacking = false;
+        //        GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
+        //    }
+        //    else
+        //    {
+        //        moving = false;
+        //        attacking = false;
+        //        GameManager.instance.RemoveHighlightTiles();
+        //    }
+        //}
+        ////attack button
+        //buttonRect = new Rect(0, Screen.height - buttonHeight * 2, buttonWight, buttonHeight);
 
-        if (GUI.Button(buttonRect, "Attack"))
-        {
-            if (!attacking)
-            {
-                GameManager.instance.RemoveHighlightTiles();
-                moving = false;
-                attacking = true;
-                GameManager.instance.HighlightTileAt(gridPosition, Color.red, attackRange);
-            }
-            else
-            {
-                moving = false;
-                attacking = false;
-                GameManager.instance.RemoveHighlightTiles();
-            }
-        }
-        //end turn button
-        buttonRect = new Rect(0, Screen.height - buttonHeight * 1, buttonWight, buttonHeight);
+        //if (GUI.Button(buttonRect, "Attack"))
+        //{
+        //    if (!attacking)
+        //    {
+        //        GameManager.instance.RemoveHighlightTiles();
+        //        moving = false;
+        //        attacking = true;
+        //        GameManager.instance.HighlightTileAt(gridPosition, Color.red, attackRange);
+        //    }
+        //    else
+        //    {
+        //        moving = false;
+        //        attacking = false;
+        //        GameManager.instance.RemoveHighlightTiles();
+        //    }
+        //}
+        ////end turn button
+        //buttonRect = new Rect(0, Screen.height - buttonHeight * 1, buttonWight, buttonHeight);
 
-        if (GUI.Button(buttonRect,"End Turn"))
-        {
-            GameManager.instance.RemoveHighlightTiles();
-            actionPoint = 2;
-            moving = false;
-            attacking = false;
-            GameManager.instance.NextTurn();
-        }
+        //if (GUI.Button(buttonRect,"End Turn"))
+        //{
+        //    GameManager.instance.RemoveHighlightTiles();
+        //    actionPoint = 2;
+        //    moving = false;
+        //    attacking = false;
+        //    GameManager.instance.NextTurn();
+        //}
 
-        base.TurnOnGUI();
+        //base.TurnOnGUI();
     }
 }

@@ -11,6 +11,9 @@ public class TileXml
     [XmlAttribute("id")]
     public int id;
 
+    [XmlAttribute("spritIndex")]
+    public int spritIndex;
+
     [XmlAttribute("locX")]
     public int locX;
 
@@ -99,7 +102,8 @@ public static class MapSaveLoad
 	{
         return new TileXml()
         {
-            id = (int)tile.type,
+            id = (int)tile.type2D,
+            spritIndex = tile.spriteIdex,
             locX = (int)tile.hex.q,
             locY = (int)tile.hex.r
         };
