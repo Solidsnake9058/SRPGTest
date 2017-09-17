@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class UserPlayer : Player
 {
@@ -58,6 +59,77 @@ public class UserPlayer : Player
         }
 
         base.TurnUpdate();
+    }
+
+    public override PlayerRecord LevelUp()
+    {
+        //hp atk def dex wis mdef
+        if (level >= 20)
+        {
+            return new PlayerRecord();
+        }
+
+        List<LevelProp> lvprops = new List<LevelProp>();
+        for (int i = 0; i < (int)LevelProp.max; i++)
+        {
+            lvprops.Add((LevelProp)i);
+        }
+        lvprops = Shuffle(lvprops);
+        int upCount = Random.Range(1, 4);
+
+        level++;
+        int addValue = 0;
+        for (int i = 0; i < upCount; i++)
+        {
+            addValue = Random.Range(1, 2);
+            switch (lvprops[i])
+            {
+                case LevelProp.hp:
+                    maxHP += addValue;
+                    break;
+                case LevelProp.atk:
+                    if (atk + addValue > 45)
+                    {
+                        addValue = 45 - atk;
+                    }
+                    atk += addValue;
+                    break;
+                case LevelProp.def:
+                    if (atk + addValue > 45)
+                    {
+                        addValue = 45 - def;
+                    }
+                    def += addValue;
+                    break;
+                case LevelProp.dex:
+                    if (atk + addValue > 45)
+                    {
+                        addValue = 45 - dex;
+                    }
+                    dex += addValue;
+                    break;
+                case LevelProp.wis:
+                    if (atk + addValue > 45)
+                    {
+                        addValue = 45 - wis;
+                    }
+                    wis += addValue;
+                    break;
+                case LevelProp.mdef:
+                    if (atk + addValue > 45)
+                    {
+                        addValue = 45 - mdef;
+                    }
+                    mdef += addValue;
+                    break;
+            }
+            if (addValue == 0 && upCount <= (int)LevelProp.max)
+            {
+                upCount++;
+            }
+        }
+
+        return new PlayerRecord((uint)hp, (uint)atk, (uint)def, (uint)wis, (uint)dex, (uint)mdef);
     }
 
     public override void TurnOnGUI()

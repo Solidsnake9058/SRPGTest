@@ -13,11 +13,11 @@ public class TileMenu : MonoBehaviour
     [HideInInspector]
     public string[] tileMenu = { "ShowEndTurn", "Unit", "Save", "Load", "Setting", "EndGame" };
     [HideInInspector]
-    public string[] playerMenu = { "Move", "Action", "Weapon", "Item", "Switch", "Status" };
+    public string[] playerMenu = { "Move", "Action", "Weapon", "Item", "Status" };
     [HideInInspector]
-    public string[] playerMoveMenu = { "Move", "Weapon", "Item", "Switch", "Status" };
+    public string[] playerMoveMenu = { "Move", "Weapon", "Item", "Status" };
     [HideInInspector]
-    public string[] playerStandMenu = { "Weapon", "Item", "ItemSwitch", "Status" };
+    public string[] playerStandMenu = { "Weapon", "Item", "Status" };
     [HideInInspector]
     public string[] playerDeadMenu = { "Status" };
     [HideInInspector]

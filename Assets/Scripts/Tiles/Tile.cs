@@ -101,15 +101,15 @@ public class Tile : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
-            if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
-            {
-                //GameManager.instance.moveCurrentPlayer(this);
-            }
-            else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
-            {
-                //GameManager.instance.attackWithCurrentPlayer(this);
-            }
-            else
+            //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
+            //{
+            //    //GameManager.instance.moveCurrentPlayer(this);
+            //}
+            //else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
+            //{
+            //    //GameManager.instance.attackWithCurrentPlayer(this);
+            //}
+            //else
             {
                 impassible = impassible ? false : true;
                 if (impassible)

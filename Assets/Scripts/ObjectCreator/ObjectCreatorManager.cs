@@ -72,6 +72,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public InputField charWis;
     public InputField charDex;
     public InputField charMdef;
+    public InputField charGold;
     public Dropdown charWeapon;
     public Toggle charIsEnemy;
     public RectTransform charLevelList;
@@ -506,6 +507,7 @@ public class ObjectCreatorManager : MonoBehaviour
             weaponIndirectWis.text = temp.indirectWis.ToString();
             weaponPrice.text = temp.price.ToString();
             weaponCanSell.isOn = temp.sell;
+            weaponCanTwice.isOn = temp.atkTwice;
         }
     }
 
@@ -722,6 +724,7 @@ public class ObjectCreatorManager : MonoBehaviour
         charWis.text = "";
         charDex.text = "";
         charMdef.text = "";
+        charGold.text = "";
         charWeapon.value = 0;
         charIsEnemy.isOn = false;
         characterLevels = new List<CharacterLevelTemplate>();
@@ -790,6 +793,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 charWis.text = temp.levelData[0].wis.ToString();
                 charDex.text = temp.levelData[0].dex.ToString();
                 charMdef.text = temp.levelData[0].mdef.ToString();
+                charGold.text = temp.levelData[0].gold.ToString();
                 charWeapon.value = charWeapon.options.FindIndex(x => x.text == dicWeapon[(int)temp.levelData[0].equipWeapon]);
 
                 charWeapon.RefreshShownValue();
@@ -855,6 +859,7 @@ public class ObjectCreatorManager : MonoBehaviour
             uint wis = Convert.ToUInt32(string.IsNullOrEmpty(charWis.text) ? "0" : charWis.text);
             uint dex = Convert.ToUInt32(string.IsNullOrEmpty(charDex.text) ? "0" : charDex.text);
             uint mdef = Convert.ToUInt32(string.IsNullOrEmpty(charMdef.text) ? "0" : charMdef.text);
+            uint gold = Convert.ToUInt32(string.IsNullOrEmpty(charGold.text) || !charIsEnemy.isOn ? "0" : charGold.text);
             int equipWeapon = dicWeapon.Where(x => x.Value == charWeapon.options[charWeapon.value].text).FirstOrDefault().Key;
 
             int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
@@ -864,7 +869,7 @@ public class ObjectCreatorManager : MonoBehaviour
             //    return false;
             //}
 
-            CharacterLevelTemplate newLevel = new CharacterLevelTemplate(id, level, exp, hp, atk, def, wis, dex, mdef, equipWeapon);
+            CharacterLevelTemplate newLevel = new CharacterLevelTemplate(id, level, exp, hp, atk, def, wis, dex, mdef, gold, equipWeapon);
 
             characterLevels.Add(newLevel);
         }
@@ -899,7 +904,7 @@ public class ObjectCreatorManager : MonoBehaviour
         {
             GameObject newObject = (GameObject)Instantiate(charLevelSelectPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
             newObject.GetComponentInChildren<Button>().name = t.id.ToString();
-            newObject.transform.Find("LevelInfo").GetComponent<Text>().text = string.Format("Lv{0} HP{1} Exp{2} Atk{3} Def{4} Wis{5} Dex{6} Mded{7} Weapon:{8}", t.level, t.hp, t.exp, t.atk, t.def, t.wis, t.dex, t.mdef, weapons.Where(x => x.id == t.equipWeapon).FirstOrDefault().name);
+            newObject.transform.Find("LevelInfo").GetComponent<Text>().text = string.Format("Lv{0} HP{1} Exp{2} Atk{3} Def{4} Wis{5} Dex{6} Mded{7} Gold{9} Weapon:{8}", t.level, t.hp, t.exp, t.atk, t.def, t.wis, t.dex, t.mdef, weapons.Where(x => x.id == t.equipWeapon).FirstOrDefault().name, t.gold);
             newObject.transform.SetParent(charLevelList);
         }
     }

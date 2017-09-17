@@ -137,8 +137,11 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         var cube = center + Scale(CubeDirection(4), radius);
         for (int i = 0; i < 6; i++)
         {
-            results.Add(cube);
-            cube = CubeNeighbor(cube, i);
+            for (int j = 0; j < radius; j++)
+            {
+                results.Add(cube);
+                cube = CubeNeighbor(cube, i);
+            }
         }
         return results;
     }
@@ -250,28 +253,42 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                     }
                     else
                     {
+                        MenuType setType = MenuType.tileMenu;
+                        Player player = null;
                         if (GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
                         {
-
+                            player = GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
+                            setType = MenuType.playerDeadMenu;
                         }
                         else
                         {
-                            MenuType setType = MenuType.tileMenu;
                             if (GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
                             {
-                                Player player = GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
-                                setType = (player.hp > 0) ? player.isActable ? MenuType.playerMenu : MenuType.playerStandMenu : MenuType.playerDeadMenu;
+                                player = GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
+                                bool isShowAction = false;
+                                if (player.GetIsCanHeal())
+                                {
+                                    isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Where(y => y.hp < y.maxHP && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+                                }
+                                isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? MenuType.playerMenu : MenuType.playerMoveMenu) : MenuType.playerStandMenu) : MenuType.playerDeadMenu;
                                 GameManager.instance.SetPlayerIndex(player.playerIndex);
                             }
-                            GameManager.instance.ShowMenu();
-                            Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
-                            //Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
-                            Vector2 newSize = TileMenu.instance.SetMenu(setType);
-                            float newX = (pos.x + newSize.x) + 10f >= Screen.width ? (pos.x - newSize.x) - 10f : pos.x;
-                            float newY = (pos.y - newSize.y) - 10f <= 0 ? (pos.y + newSize.y) + 10f : pos.y;
-
-                            menuImage.rectTransform.position = new Vector3(newX, newY, 0);
                         }
+
+                        if (player != null)
+                        {
+                            GameManager.instance.SetPlayerStatusUI(player);
+                        }
+                        GameManager.instance.ShowMenu();
+                        Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
+                        //Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
+                        Vector2 newSize = TileMenu.instance.SetMenu(setType);
+                        float newX = (pos.x + newSize.x) + 10f >= Screen.width ? (pos.x - newSize.x) - 10f : pos.x;
+                        float newY = (pos.y - newSize.y) - 10f <= 0 ? (pos.y + newSize.y) + 10f : pos.y;
+
+                        menuImage.rectTransform.position = new Vector3(newX, newY, 0);
+
                     }
                 }
                 else

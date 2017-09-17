@@ -51,11 +51,13 @@ public class CharacterLevelTemplate
     [JsonProperty]
     public uint mdef { get; private set; }
     [JsonProperty]
+    public uint gold { get; private set; }
+    [JsonProperty]
     public int equipWeapon { get; private set; }
 
     public CharacterLevelTemplate() { }
 
-    public CharacterLevelTemplate(int id, uint level, uint exp, uint hp, uint atk, uint def, uint wis, uint dex, uint mdef, int equipWeapon)
+    public CharacterLevelTemplate(int id, uint level, uint exp, uint hp, uint atk, uint def, uint wis, uint dex, uint mdef, uint gold, int equipWeapon)
     {
         this.id = id;
         this.level = level;
@@ -66,6 +68,7 @@ public class CharacterLevelTemplate
         this.wis = wis;
         this.dex = dex;
         this.mdef = mdef;
+        this.gold = gold;
         this.equipWeapon = equipWeapon;
     }
 }

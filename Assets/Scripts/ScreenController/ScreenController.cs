@@ -25,6 +25,11 @@ public class ScreenController : MonoBehaviour
     public Vector3 limitPointC;
     public Vector3 limitPointD;
 
+    public ArrowButton btnRight;
+    public ArrowButton btnDown;
+    public ArrowButton btnLeft;
+    public ArrowButton btnUp;
+
     private void Awake()
     {
         instance = this;
@@ -43,6 +48,37 @@ public class ScreenController : MonoBehaviour
         imageDown.rectTransform.position = new Vector2(mPoint.x, imageDown.rectTransform.position.y);
 
     }
+
+    public void ResetCamera()
+    {
+        btnRight.pivot = PivotType.Right;
+        btnDown.pivot = PivotType.Down;
+        btnLeft.pivot = PivotType.Left;
+        btnUp.pivot = PivotType.Up;
+        mainCamera.rotation = Quaternion.identity;
+    }
+
+    public void TurnCameraRight()
+    {
+        PivotType temp = btnRight.pivot;
+        btnRight.pivot = btnDown.pivot;
+        btnDown.pivot = btnLeft.pivot;
+        btnLeft.pivot = btnUp.pivot;
+        btnUp.pivot = temp;
+        mainCamera.Rotate(0, mainCamera.rotation.y + 90f, 0);
+
+    }
+
+    public void TurnCameraLeft()
+    {
+        PivotType temp = btnUp.pivot;
+        btnUp.pivot = btnLeft.pivot;
+        btnLeft.pivot = btnDown.pivot;
+        btnDown.pivot = btnRight.pivot;
+        btnRight.pivot = temp;
+        mainCamera.Rotate(0, mainCamera.rotation.y - 90f, 0);
+    }
+
 
     public void SetLimitPoint(Vector3 connerPointA, Vector3 connerPointB, Vector3 connerPointC, Vector3 connerPointD)
     {

@@ -19,7 +19,8 @@ public class GameManager : MonoBehaviour
     public Image menuImage;
     public CanvasGroup menu;
     public CanvasGroup endTurnConfirm;
-    public Button stageMessage;
+    public CanvasGroup stageMessage;
+    public CanvasGroup status;
     public Text stageInfo;
 
     public int mapSizeX = 32;
@@ -33,7 +34,7 @@ public class GameManager : MonoBehaviour
     private List<PlayerRecord> saveUserPlayerRecords;
     private List<PlayerRecord> userPlayerRecords;
     private List<PlayerRecord> enemyPlayerRecords;
-    public List<Player> players = new List<Player>();
+    //public List<Player> players = new List<Player>();
     public List<Player> userPlayers = new List<Player>();
     public List<Player> enemyPlayers = new List<Player>();
 
@@ -44,15 +45,19 @@ public class GameManager : MonoBehaviour
     public Color moveTileColor;
     public Color attackTileColor;
 
-    private bool isPlayerTurn = true;
+    [HideInInspector]
+    public bool isPlayerTurn = true;
     private bool isWaitingAct = false;
     private bool isWaitingMsg = false;
     private bool isShowStage = true;
+    [HideInInspector]
     public bool isSetCamera = false;
 
     private int turnCount = 1;
 
+    [HideInInspector]
     public int currentPlayerIndex = 0;
+    [HideInInspector]
     public int currentEnemyPlayerIndex = 0;
 
     private int playerIndex = -1;
@@ -64,8 +69,26 @@ public class GameManager : MonoBehaviour
 
     private string gameElementfilename = "ObjectJson.txt";
 
+    [HideInInspector]
     public bool moving = false;
+    [HideInInspector]
     public bool attacking = false;
+
+    [Header("StatusUI")]
+    public Text playerName;
+    public Text playerClass;
+    public Text playerLevel;
+    public Text playerHP;
+    public Text playerMaxHP;
+    public Text playerExp;
+    public Text playerAtk;
+    public Text playerWeaponAtk;
+    public Text playerDef;
+    public Text playerWis;
+    public Text playerDex;
+    public Text playerMdef;
+    public Text playerEquip;
+    public Text playerEquipRange;
 
     void Awake()
     {
@@ -136,6 +159,7 @@ public class GameManager : MonoBehaviour
         HideMenu();
         HideStageInfo();
         HideEndTurnConfirm();
+        HidePlayerStatus();
 
         isShowStage = true;
     }
@@ -157,19 +181,71 @@ public class GameManager : MonoBehaviour
         {
             stageInfo.text = string.Format("Turn {0}\n{1} action", turnCount, isPlayerTurn ? "Ark's" : "Devil armys");
         }
-        stageMessage.gameObject.SetActive(true);
+        stageMessage.alpha = 1;
+        stageMessage.blocksRaycasts = true;
+        stageMessage.interactable = true;
         isWaitingMsg = true;
     }
 
     public void HideStageInfo()
     {
-        stageMessage.gameObject.SetActive(false);
+        stageMessage.alpha = 0;
+        stageMessage.blocksRaycasts = false;
+        stageMessage.interactable = false;
         isWaitingMsg = false;
         if (isShowStage)
         {
             isShowStage = false;
             ShowStageInfo();
         }
+    }
+
+    public void ShowPlayerStatus()
+    {
+        status.alpha = 1;
+        status.blocksRaycasts = true;
+        status.interactable = true;
+    }
+
+    public void HidePlayerStatus()
+    {
+        status.alpha = 0;
+        status.blocksRaycasts = false;
+        status.interactable = false;
+    }
+
+    public void SetPlayerStatusUI(Player player)
+    {
+        CharacterType race = gameElement.races[player.race];
+        Weapon weapon = gameElement.weapons[player.equipWeapon];
+        int directAtk = 0;
+        int indirectAtk = 0;
+        player.GetWeaponAttack(ref directAtk, ref indirectAtk);
+
+        List<string> weaponRangeText = new List<string>();
+        if (directAtk>0)
+        {
+            weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "Direct"));
+        }
+        if (indirectAtk > 0)
+        {
+            weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "Indirect"));
+        }
+
+        playerName.text = player.playerName;
+        playerClass.text = race.name;
+        playerLevel.text = player.level.ToString();
+        playerHP.text =           player.hp.ToString()+"/";
+        playerMaxHP.text =        player.maxHP.ToString();
+        playerExp.text =          player.exp.ToString();
+        playerAtk.text =          player.atk.ToString();
+        playerWeaponAtk.text = string.Format("<color=white>(</color><color=orange>{0}</color><color=white>/</color><color=lime>{1}</color><color=white>)</color>", directAtk > 0 ? "+" + directAtk.ToString() : "✕", indirectAtk > 0 ? "+" + indirectAtk.ToString() : "✕");
+        playerDef.text =          player.def.ToString();
+        playerWis.text =          player.wis.ToString();
+        playerDex.text =          player.dex.ToString();
+        playerMdef.text =         player.mdef.ToString();
+        playerEquip.text =        weapon.name;
+        playerEquipRange.text = string.Join("<color=white>/</color>", weaponRangeText.ToArray());
     }
 
     public void SetPlayerIndex(int index)
@@ -268,12 +344,16 @@ public class GameManager : MonoBehaviour
     public void ShowConfirmMenu()
     {
         Player player = userPlayers[playerIndex];
-        List<HexTile> highlightTiles = HexTileHighlight.FindHighlight(mapHex[(int)player.mapHexIndex.y][(int)player.mapHexIndex.x], player.attackRange, true);
-        MenuType setType = MenuType.playerMoveCanAtkMenu;
-
-        if (highlightTiles.Select(x => x.gridPosition).Intersect(enemyPlayers.Where(x => x.hp > 0).Select(y => y.gridPosition)).Count() == 0)
+        MenuType setType = MenuType.playerMoveCantAtkMenu;
+        bool isShowAction = false;
+        if (player.GetIsCanHeal())
         {
-            setType = MenuType.playerMoveCantAtkMenu;
+            isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Where(y => y.hp < y.maxHP && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+        }
+        isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+        if (isShowAction)
+        {
+            setType = MenuType.playerMoveCanAtkMenu;
         }
         ShowMenu();
         Vector3 pos = Camera.main.WorldToScreenPoint(player.gameObject.transform.position);
@@ -296,29 +376,27 @@ public class GameManager : MonoBehaviour
 
         Player attacker = null;
         Player target = null;
+        bool isHeal = false;
 
+        //Get attacker and target
         if (isPlayerTurn)
         {
             attacker = userPlayers[playerIndex];
-            for (int i = 0; i < enemyPlayers.Count; i++)
+            target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+            if (target == null)
             {
-                if (enemyPlayers[i].gridPosition == destTile.gridPosition)
-                {
-                    target = enemyPlayers[i];
-                    break;
-                }
+                target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+                isHeal = true;
             }
         }
         else
         {
             attacker = enemyPlayers[currentEnemyPlayerIndex];
-            for (int i = 0; i < userPlayers.Count; i++)
+            target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+            if (target == null)
             {
-                if (userPlayers[i].gridPosition == destTile.gridPosition)
-                {
-                    target = userPlayers[i];
-                    break;
-                }
+                target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+                isHeal = true;
             }
         }
 
@@ -332,21 +410,22 @@ public class GameManager : MonoBehaviour
 
             attacker.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
-            if (attacker.gridPosition.x >= target.gridPosition.x - 1 && attacker.gridPosition.x <= target.gridPosition.x + 1 &&
-                attacker.gridPosition.y >= target.gridPosition.y - 1 && attacker.gridPosition.y <= target.gridPosition.y + 1)
+            //if (attacker.gridPosition.x >= target.gridPosition.x - 1 && attacker.gridPosition.x <= target.gridPosition.x + 1 &&
+            //    attacker.gridPosition.y >= target.gridPosition.y - 1 && attacker.gridPosition.y <= target.gridPosition.y + 1)
+            attacker.TurnEnd();
+            RemoveHighlightTiles();
+            attacking = false;
+            moving = false;
+
+            if (!isHeal)
             {
-                attacker.TurnEnd();
-                RemoveHighlightTiles();
-                attacking = false;
-
-
                 //attack
-                int amountOfDamage = Mathf.FloorToInt((attacker.atk + (isDirectAtk ? directAtk : indirectAtk) - target.def) * (1f - (destTile.defenseRate / 10)));
+                int amountOfDamage = Mathf.FloorToInt((attacker.atk + (isDirectAtk ? directAtk : indirectAtk) - target.def) * (1f - (destTile.defenseRate / 100f)));
                 target.hp -= amountOfDamage;
 
-                Debug.Log(attacker.playerName + (isDirectAtk ? " direct attack " : " indirect attack ") + target.playerName + " for " + amountOfDamage + " damage!");
+                Debug.Log(attacker.playerName + (isDirectAtk ? " direct attack " : " indirect attack ") + target.playerName + " for " + (amountOfDamage + (target.hp < 0 ? target.hp : 0)) + " damage!");
 
-                //Counter
+                //Target dead, user player get exp
                 if (target.hp <= 0)
                 {
                     if (isPlayerTurn)
@@ -358,30 +437,35 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
+                    //Target not dead, user player get exp
                     if (isPlayerTurn)
                     {
                         attacker.exp += amountOfDamage;
                         Debug.Log(attacker.playerName + " get exp " + amountOfDamage + "!");
                     }
+
+                    //Counter
                     if (isDirectAtk && target.GetIsCanAttack(true) || !isDirectAtk && target.GetIsCanAttack(false))
                     {
                         target.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
-                        amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 10)));
+                        amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 100f)));
                         attacker.hp -= amountOfDamage;
 
-                        Debug.Log(target.playerName + " counter attack " + attacker.playerName + " for " + amountOfDamage + " damage!");
+                        Debug.Log(target.playerName + " counter attack " + attacker.playerName + " for " + (amountOfDamage + (attacker.hp < 0 ? attacker.hp : 0)) + " damage!");
+                        //Attacker dead, user player get exp
                         if (attacker.hp <= 0)
                         {
                             if (!isPlayerTurn)
                             {
-                                target.exp += target.exp;
-                                Debug.Log(target.playerName + " get exp " + target.exp + "!");
+                                target.exp += attacker.exp;
+                                Debug.Log(target.playerName + " get exp " + attacker.exp + "!");
                             }
                             Debug.Log(target.playerName + " defeat " + attacker.playerName + "!");
                         }
                         else
                         {
+                            //Attacker not dead, user player get exp
                             if (!isPlayerTurn)
                             {
                                 target.exp += amountOfDamage;
@@ -407,8 +491,43 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("Target is not adjacent!");
+                //Heal player
+                int amountOfHeal = Mathf.FloorToInt(attacker.wis);
+                amountOfHeal = amountOfHeal > target.maxHP - target.hp ? target.maxHP - target.hp : amountOfHeal;
+                target.hp += amountOfHeal;
+
+                Debug.Log(attacker.playerName + " heal " + target.playerName + " for " + amountOfHeal + " HP point!");
+
+                if (isPlayerTurn)
+                {
+                    attacker.exp += amountOfHeal;
+                    Debug.Log(attacker.playerName + " get exp " + amountOfHeal + "!");
+                }
             }
+
+            //level up
+            PlayerRecord lvUpProp = new PlayerRecord();
+            if (isPlayerTurn && attacker.hp > 0 && (attacker.exp / 100) == attacker.level)
+            {
+                lvUpProp = attacker.LevelUp();
+                Debug.Log(attacker.playerName + " is level up to " + attacker.level + "!");
+
+            }
+            else if (!isPlayerTurn && target.hp > 0 && (target.exp / 100) == target.level)
+            {
+                lvUpProp = target.LevelUp();
+                Debug.Log(target.playerName + " is level up to " + target.level + "!");
+            }
+
+            //send to battle scene
+            if (lvUpProp != null && lvUpProp != default(PlayerRecord))
+            {
+                //show level dialog
+            }
+            //else
+            //{
+            //    Debug.Log("Target is not adjacent!");
+            //}
         }
     }
 
@@ -619,7 +738,7 @@ public class GameManager : MonoBehaviour
         {
             RemoveHighlightTiles();
             attacking = true;
-            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, attackTileColor, userPlayers[inputPlayerIndex].attackRange);
+            HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, attackTileColor, userPlayers[inputPlayerIndex].GetAttackRange());
         }
         else
         {
@@ -667,6 +786,11 @@ public class GameManager : MonoBehaviour
 
         ShowStageInfo();
         isSetCamera = true;
+    }
+
+    private void Status(int playerIndex)
+    {
+        ShowPlayerStatus();
     }
 
     #endregion
@@ -734,7 +858,7 @@ public class GameManager : MonoBehaviour
             CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
             PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 1f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 0.7f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player.gameObject.name = string.Format(userPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -787,7 +911,7 @@ public class GameManager : MonoBehaviour
             CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
             CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[enemyPlayerRecords[i].levelId];
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 1f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 0.7f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -805,6 +929,7 @@ public class GameManager : MonoBehaviour
             player.wis = (int)playerLvData.wis;
             player.dex = (int)playerLvData.dex;
             player.mdef = (int)playerLvData.mdef;
+            player.gold = (int)playerLvData.gold;
             player.equipWeapon = playerLvData.equipWeapon;
             player.enemyAIType = enemyPlayerRecords[i].aiType;
             player.searchRange = enemyPlayerRecords[i].searchRange;

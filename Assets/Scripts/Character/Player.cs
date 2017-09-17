@@ -25,7 +25,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public string playerName;
 
-    public int race;
+    public int race = 0;
     public int level = 1;
     public int maxHP = 25;
     public int hp = 25;
@@ -35,6 +35,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public int wis = 5;
     public int dex = 8;
     public int mdef = 5;
+    public int gold = 0;
     public int equipWeapon;
     public EnemyAIType enemyAIType = EnemyAIType.Attacker;
     public int searchRange = 5;
@@ -59,6 +60,22 @@ public class Player : MonoBehaviour, IPointerClickHandler
         get
         {
             return new HexTile.HexCoord((int)gridPosition.x , (int)gridPosition.y);
+        }
+    }
+
+    public int mapSizeX
+    {
+        get
+        {
+            return GameManager.instance.mapSizeX;
+        }
+    }
+
+    public int mapSizeY
+    {
+        get
+        {
+            return GameManager.instance.mapSizeY;
         }
     }
 
@@ -139,6 +156,23 @@ public class Player : MonoBehaviour, IPointerClickHandler
         return indirectAtk > 0;
     }
 
+    public bool GetIsCanHeal()
+    {
+        CharacterType race = GameManager.instance.gameElement.races[this.race];
+        return race.canHeal;
+    }
+
+    public bool GetIsCanFly()
+    {
+        CharacterType race = GameManager.instance.gameElement.races[this.race];
+        return race.canFly;
+    }
+
+    public virtual PlayerRecord LevelUp()
+    {
+        return new PlayerRecord();
+    }
+
     public virtual void TurnOnGUI()
     {
 
@@ -147,6 +181,40 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public virtual void OnMouseDown()
     {
 
+    }
+
+    public static List<T> Shuffle<T>(IEnumerable<T> values)
+    {
+        List<T> list = new List<T>(values);
+        T tmp;
+        int iS;
+        for (int N1 = 0; N1 < list.Count; N1++)
+        {
+            iS = Random.Range(0, list.Count);
+            tmp = list[N1];
+            list[N1] = list[iS];
+            list[iS] = tmp;
+        }
+        return list;
+    }
+
+    public virtual List<HexTile> GetAttackRange()
+    {
+        List<HexTile> range = new List<HexTile>();
+        if (GetIsCanAttack(true))
+        {
+            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 1, mapSizeX, mapSizeY));
+        }
+        if (GetIsCanAttack(false))
+        {
+            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 2, mapSizeX, mapSizeY));
+        }
+        return range;
+    }
+
+    public virtual List<HexTile> GetHealRange()
+    {
+        return HexTile.GetCubeRingTile(gridPosition, 1, mapSizeX, mapSizeY);
     }
 
     public virtual void OnPointerClick(PointerEventData eventData)
@@ -169,7 +237,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
         Vector3 location = Camera.main.WorldToScreenPoint(transform.position);// + Vector3.up * 35;
         GUIStyle style = new GUIStyle();
         style.normal.textColor = Color.black;
-        GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), hp.ToString(), style);
+        GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), (hp.ToString() + "//" + maxHP.ToString()), style);
         //Debug.Log(playerName + ":(" + location.x + "," + location.y + "," + location.z + ")");
     }
 }

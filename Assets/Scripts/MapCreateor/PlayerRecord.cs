@@ -87,4 +87,14 @@ public class PlayerRecord
         this.aiType = aiType;
         this.searchRange = searchRange;
     }
+
+    public PlayerRecord(uint hp, uint atk, uint def, uint wis, uint dex, uint mdef)
+    {
+        this.hp = hp;
+        this.atk = atk;
+        this.def = def;
+        this.wis = wis;
+        this.dex = dex;
+        this.mdef = mdef;
+    }
 }

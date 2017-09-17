@@ -62,7 +62,7 @@ public class HexTilePathFinder : MonoBehaviour
             foreach (HexTile t in current.lastTile.neighbors)
             {
                 HexTilePath newTilePath = new HexTilePath(current);
-                List<Player> playerTiles = GameManager.instance.players.Where(x => x.gridPosition == t.gridPosition).ToList();
+                List<Player> playerTiles = GameManager.instance.userPlayers.Union(GameManager.instance.enemyPlayers).Where(x => x.gridPosition == t.gridPosition).ToList();
                 if (t.impassible || occupied.Contains(t.gridPosition) || current.listOfTiles.Contains(t) || (!ignorePlayers && playerTiles.Count > 0))
                 {
                     continue;
