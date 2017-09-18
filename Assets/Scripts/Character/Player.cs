@@ -212,6 +212,21 @@ public class Player : MonoBehaviour, IPointerClickHandler
         return range;
     }
 
+    public virtual List<HexTile> GetAttackRangeWhitTarget(Vector2 targetGridPosition)
+    {
+        List<HexTile> range = new List<HexTile>();
+        if (GetIsCanAttack(true))
+        {
+            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 1, mapSizeX, mapSizeY));
+        }
+        if (GetIsCanAttack(false))
+        {
+            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 2, mapSizeX, mapSizeY));
+        }
+        return range;
+    }
+
+
     public virtual List<HexTile> GetHealRange()
     {
         return HexTile.GetCubeRingTile(gridPosition, 1, mapSizeX, mapSizeY);
@@ -234,10 +249,10 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public void OnGUI()
     {
         //display HP
-        Vector3 location = Camera.main.WorldToScreenPoint(transform.position);// + Vector3.up * 35;
-        GUIStyle style = new GUIStyle();
-        style.normal.textColor = Color.black;
-        GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), (hp.ToString() + "//" + maxHP.ToString()), style);
+        //Vector3 location = Camera.main.WorldToScreenPoint(transform.position);// + Vector3.up * 35;
+        //GUIStyle style = new GUIStyle();
+        //style.normal.textColor = Color.black;
+        //GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), (hp.ToString() + "//" + maxHP.ToString()), style);
         //Debug.Log(playerName + ":(" + location.x + "," + location.y + "," + location.z + ")");
     }
 }

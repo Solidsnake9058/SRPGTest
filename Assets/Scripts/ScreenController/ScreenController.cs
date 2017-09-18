@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,11 +31,16 @@ public class ScreenController : MonoBehaviour
     public ArrowButton btnLeft;
     public ArrowButton btnUp;
 
+    Transform playerUITransform;
+    List<PlayerUI> playerUIs;
+
     private void Awake()
     {
         instance = this;
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
         camera = GetComponentInChildren<Camera>();
+
+        playerUITransform = transform.Find("PlayerUIs");
     }
 
     // Update is called once per frame
@@ -56,6 +62,15 @@ public class ScreenController : MonoBehaviour
         btnLeft.pivot = PivotType.Left;
         btnUp.pivot = PivotType.Up;
         mainCamera.rotation = Quaternion.identity;
+        for (int i = 0; i < playerUIs.Count; i++)
+        {
+            playerUIs[i].transform.Rotate(45, 45, 0);
+        }
+    }
+
+    public void SetPlayerUIs()
+    {
+        playerUIs = (playerUITransform.GetComponentsInChildren<PlayerUI>()).ToList<PlayerUI>(); ;
     }
 
     public void TurnCameraRight()
@@ -65,8 +80,17 @@ public class ScreenController : MonoBehaviour
         btnDown.pivot = btnLeft.pivot;
         btnLeft.pivot = btnUp.pivot;
         btnUp.pivot = temp;
-        mainCamera.Rotate(0, mainCamera.rotation.y + 90f, 0);
+        mainCamera.Rotate(0, (int)System.Math.Round((mainCamera.rotation.y + 90f) / 10, 0) * 10, 0);
+        for (int i = 0; i < playerUIs.Count; i++)
+        {
+            playerUIs[i].transform.Rotate(Vector3.up, 90);
+        }
 
+    }
+
+    public void RemoveUI(string uiName)
+    {
+        playerUIs.Remove(playerUIs.Where(x => x.name == uiName).FirstOrDefault());
     }
 
     public void TurnCameraLeft()
@@ -76,9 +100,28 @@ public class ScreenController : MonoBehaviour
         btnLeft.pivot = btnDown.pivot;
         btnDown.pivot = btnRight.pivot;
         btnRight.pivot = temp;
-        mainCamera.Rotate(0, mainCamera.rotation.y - 90f, 0);
+        mainCamera.Rotate(0, (int)System.Math.Round((mainCamera.rotation.y - 90f) / 10, 0) * 10, 0);
+        for (int i = 0; i < playerUIs.Count; i++)
+        {
+            playerUIs[i].transform.Rotate(Vector3.up, -90);
+        }
+
     }
 
+    public void SetPlayerUIIsShow(bool isShowPlayerUI)
+    {
+        for (int i = 0; i < playerUIs.Count; i++)
+        {
+            if (isShowPlayerUI)
+            {
+                playerUIs[i].SetShowUI();
+            }
+            else
+            {
+                playerUIs[i].SetHideUI();
+            }
+        }
+    }
 
     public void SetLimitPoint(Vector3 connerPointA, Vector3 connerPointB, Vector3 connerPointC, Vector3 connerPointD)
     {

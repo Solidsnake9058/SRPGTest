@@ -14,6 +14,9 @@ public class GameManager : MonoBehaviour
     //public GameObject aiPlayerPrefab;
     Transform mapTransform;
     Transform playerTransform;
+    Transform playerUITransform;
+
+    public GameObject playerUIPrefab;
 
     public CanvasGroup blockUI;
     public Image menuImage;
@@ -21,12 +24,17 @@ public class GameManager : MonoBehaviour
     public CanvasGroup endTurnConfirm;
     public CanvasGroup stageMessage;
     public CanvasGroup status;
+    public CanvasGroup gameSetting;
     public Text stageInfo;
 
     public int mapSizeX = 32;
     public int mapSizeY = 38;
 
     public float cubeSize = 1;
+    public float playerScale = 0.7f;
+
+    public bool isShowTile = true;
+    public bool isShowPlayerUI = true;
 
     public List<List<Tile>> map = new List<List<Tile>>();
     public List<List<HexTile>> mapHex = new List<List<HexTile>>();
@@ -74,6 +82,10 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public bool attacking = false;
 
+    public int playerGold = 1000;
+    public List<int> playerItems;
+    public List<int> playerWeapons;
+
     [Header("StatusUI")]
     public Text playerName;
     public Text playerClass;
@@ -90,16 +102,23 @@ public class GameManager : MonoBehaviour
     public Text playerEquip;
     public Text playerEquipRange;
 
+    [Header("UI Setting UI")]
+    public Toggle isShowTileLine;
+    public Toggle isShowPlayHP;
+
     void Awake()
     {
         instance = this;
         mapTransform = transform.Find("Map");
         playerTransform = transform.Find("Players");
+        playerUITransform = transform.Find("PlayerUIs");
     }
 
     private void Start()
     {
         saveUserPlayerRecords = new List<PlayerRecord>();
+        playerItems = new List<int>();
+        playerWeapons = new List<int>();
         InitialStage();
         ShowStageInfo(false);
     }
@@ -160,6 +179,13 @@ public class GameManager : MonoBehaviour
         HideStageInfo();
         HideEndTurnConfirm();
         HidePlayerStatus();
+        HideSetting();
+
+        int herbId = gameElement.items.Where(x => x.name == "Herb").FirstOrDefault().id;
+        for (int i = 0; i < 4; i++)
+        {
+            playerItems.Add(herbId);
+        }
 
         isShowStage = true;
     }
@@ -213,6 +239,14 @@ public class GameManager : MonoBehaviour
         status.blocksRaycasts = false;
         status.interactable = false;
     }
+
+    public void HideSetting()
+    {
+        gameSetting.alpha = 0;
+        gameSetting.blocksRaycasts = false;
+        gameSetting.interactable = false;
+    }
+
 
     public void SetPlayerStatusUI(Player player)
     {
@@ -294,13 +328,7 @@ public class GameManager : MonoBehaviour
             ScreenController.instance.SetCameraPos(pos);
             //isSetCamera = false;
 
-            List<Player> temp = enemyPlayers.Where(x => x.hp <= 0).ToList();
-            foreach (var p in temp)
-            {
-                enemyPlayers.Remove(p);
-                Destroy(p.gameObject);
-            }
-
+            RemoveDeadEnemy();
             ShowStageInfo();
         }
         else
@@ -309,6 +337,38 @@ public class GameManager : MonoBehaviour
         }
         currentEnemyPlayerIndex++;
         currentEnemyPlayerIndex = currentEnemyPlayerIndex % enemyPlayers.Count;
+    }
+
+    private void RemoveDeadEnemy()
+    {
+        List<Player> temp = enemyPlayers.Where(x => x.hp <= 0).ToList();
+        foreach (var p in temp)
+        {
+            enemyPlayers.Remove(p);
+            Transform ui = playerUITransform.Find(p.name+"UI");
+            ScreenController.instance.RemoveUI(p.name + "UI");
+            Destroy(ui.gameObject);
+            Destroy(p.gameObject);
+        }
+
+    }
+
+    private void SetTileLineIsShow()
+    {
+        for (int i = 0; i < mapHex.Count; i++)
+        {
+            for (int j = 0; j < mapHex[i].Count; j++)
+            {
+                if (isShowTile)
+                {
+                    mapHex[i][j].SetShowUI();
+                }
+                else
+                {
+                    mapHex[i][j].SetHideUI();
+                }
+            }
+        }
     }
 
     public void MoveCurrentPlayer(HexTile destTile)
@@ -329,7 +389,7 @@ public class GameManager : MonoBehaviour
             }
             foreach (HexTile t in HexTilePathFinder.FindPath(mapHex[(int)targetPlayer.mapHexIndex.y][(int)targetPlayer.mapHexIndex.x], destTile, userPlayers.Union(enemyPlayers).Where(x => x.gridPosition != targetPlayer.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
             {
-                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + 1f * Vector3.up);
+                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + playerScale * Vector3.up);
                 //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
             }
             targetPlayer.gridPosition = destTile.gridPosition;
@@ -430,10 +490,23 @@ public class GameManager : MonoBehaviour
                 {
                     if (isPlayerTurn)
                     {
+                        target.gridPosition = new Vector2(-1, -1);
                         attacker.exp += target.exp;
                         Debug.Log(attacker.playerName + " get exp " + target.exp + "!");
                     }
                     Debug.Log(attacker.playerName + " defeat " + target.playerName + "!");
+
+                    //Got item/weapon/gold by enemy
+                    if (UnityEngine.Random.Range(0f, 1f) < 0.5)
+                    {
+                        playerGold += target.gold;
+                        Debug.Log("Got " + target.gold + " gold!");
+                    }
+                    else
+                    {
+                        playerWeapons.Add(target.equipWeapon);
+                        Debug.Log("Got " + gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name + "!");
+                    }
                 }
                 else
                 {
@@ -458,10 +531,23 @@ public class GameManager : MonoBehaviour
                         {
                             if (!isPlayerTurn)
                             {
+                                attacker.gridPosition = new Vector2(-1, -1);
                                 target.exp += attacker.exp;
                                 Debug.Log(target.playerName + " get exp " + attacker.exp + "!");
                             }
                             Debug.Log(target.playerName + " defeat " + attacker.playerName + "!");
+
+                            //Got item/weapon/gold by enemy
+                            if (UnityEngine.Random.Range(0f, 1f) < 0.5)
+                            {
+                                playerGold += attacker.gold;
+                                Debug.Log("Got " + attacker.gold + " gold!");
+                            }
+                            else
+                            {
+                                playerWeapons.Add(target.equipWeapon);
+                                Debug.Log("Got " + gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name + "!");
+                            }
                         }
                         else
                         {
@@ -781,6 +867,7 @@ public class GameManager : MonoBehaviour
         {
             p.TurnActive();
         }
+        RemoveDeadEnemy();
         SetStartWaiting();
         HideEndTurnConfirm();
 
@@ -792,6 +879,26 @@ public class GameManager : MonoBehaviour
     {
         ShowPlayerStatus();
     }
+
+    private void Setting(int playerIndex)
+    {
+        gameSetting.alpha = 1;
+        gameSetting.interactable = true;
+        gameSetting.blocksRaycasts = true;
+    }
+
+
+    private void UISettingConfirm(int playerIndex)
+    {
+        isShowTile = isShowTileLine.isOn;
+        isShowPlayerUI = isShowPlayHP.isOn;
+
+        SetTileLineIsShow();
+        ScreenController.instance.SetPlayerUIIsShow(isShowPlayerUI);
+
+        HideSetting();
+    }
+
 
     #endregion
 
@@ -858,7 +965,7 @@ public class GameManager : MonoBehaviour
             CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
             PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, 0.7f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, playerScale, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player.gameObject.name = string.Format(userPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -867,6 +974,10 @@ public class GameManager : MonoBehaviour
             player.playerName = playerData.name;
             player.race = playerData.race;
             player.movementPerActionPoint = playerData.move;
+            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 0.3f, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
+            playerUI.player = player;
+            playerUI.gameObject.name = string.Format(userPlayerNameFormat + "UI", i);
+            playerUI.transform.SetParent(playerUITransform);
 
             if (userPlayerRecords[i].isNewPlayer || record == null)
             {
@@ -911,7 +1022,7 @@ public class GameManager : MonoBehaviour
             CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
             CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[enemyPlayerRecords[i].levelId];
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, 0.7f, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, playerScale, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -934,8 +1045,14 @@ public class GameManager : MonoBehaviour
             player.enemyAIType = enemyPlayerRecords[i].aiType;
             player.searchRange = enemyPlayerRecords[i].searchRange;
             player.playerIndex = i;
+            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 0.3f, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
+            playerUI.player = player;
+            playerUI.gameObject.name = string.Format(enemyPlayerNameFormat + "UI", i);
+            playerUI.transform.SetParent(playerUITransform);
 
             enemyPlayers.Add(player);
         }
+
+        ScreenController.instance.SetPlayerUIs();
     }
 }

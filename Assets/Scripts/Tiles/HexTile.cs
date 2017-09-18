@@ -13,6 +13,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
     GameObject Prefab;
     public GameObject visual;
+    public Transform tileLine;
 
     public TileType type = TileType.Normal;
     public TileType2D type2D = TileType2D.Plain;
@@ -504,6 +505,15 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         newVisual.GetComponent<SpriteMetarial>().SetSprite(spriteIdex);
     }
 
+    public void SetShowUI()
+    {
+        tileLine.localPosition = new Vector3(0, 0, 0);
+    }
+
+    public void SetHideUI()
+    {
+        tileLine.localPosition = new Vector3(0, -100, 0);
+    }
 
 
     [Serializable]
