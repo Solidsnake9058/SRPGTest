@@ -56,6 +56,7 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public bool isPlayerTurn = true;
     private bool isWaitingAct = false;
+    private bool isWaitingBattle = false;
     private bool isWaitingMsg = false;
     private bool isShowStage = true;
     [HideInInspector]
@@ -76,6 +77,10 @@ public class GameManager : MonoBehaviour
     private string enemyPlayerNameFormat = "EnemyPlayer{0}";
 
     private string gameElementfilename = "ObjectJson.txt";
+
+    private bool isStartGame = true;
+    public Vector3 cameraPosition;
+    public Vector3 cameraRotation;
 
     [HideInInspector]
     public bool moving = false;
@@ -108,7 +113,15 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        instance = this;
+        if (instance==null)
+        {
+            instance = this;
+            DontDestroyOnLoad(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
         mapTransform = transform.Find("Map");
         playerTransform = transform.Find("Players");
         playerUITransform = transform.Find("PlayerUIs");
@@ -116,11 +129,19 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        saveUserPlayerRecords = new List<PlayerRecord>();
-        playerItems = new List<int>();
-        playerWeapons = new List<int>();
-        InitialStage();
-        ShowStageInfo(false);
+        ScreenController.instance.SetCameraPos(cameraPosition);
+        ScreenController.instance.SetCameraRot(cameraRotation);
+
+        isWaitingBattle = false;
+        if (isStartGame)
+        {
+            isStartGame = false;
+            saveUserPlayerRecords = new List<PlayerRecord>();
+            playerItems = new List<int>();
+            playerWeapons = new List<int>();
+            InitialStage();
+            ShowStageInfo(false);
+        }
     }
 
     void Update()
@@ -610,6 +631,8 @@ public class GameManager : MonoBehaviour
             {
                 //show level dialog
             }
+            isWaitingBattle = true;
+
             //else
             //{
             //    Debug.Log("Target is not adjacent!");

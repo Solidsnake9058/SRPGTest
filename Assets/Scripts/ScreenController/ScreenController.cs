@@ -39,6 +39,7 @@ public class ScreenController : MonoBehaviour
         instance = this;
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
         camera = GetComponentInChildren<Camera>();
+        playerUIs = new List<PlayerUI>();
 
         playerUITransform = transform.Find("PlayerUIs");
     }
@@ -70,22 +71,19 @@ public class ScreenController : MonoBehaviour
 
     public void SetPlayerUIs()
     {
-        playerUIs = (playerUITransform.GetComponentsInChildren<PlayerUI>()).ToList<PlayerUI>(); ;
+        playerUIs = (playerUITransform.GetComponentsInChildren<PlayerUI>()).ToList(); ;
     }
 
     public void TurnCameraRight()
     {
-        PivotType temp = btnRight.pivot;
-        btnRight.pivot = btnDown.pivot;
-        btnDown.pivot = btnLeft.pivot;
-        btnLeft.pivot = btnUp.pivot;
-        btnUp.pivot = temp;
-        mainCamera.Rotate(0, (int)System.Math.Round((mainCamera.rotation.y + 90f) / 10, 0) * 10, 0);
-        for (int i = 0; i < playerUIs.Count; i++)
-        {
-            playerUIs[i].transform.Rotate(Vector3.up, 90);
-        }
-
+        PivotType temp = btnUp.pivot;
+        btnUp.pivot = btnLeft.pivot;
+        btnLeft.pivot = btnDown.pivot;
+        btnDown.pivot = btnRight.pivot;
+        btnRight.pivot = temp;
+        mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y > 0 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y + 360) + 90, 0);
+        GameManager.instance.cameraPosition = mainCamera.rotation.eulerAngles;
+        SetPlayerUIRotation();
     }
 
     public void RemoveUI(string uiName)
@@ -95,17 +93,22 @@ public class ScreenController : MonoBehaviour
 
     public void TurnCameraLeft()
     {
-        PivotType temp = btnUp.pivot;
-        btnUp.pivot = btnLeft.pivot;
-        btnLeft.pivot = btnDown.pivot;
-        btnDown.pivot = btnRight.pivot;
-        btnRight.pivot = temp;
-        mainCamera.Rotate(0, (int)System.Math.Round((mainCamera.rotation.y - 90f) / 10, 0) * 10, 0);
+        PivotType temp = btnRight.pivot;
+        btnRight.pivot = btnDown.pivot;
+        btnDown.pivot = btnLeft.pivot;
+        btnLeft.pivot = btnUp.pivot;
+        btnUp.pivot = temp;
+        mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y < 360 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y - 360) + 90, 0);
+        GameManager.instance.cameraPosition = mainCamera.rotation.eulerAngles;
+        SetPlayerUIRotation();
+    }
+
+    public void SetPlayerUIRotation()
+    {
         for (int i = 0; i < playerUIs.Count; i++)
         {
-            playerUIs[i].transform.Rotate(Vector3.up, -90);
+            playerUIs[i].transform.eulerAngles = new Vector3(0, Mathf.Abs(mainCamera.eulerAngles.y) + 45, 0);
         }
-
     }
 
     public void SetPlayerUIIsShow(bool isShowPlayerUI)
@@ -164,13 +167,20 @@ public class ScreenController : MonoBehaviour
         {
             return;
         }
-        mainCamera.localPosition = newPoint;
+        GameManager.instance.cameraPosition = mainCamera.localPosition = newPoint;
     }
 
     public void SetCameraPos(Vector3 pos)
     {
         mainCamera.localPosition = pos;
     }
+
+    public void SetCameraRot(Vector3 pos)
+    {
+        mainCamera.localRotation = Quaternion.Euler(pos);
+        SetPlayerUIRotation();
+    }
+
 
     public bool isContain(Vector3 mp1, Vector3 mp2, Vector3 mp3, Vector3 mp4, Vector3 mp)
     {
