@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     Transform playerUITransform;
 
     public GameObject playerUIPrefab;
+    public GameObject itemUIPrefab;
 
     public CanvasGroup blockUI;
     public Image menuImage;
@@ -24,6 +25,7 @@ public class GameManager : MonoBehaviour
     public CanvasGroup endTurnConfirm;
     public CanvasGroup stageMessage;
     public CanvasGroup status;
+    public CanvasGroup itemGroup;
     public CanvasGroup gameSetting;
     public Text stageInfo;
 
@@ -88,8 +90,8 @@ public class GameManager : MonoBehaviour
     public bool attacking = false;
 
     public int playerGold = 1000;
-    public List<int> playerItems;
-    public List<int> playerWeapons;
+    public Dictionary<int, int> playerItems;
+    public Dictionary<int, int> playerWeapons;
 
     [Header("StatusUI")]
     public Text playerName;
@@ -110,6 +112,14 @@ public class GameManager : MonoBehaviour
     [Header("UI Setting UI")]
     public Toggle isShowTileLine;
     public Toggle isShowPlayHP;
+
+    [Header("Item UI")]
+    public int itemSelectedId = -1;
+    public Text itemGold;
+    public Text itemNotice;
+    public RectTransform itemList;
+    public Button buttonUseItem;
+    public Button buttonSellItem;
 
     void Awake()
     {
@@ -137,8 +147,8 @@ public class GameManager : MonoBehaviour
         {
             isStartGame = false;
             saveUserPlayerRecords = new List<PlayerRecord>();
-            playerItems = new List<int>();
-            playerWeapons = new List<int>();
+            playerItems = new Dictionary<int, int>();
+            playerWeapons = new Dictionary<int, int>();
             InitialStage();
             ShowStageInfo(false);
         }
@@ -146,7 +156,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (!isWaitingMsg)
+        if (!isWaitingMsg && !isWaitingBattle)
         {
             if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
             {
@@ -203,10 +213,8 @@ public class GameManager : MonoBehaviour
         HideSetting();
 
         int herbId = gameElement.items.Where(x => x.name == "Herb").FirstOrDefault().id;
-        for (int i = 0; i < 4; i++)
-        {
-            playerItems.Add(herbId);
-        }
+        playerItems.Add(herbId, 4);
+        SetItem();
 
         isShowStage = true;
     }
@@ -233,6 +241,31 @@ public class GameManager : MonoBehaviour
         stageMessage.interactable = true;
         isWaitingMsg = true;
     }
+
+    public void ShowGetItemInfo(int gold, int itemId, int weaponId)
+    {
+        List<string> msg = new List<string>();
+        if (gold>0)
+        {
+            msg.Add(gold + "G");
+        }
+        if (itemId > 0)
+        {
+            msg.Add(gameElement.items.Where(x => x.id == itemId).FirstOrDefault().name);
+        }
+        if (weaponId > 0)
+        {
+            msg.Add(gameElement.weapons.Where(x => x.id == weaponId).FirstOrDefault().name);
+        }
+        stageInfo.text = string.Format("Got\n{0}", string.Join("\n", msg.ToArray()));
+
+
+        stageMessage.alpha = 1;
+        stageMessage.blocksRaycasts = true;
+        stageMessage.interactable = true;
+        isWaitingMsg = true;
+    }
+
 
     public void HideStageInfo()
     {
@@ -525,7 +558,14 @@ public class GameManager : MonoBehaviour
                     }
                     else
                     {
-                        playerWeapons.Add(target.equipWeapon);
+                        if (playerWeapons.ContainsKey(target.equipWeapon))
+                        {
+                            playerWeapons[target.equipWeapon]++;
+                        }
+                        else
+                        {
+                            playerWeapons.Add(target.equipWeapon, 1);
+                        }
                         Debug.Log("Got " + gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name + "!");
                     }
                 }
@@ -566,7 +606,14 @@ public class GameManager : MonoBehaviour
                             }
                             else
                             {
-                                playerWeapons.Add(target.equipWeapon);
+                                if (playerWeapons.ContainsKey(target.equipWeapon))
+                                {
+                                    playerWeapons[target.equipWeapon]++;
+                                }
+                                else
+                                {
+                                    playerWeapons.Add(target.equipWeapon, 1);
+                                }
                                 Debug.Log("Got " + gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name + "!");
                             }
                         }
@@ -631,7 +678,7 @@ public class GameManager : MonoBehaviour
             {
                 //show level dialog
             }
-            isWaitingBattle = true;
+            //isWaitingBattle = true;
 
             //else
             //{
@@ -663,6 +710,151 @@ public class GameManager : MonoBehaviour
         foreach (HexTile t in highlightTiles)
         {
             t.visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+        }
+    }
+
+    public void GetChest(int gold, int itemId, int weaponId)
+    {
+        playerGold += gold;
+        if (itemId >= 0)
+        {
+            if (playerItems.ContainsKey(itemId))
+            {
+                playerItems[itemId]++;
+            }
+            else
+            {
+                playerItems.Add(itemId, 1);
+            }
+        }
+
+        if (weaponId >= 0)
+        {
+            if (playerWeapons.ContainsKey(weaponId))
+            {
+                playerWeapons[weaponId]++;
+            }
+            else
+            {
+                playerWeapons.Add(weaponId, 1);
+            }
+        }
+
+        ShowGetItemInfo(gold, itemId, weaponId);
+    }
+
+
+    public void SetItem()
+    {
+        itemGold.text = string.Format("所持金 <color=yellow>{0}</color> Gold", playerGold);
+
+        buttonUseItem.enabled = false;
+        buttonSellItem.enabled = false;
+
+        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id==itemSelectedId).FirstOrDefault() : null;
+        if (selectItem != null)
+        {
+            itemNotice.text = string.Format("<color=yellow>{0}</color>\r\n{1}", selectItem.name, selectItem.notice);
+            if (playerIndex >= 0)
+            {
+                switch (selectItem.itemType)
+                {
+                    case ItemType.cure:
+                        if (userPlayers[playerIndex].hp > 0 && userPlayers[playerIndex].hp < userPlayers[playerIndex].maxHP)
+                        {
+                            buttonUseItem.enabled = true;
+                        }
+                        break;
+                    case ItemType.resurge:
+                        if (userPlayers[playerIndex].hp <= 0)
+                        {
+                            buttonUseItem.enabled = true;
+                        }
+                        break;
+                    case ItemType.special:
+                        if (userPlayers[playerIndex].hp > 0)
+                        {
+                            if (selectItem.useCharType == -1|| selectItem.useCharType== userPlayers[playerIndex].race)
+                            {
+                                buttonUseItem.enabled = true;
+                            }
+                        }
+                        break;
+                }
+            }
+            if (selectItem.price > 0)
+            {
+                buttonSellItem.enabled = true;
+            }
+        }
+        else
+        {
+            itemNotice.text = "";
+        }
+
+        ClearItemList();
+        foreach (var item in playerItems)
+        {
+            if (item.Value > 0)
+            {
+                Item setItem = gameElement.items.Where(x => x.id == item.Key).FirstOrDefault();
+                GameObject newObject = Instantiate(itemUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
+                newObject.GetComponent<Button>().name = item.Key.ToString();
+                if (item.Key == itemSelectedId)
+                {
+                    Color newColor = newObject.GetComponent<Image>().color;
+                    newColor.a = 0.5f;
+                    newObject.GetComponent<Image>().color = newColor;
+                }
+                newObject.GetComponent<ItemSelection>().SetItemInfo(setItem.name, setItem.itemType, item.Value);
+                newObject.transform.SetParent(itemList);
+            }
+        }
+    }
+
+    public void SellItem()
+    {
+        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
+        playerItems[itemSelectedId]--;
+        playerGold += selectItem.price;
+
+        itemSelectedId = -1;
+        SetItem();
+    }
+
+    public void UseItem()
+    {
+        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
+        playerItems[itemSelectedId]--;
+
+        userPlayers[playerIndex].hp += selectItem.hp;
+        userPlayers[playerIndex].atk += selectItem.atk;
+        userPlayers[playerIndex].def += selectItem.def;
+        userPlayers[playerIndex].dex += selectItem.dex;
+        userPlayers[playerIndex].wis += selectItem.wis;
+        userPlayers[playerIndex].maxHP += selectItem.addHp;
+        playerGold += selectItem.gold;
+        if (userPlayers[playerIndex].hp > userPlayers[playerIndex].maxHP)
+        {
+            userPlayers[playerIndex].hp = userPlayers[playerIndex].maxHP;
+        }
+
+        if (selectItem.useCharType > 0)
+        {
+            userPlayers[playerIndex].race = selectItem.newCharType;
+            userPlayers[playerIndex].level = 1;
+            userPlayers[playerIndex].exp = 0;
+        }
+
+        itemSelectedId = -1;
+        SetItem();
+    }
+
+    private void ClearItemList()
+    {
+        for (int i = 0; i < itemList.transform.childCount; i++)
+        {
+            Destroy(itemList.transform.GetChild(i).gameObject);
         }
     }
 
@@ -779,7 +971,8 @@ public class GameManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.TileInitializer(mapTransform, (TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, (TileType2D)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().spritIndex, j, i, mapSizeX, mapSizeY);
+                TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
+                tile.TileInitializer(mapTransform, (TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, 0, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -902,6 +1095,15 @@ public class GameManager : MonoBehaviour
     {
         ShowPlayerStatus();
     }
+
+    private void Item(int playerIndex)
+    {
+        SetItem();
+        itemGroup.alpha = 1;
+        itemGroup.interactable = true;
+        itemGroup.blocksRaycasts = true;
+    }
+
 
     private void Setting(int playerIndex)
     {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ScreenController : MonoBehaviour
@@ -81,7 +82,7 @@ public class ScreenController : MonoBehaviour
         btnLeft.pivot = btnDown.pivot;
         btnDown.pivot = btnRight.pivot;
         btnRight.pivot = temp;
-        mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y > 0 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y + 360) + 90, 0);
+        mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y > 0 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y + 360) - 90, 0);
         GameManager.instance.cameraPosition = mainCamera.rotation.eulerAngles;
         SetPlayerUIRotation();
     }
@@ -167,7 +168,13 @@ public class ScreenController : MonoBehaviour
         {
             return;
         }
-        GameManager.instance.cameraPosition = mainCamera.localPosition = newPoint;
+
+        mainCamera.localPosition = newPoint;
+
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            GameManager.instance.cameraPosition = newPoint;
+        }
     }
 
     public void SetCameraPos(Vector3 pos)

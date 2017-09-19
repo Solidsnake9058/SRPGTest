@@ -34,6 +34,7 @@ public class PlayerUI : MonoBehaviour {
         playerHP.fillAmount = player.hp / (float)player.maxHP;
         playerHPText.text = string.Format("{0}/{1}", player.hp, player.maxHP);
         playerEnable.enabled = !player.isActable;
+        playerEnable.text = player.hp > 0 ? "<color=lightblue>E</color>" : "<color=red>D</color>";
     }
 
     public void SetShowUI()

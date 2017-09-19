@@ -33,10 +33,12 @@ public class Weapon
     public bool atkTwice { get; private set; }
     [JsonProperty]
     public int atkPoint { get; private set; }
+    [JsonProperty]
+    public string notice { get; private set; }
 
     public Weapon() { }
 
-    public Weapon(int id, string name, int directAtk, int indirectAtk, int directWis, int indirectWis, int price, bool sell, bool atkTwice)
+    public Weapon(int id, string name, int directAtk, int indirectAtk, int directWis, int indirectWis, int price, bool sell, bool atkTwice, string notice)
     {
         this.id = id;
         this.name = name;
@@ -48,5 +50,6 @@ public class Weapon
         this.sell = sell;
         this.atkTwice = atkTwice;
         this.atkPoint = atkTwice ? 2 : 1;
+        this.notice = notice;
     }
 }

@@ -14,11 +14,23 @@ public class TileXml
     [XmlAttribute("spritIndex")]
     public int spritIndex;
 
+    [XmlAttribute("spritChestIndex")]
+    public int spritChestIndex;
+
     [XmlAttribute("locX")]
     public int locX;
 
     [XmlAttribute("locY")]
     public int locY;
+
+    [XmlAttribute("gold")]
+    public int gold;
+
+    [XmlAttribute("itemId")]
+    public int itemId;
+
+    [XmlAttribute("weaponId")]
+    public int weaponId;
 
 }
 
@@ -105,7 +117,11 @@ public static class MapSaveLoad
             id = (int)tile.type2D,
             spritIndex = tile.spriteIdex,
             locX = (int)tile.hex.q,
-            locY = (int)tile.hex.r
+            locY = (int)tile.hex.r,
+            gold = tile.gold,
+            itemId = tile.itemId,
+            weaponId = tile.weaponId,
+            spritChestIndex= tile.spritChestIndex
         };
 	}
 

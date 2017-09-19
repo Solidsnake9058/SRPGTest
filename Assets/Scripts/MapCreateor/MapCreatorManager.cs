@@ -24,6 +24,8 @@ public class MapCreatorManager : MonoBehaviour
     public TileType2D pallerSelection2D = TileType2D.Plain;
     public int spriteIndex = 0;
     public int spritesMax = 0;
+    public int spriteChestIndex = 0;
+    public int spritesChestMax = 0;
 
     public int playerIndex = 0;
     public int enemyIndex = 0;
@@ -38,8 +40,15 @@ public class MapCreatorManager : MonoBehaviour
     [Header("Tile UI")]
 	public Text tileTypeName;
     public Image tileSprite;
+    public Image tileChestSprite;
+    public Toggle isHaveChest;
+    public InputField chestGoldInput;
+    public Dropdown chestItemInput;
+    public Dropdown chestWeaponInput;
+    public int chestItem = -1;
+    public int chestWeapon =-1;
 
-	[Header("Player UI")]
+    [Header("Player UI")]
 	public Text playerTypeName;
     public Toggle isNewPlayer;
 
@@ -62,6 +71,8 @@ public class MapCreatorManager : MonoBehaviour
     private List<CharacterLevelTemplate> enemyLevels;
     private List<PlayerRecord> userPlayerRecords;
     private List<PlayerRecord> enemyPlayerRecords;
+    private Dictionary<int, string> dicItem;
+    private Dictionary<int, string> dicWeapon;
 
     private string userPlayerNameFormat = "UserPlayer{0}";
     private string enemyPlayerNameFormat = "EnemyPlayer{0}";
@@ -227,6 +238,24 @@ public class MapCreatorManager : MonoBehaviour
         SetSprite();
     }
 
+    public void NextChestSprite()
+    {
+        int temp = spriteChestIndex;
+        temp++;
+        temp = temp % spritesChestMax;
+        spriteChestIndex = temp;
+        SetSprite();
+    }
+
+    public void LastChestSprite()
+    {
+        int temp = spriteChestIndex;
+        temp--;
+        temp = (temp + spritesChestMax) % spritesChestMax;
+        spriteChestIndex = temp;
+        SetSprite();
+    }
+
 
     private void GetSpriteSize()
     {
@@ -240,6 +269,8 @@ public class MapCreatorManager : MonoBehaviour
                 break;
             case TileType2D.Plain:
                 spritesMax = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesChestMax = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().chestSprites.Count;
+
                 break;
             case TileType2D.Wasteland:
                 spritesMax = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().spriteCount;
@@ -256,6 +287,7 @@ public class MapCreatorManager : MonoBehaviour
     private void SetSprite()
     {
         List<Sprite> temp = new List<Sprite>();
+        List<Sprite> chestTemp = new List<Sprite>();
         switch (pallerSelection2D)
         {
             case TileType2D.Impassible:
@@ -266,6 +298,7 @@ public class MapCreatorManager : MonoBehaviour
                 break;
             case TileType2D.Plain:
                 temp = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().sprites;
+                chestTemp = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().chestSprites;
                 break;
             case TileType2D.Wasteland:
                 temp = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().sprites;
@@ -282,10 +315,24 @@ public class MapCreatorManager : MonoBehaviour
         {
             tileSprite.sprite = temp[spriteIndex];
         }
+        if (chestTemp.Count > 0)
+        {
+            tileChestSprite.sprite = chestTemp[spriteChestIndex];
+        }
+        else
+        {
+            tileChestSprite.sprite = null;
+        }
+
     }
 
+    public void SetChestValue()
+    {
+        chestItem = dicItem.Where(x => x.Value == chestItemInput.options[chestItemInput.value].text).FirstOrDefault().Key;
+        chestWeapon = dicWeapon.Where(x => x.Value == chestWeaponInput.options[chestWeaponInput.value].text).FirstOrDefault().Key;
+    }
 
-	public void NextAIType()
+    public void NextAIType()
 	{
 		int temp = (int)aiTypeSelection;
 		temp++;
@@ -450,11 +497,49 @@ public class MapCreatorManager : MonoBehaviour
             playerTypes.Sort((x,y)=>{ return x.id.CompareTo(y.id); });
             enemyTypes = gameElement.characters.Where(x => x.enemy).ToList();
             enemyTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
+            SetItem();
+            SetWeapon();
         }
         catch (Exception ex)
         {
             Debug.LogError(ex.Message);
         }
+    }
+
+    private void SetItem()
+    {
+        dicItem = new Dictionary<int, string>();
+
+        dicItem.Add(-1, "None");
+
+        chestItemInput.options.Clear();
+
+        chestItemInput.options.Add(new Dropdown.OptionData() { text = "None" });
+
+        foreach (Item item in gameElement.items)
+        {
+            dicItem.Add(item.id, item.name);
+            chestItemInput.options.Add(new Dropdown.OptionData() { text = item.name });
+        }
+        chestItemInput.RefreshShownValue();
+    }
+
+    private void SetWeapon()
+    {
+        dicWeapon = new Dictionary<int, string>();
+
+        dicWeapon.Add(-1, "None");
+
+        chestWeaponInput.options.Clear();
+
+        chestWeaponInput.options.Add(new Dropdown.OptionData() { text = "None" });
+
+        foreach (Weapon weapon in gameElement.weapons)
+        {
+            dicWeapon.Add(weapon.id, weapon.name);
+            chestWeaponInput.options.Add(new Dropdown.OptionData() { text = weapon.name });
+        }
+        chestWeaponInput.RefreshShownValue();
     }
 
     public void TrimFileName()
@@ -506,7 +591,7 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.TileInitializer(mapTransform, TileType.Normal, TileType2D.Plain, 0, j, i, mapSizeX, mapSizeY);
+                tile.TileInitializer(mapTransform, TileType.Normal, TileType2D.Plain, 0, 0, j, i, mapSizeX, mapSizeY, 0, -1, -1);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -619,7 +704,8 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.TileInitializer(mapTransform, (TileType)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, (TileType2D)container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().id, container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault().spritIndex, j, i, mapSizeX, mapSizeY);
+                TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
+                tile.TileInitializer(mapTransform, (TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId);
                 row.Add(tile);
                 if (i == 0)
                 {

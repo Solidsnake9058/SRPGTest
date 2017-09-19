@@ -34,6 +34,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public Dropdown itemUseRace;
     public Dropdown itemNewRace;
     public Toggle itemCanSell;
+    public InputField itemNotice;
 
     //Weapon group
     private int weaponId = -1;
@@ -46,6 +47,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public InputField weaponPrice;
     public Toggle weaponCanSell;
     public Toggle weaponCanTwice;
+    public InputField weaponNotice;
 
     //Race group
     private int raceId = -1;
@@ -338,6 +340,7 @@ public class ObjectCreatorManager : MonoBehaviour
         itemUseRace.value = 0;
         itemNewRace.value = 0;
         itemCanSell.isOn = false;
+        itemNotice.text = "";
     }
 
     private bool AddItem(int newId = -1)
@@ -359,7 +362,8 @@ public class ObjectCreatorManager : MonoBehaviour
             int price = Convert.ToInt32(string.IsNullOrEmpty(itemPrice.text) ? "0" : itemPrice.text);
             int itemType = dicItemType.Where(x=>x.Value == itemItemType.options[itemItemType.value].text).FirstOrDefault().Key;
             int useCharType = dicRace.Where(x => x.Value == itemUseRace.options[itemUseRace.value].text).FirstOrDefault().Key;
-            int newCharType = dicRace.Where(x => x.Value == itemNewRace.options[itemNewRace.value].text).FirstOrDefault().Key;         
+            int newCharType = dicRace.Where(x => x.Value == itemNewRace.options[itemNewRace.value].text).FirstOrDefault().Key;
+            string notice = itemNotice.text;
             bool sell = itemCanSell.isOn;
             int id = newId == -1 ? (items.Count > 0 ? items.Select(x => x.id).Max() + 1 : 0) : newId;
             if (items.Where(x => x.name == name).Count() > 0)
@@ -368,7 +372,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 return false;
             }
 
-            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, addHp, gold, price, useCharType, newCharType, sell);
+            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, addHp, gold, price, useCharType, newCharType, sell, notice);
             items.Add(newItem);
         }
         catch (Exception ex)
@@ -398,6 +402,7 @@ public class ObjectCreatorManager : MonoBehaviour
             itemUseRace.value = itemUseRace.options.FindIndex(x => x.text == dicRace[temp.useCharType]);
             itemNewRace.value = itemNewRace.options.FindIndex(x => x.text == dicRace[temp.newCharType]); 
             itemCanSell.isOn = temp.sell;
+            itemNotice.text = temp.notice;
 
             itemItemType.RefreshShownValue();
             itemUseRace.RefreshShownValue();
@@ -457,6 +462,7 @@ public class ObjectCreatorManager : MonoBehaviour
         weaponIndirectWis.text = "";
         weaponPrice.text = "";
         weaponCanSell.isOn = false;
+        weaponNotice.text = "";
     }
 
     private bool AddWeapon(int newId = -1)
@@ -473,6 +479,7 @@ public class ObjectCreatorManager : MonoBehaviour
             int directWis = Convert.ToInt32(string.IsNullOrEmpty(weaponDirectWis.text) ? "0" : weaponDirectWis.text);
             int indirectWis = Convert.ToInt32(string.IsNullOrEmpty(weaponIndirectWis.text) ? "0" : weaponIndirectWis.text);
             int price = Convert.ToInt32(string.IsNullOrEmpty(weaponPrice.text) ? "0" : weaponPrice.text);
+            string notice = weaponNotice.text;
             bool sell = weaponCanSell.isOn;
             bool atkTwice = weaponCanTwice.isOn;
 
@@ -483,7 +490,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 return false;
             }
 
-            Weapon newWeapon = new Weapon(id, name, directAtk, indirectAtk, directWis, indirectWis, price, sell, atkTwice);
+            Weapon newWeapon = new Weapon(id, name, directAtk, indirectAtk, directWis, indirectWis, price, sell, atkTwice, notice);
             weapons.Add(newWeapon);
         }
         catch (Exception ex)
@@ -508,6 +515,7 @@ public class ObjectCreatorManager : MonoBehaviour
             weaponPrice.text = temp.price.ToString();
             weaponCanSell.isOn = temp.sell;
             weaponCanTwice.isOn = temp.atkTwice;
+            weaponNotice.text = temp.notice;
         }
     }
 

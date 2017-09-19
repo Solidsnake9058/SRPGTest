@@ -40,10 +40,12 @@ public class Item
     public int newCharType { get; private set; }
     [JsonProperty]
     public bool sell { get; private set; }
+    [JsonProperty]
+    public string notice { get; private set; }
 
     public Item() { }
 
-    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int addHp, int gold, int price, int useCharType, int newCharType, bool sell)
+    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int addHp, int gold, int price, int useCharType, int newCharType, bool sell, string notice)
     {
         this.id = id;
         this.itemType = itemType;
@@ -59,6 +61,7 @@ public class Item
         this.useCharType = useCharType;
         this.newCharType = newCharType;
         this.sell = sell;
+        this.notice = notice;
     }
 
 }

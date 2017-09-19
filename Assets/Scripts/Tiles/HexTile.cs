@@ -23,6 +23,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public float movementCost = 1f;
     public bool impassible = false;
     public int spriteIdex = 0;
+    public int spritChestIndex = 0;
 
     public List<HexTile> neighbors = new List<HexTile>();
 
@@ -32,6 +33,13 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public float defenseRate = 0;
 
     public Image menuImage;
+
+    [Header("Chest Setting")]
+    public bool isHaveChest =false;
+    public bool isChestOpened = false;
+    public int gold = 0;
+    public int itemId = -1;
+    public int weaponId = -1;
 
     public HexTile(int q, int r)
     {
@@ -188,15 +196,23 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return new Vector2(pos.x + (((int)pos.y) >> 1), pos.y);
     }
 
-    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int q, int r, int mapSizeX, int mapSizeY)
+    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY, int gold, int itemId, int weaponId)
     {
         transform.parent = mapTransform;
         //SetType(tileType);
         SetType2D(tileType2D, spriteIndex);
+        this.spritChestIndex = spritChestIndex;
         hex.q = q;
         hex.r = r;
         this.mapSizeX = mapSizeX;
         this.mapSizeY = mapSizeY;
+        this.gold = gold;
+        this.itemId = itemId;
+        this.weaponId = weaponId;
+        if (gold > 0 || itemId > 0 || weaponId > 0)
+        {
+            isHaveChest = true;
+        }
         gameObject.transform.localPosition = HexTilePos();
     }
 
@@ -209,6 +225,14 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             menuImage = GameObject.Find("MapMenu").GetComponent<Image>();
         }
+    }
+
+    public void OpenChest()
+    {
+        GameObject container = transform.Find("Visuals").gameObject;
+        SetType2D(type2D, spritChestIndex + container.GetComponentInChildren<SpriteMetarial>().GetSpritesCount());
+        GameManager.instance.GetChest(gold, itemId, weaponId);
+        isChestOpened = true;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -256,6 +280,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                     {
                         MenuType setType = MenuType.tileMenu;
                         Player player = null;
+                        GameManager.instance.SetPlayerIndex(-1);
                         if (GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
                         {
                             player = GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
@@ -313,7 +338,20 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                 case MapSettingType.Tile:
                     //SetType(MapCreatorManager.instance.pallerSelection);
                     SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
-
+                    if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
+                    {
+                        isHaveChest = true;
+                        gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                        itemId = MapCreatorManager.instance.chestItem;
+                        weaponId = MapCreatorManager.instance.chestWeapon;
+                    }
+                    else
+                    {
+                        isHaveChest = false;
+                        gold = 0;
+                        itemId = -1;
+                        weaponId = -1;
+                    }
                     break;
                 case MapSettingType.Player:
                     if (eventData.button == PointerEventData.InputButton.Left)
@@ -348,7 +386,12 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                 case MapSettingType.Tile:
                     //SetType(MapCreatorManager.instance.pallerSelection);
                     SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
-
+                    if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
+                    {
+                        gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                        itemId = MapCreatorManager.instance.chestItem;
+                        weaponId = MapCreatorManager.instance.chestWeapon;
+                    }
                     break;
                 case MapSettingType.Player:
                     break;

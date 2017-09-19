@@ -38,6 +38,16 @@ public class UserPlayer : Player
         base.Update();
     }
 
+    public override void TurnEnd()
+    {
+        HexTile tile = GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x];
+        if (tile.isHaveChest && !tile.isChestOpened)
+        {
+            tile.OpenChest();
+        }
+        base.TurnEnd();
+    }
+
     public override void TurnUpdate()
     {
         //highlight
