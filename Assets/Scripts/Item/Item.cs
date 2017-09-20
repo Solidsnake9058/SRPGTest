@@ -29,6 +29,8 @@ public class Item
     [JsonProperty]
     public int dex { get; private set; }
     [JsonProperty]
+    public int mdef { get; private set; }
+    [JsonProperty]
     public int addHp { get; private set; }
     [JsonProperty]
     public int gold { get; private set; }
@@ -45,7 +47,7 @@ public class Item
 
     public Item() { }
 
-    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int addHp, int gold, int price, int useCharType, int newCharType, bool sell, string notice)
+    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int mdef, int addHp, int gold, int price, int useCharType, int newCharType, bool sell, string notice)
     {
         this.id = id;
         this.itemType = itemType;
@@ -55,6 +57,7 @@ public class Item
         this.def = def;
         this.wis = wis;
         this.dex = dex;
+        this.mdef = mdef;
         this.addHp = addHp;
         this.gold = gold;
         this.price = price;
@@ -63,7 +66,6 @@ public class Item
         this.sell = sell;
         this.notice = notice;
     }
-
 }
 
 public enum ItemType

@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
 
     public GameObject playerUIPrefab;
     public GameObject itemUIPrefab;
+    public GameObject weaponUIPrefab;
 
     public CanvasGroup blockUI;
     public Image menuImage;
@@ -26,8 +27,10 @@ public class GameManager : MonoBehaviour
     public CanvasGroup stageMessage;
     public CanvasGroup status;
     public CanvasGroup itemGroup;
+    public CanvasGroup weaponGroup;
     public CanvasGroup gameSetting;
     public Text stageInfo;
+    public Image msgBox;
 
     public int mapSizeX = 32;
     public int mapSizeY = 38;
@@ -89,7 +92,7 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public bool attacking = false;
 
-    public int playerGold = 1000;
+    public int _playerGold = 1000;
     public Dictionary<int, int> playerItems;
     public Dictionary<int, int> playerWeapons;
 
@@ -120,6 +123,29 @@ public class GameManager : MonoBehaviour
     public RectTransform itemList;
     public Button buttonUseItem;
     public Button buttonSellItem;
+
+    [Header("Weapon UI")]
+    public int weaponSelectedId = -1;
+    public Text weaponNotice;
+    public RectTransform weaponList;
+    public Button buttonEquipWeapon;
+    public Button buttonSellWeapon;
+
+    public int playerGold
+    {
+        get
+        {
+            if (_playerGold > 600000)
+            {
+                return 600000;
+            }
+            else
+            {
+                return _playerGold;
+            }
+        }
+        set { _playerGold = value; }
+    }
 
     void Awake()
     {
@@ -212,7 +238,7 @@ public class GameManager : MonoBehaviour
         HidePlayerStatus();
         HideSetting();
 
-        int herbId = gameElement.items.Where(x => x.name == "Herb").FirstOrDefault().id;
+        int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
         playerItems.Add(herbId, 4);
         SetItem();
 
@@ -231,11 +257,15 @@ public class GameManager : MonoBehaviour
 
     public void ShowStageInfo(bool turnMsg = true)
     {
-        stageInfo.text = string.Format("Stage {0}\n{1}",1,"Travel");
+        stageInfo.text = string.Format("Stage {0}\n{1}",1,"旅立ち");
         if (turnMsg)
         {
-            stageInfo.text = string.Format("Turn {0}\n{1} action", turnCount, isPlayerTurn ? "Ark's" : "Devil armys");
+            stageInfo.text = string.Format("ターン {0}\n{1}の行動", turnCount, isPlayerTurn ? "アークたち" : "魔軍");
         }
+
+        Vector2 newSize = new Vector2(350, 150);
+        msgBox.rectTransform.sizeDelta = newSize;
+
         stageMessage.alpha = 1;
         stageMessage.blocksRaycasts = true;
         stageMessage.interactable = true;
@@ -247,7 +277,7 @@ public class GameManager : MonoBehaviour
         List<string> msg = new List<string>();
         if (gold>0)
         {
-            msg.Add(gold + "G");
+            msg.Add("<color=orange>"+gold + "</color>Gold");
         }
         if (itemId > 0)
         {
@@ -257,8 +287,71 @@ public class GameManager : MonoBehaviour
         {
             msg.Add(gameElement.weapons.Where(x => x.id == weaponId).FirstOrDefault().name);
         }
-        stageInfo.text = string.Format("Got\n{0}", string.Join("\n", msg.ToArray()));
+        stageInfo.text = string.Format("宝箱を見つけた！\n宝箱の中から {0}をみつけた！", string.Join("\n", msg.ToArray()));
 
+        Vector2 newSize = new Vector2(600, 150);
+        msgBox.rectTransform.sizeDelta = newSize;
+
+        stageMessage.alpha = 1;
+        stageMessage.blocksRaycasts = true;
+        stageMessage.interactable = true;
+        isWaitingMsg = true;
+    }
+
+    public void ShowUseItemInfo(string name, int hp, int atk, int def, int dex, int wis, int maxHP, int gold,string newCharType)
+    {
+        Vector2 newSize = new Vector2(350, 150);
+        msgBox.rectTransform.sizeDelta = newSize;
+
+        List<string> msg = new List<string>();
+        if (gold > 0)
+        {
+            msg.Add(string.Format("<color=orange>{0}</color>得る！", gold));
+        }
+        if (hp > 0)
+        {
+            msg.Add(string.Format("の体力は<color=lime>{0}</color>回復する！", hp));
+        }
+        if (atk > 0)
+        {
+            msg.Add(string.Format("の攻撃力は<color=lime>{0}</color>アップする！", atk));
+        }
+        if (def > 0)
+        {
+            msg.Add(string.Format("の防御力は<color=lime>{0}</color>アップする！", def));
+        }
+        if (dex > 0)
+        {
+            msg.Add(string.Format("の敏捷さは<color=lime>{0}</color>アップする！", dex));
+        }
+        if (wis > 0)
+        {
+            msg.Add(string.Format("の知力は<color=lime>{0}</color>アップする！", wis));
+        }
+        if (maxHP > 0)
+        {
+            msg.Add(string.Format("の体力は<color=lime>{0}</color>アップする！", maxHP));
+        }
+
+        if (!string.IsNullOrEmpty(newCharType))
+        {
+            msg.Add("のクラスは{0}なる！" + newCharType);
+        }
+        stageInfo.text = string.Format("{0}\n{1}", name, string.Join("\n", msg.ToArray()));
+
+
+        stageMessage.alpha = 1;
+        stageMessage.blocksRaycasts = true;
+        stageMessage.interactable = true;
+        isWaitingMsg = true;
+    }
+
+    public void ShowEquipWeaponInfo(string originalWeapon, string newWeapon)
+    {
+        Vector2 newSize = new Vector2(600, 150);
+        msgBox.rectTransform.sizeDelta = newSize;
+
+        stageInfo.text = string.Format("{0}を外して\n{1}を装備します", string.Format("<color=yellow>{0}</color>", originalWeapon), string.Format("<color=yellow>{0}</color>", newWeapon));
 
         stageMessage.alpha = 1;
         stageMessage.blocksRaycasts = true;
@@ -311,28 +404,28 @@ public class GameManager : MonoBehaviour
         player.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
         List<string> weaponRangeText = new List<string>();
-        if (directAtk>0)
+        if (directAtk > 0)
         {
-            weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "Direct"));
+            weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "直接"));
         }
         if (indirectAtk > 0)
         {
-            weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "Indirect"));
+            weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "間接"));
         }
 
         playerName.text = player.playerName;
         playerClass.text = race.name;
         playerLevel.text = player.level.ToString();
-        playerHP.text =           player.hp.ToString()+"/";
-        playerMaxHP.text =        player.maxHP.ToString();
-        playerExp.text =          player.exp.ToString();
-        playerAtk.text =          player.atk.ToString();
+        playerHP.text = player.hp.ToString() + "/";
+        playerMaxHP.text = player.maxHP.ToString();
+        playerExp.text = player.exp.ToString();
+        playerAtk.text = player.atk.ToString();
         playerWeaponAtk.text = string.Format("<color=white>(</color><color=orange>{0}</color><color=white>/</color><color=lime>{1}</color><color=white>)</color>", directAtk > 0 ? "+" + directAtk.ToString() : "✕", indirectAtk > 0 ? "+" + indirectAtk.ToString() : "✕");
-        playerDef.text =          player.def.ToString();
-        playerWis.text =          player.wis.ToString();
-        playerDex.text =          player.dex.ToString();
-        playerMdef.text =         player.mdef.ToString();
-        playerEquip.text =        weapon.name;
+        playerDef.text = player.def.ToString();
+        playerWis.text = player.wis.ToString();
+        playerDex.text = player.dex.ToString();
+        playerMdef.text = player.mdef.ToString();
+        playerEquip.text = weapon.name;
         playerEquipRange.text = string.Join("<color=white>/</color>", weaponRangeText.ToArray());
     }
 
@@ -606,13 +699,13 @@ public class GameManager : MonoBehaviour
                             }
                             else
                             {
-                                if (playerWeapons.ContainsKey(target.equipWeapon))
+                                if (playerWeapons.ContainsKey(attacker.equipWeapon))
                                 {
-                                    playerWeapons[target.equipWeapon]++;
+                                    playerWeapons[attacker.equipWeapon]++;
                                 }
                                 else
                                 {
-                                    playerWeapons.Add(target.equipWeapon, 1);
+                                    playerWeapons.Add(attacker.equipWeapon, 1);
                                 }
                                 Debug.Log("Got " + gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name + "!");
                             }
@@ -751,7 +844,7 @@ public class GameManager : MonoBehaviour
         buttonUseItem.enabled = false;
         buttonSellItem.enabled = false;
 
-        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id==itemSelectedId).FirstOrDefault() : null;
+        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id==itemSelectedId).FirstOrDefault() : null;
         if (selectItem != null)
         {
             itemNotice.text = string.Format("<color=yellow>{0}</color>\r\n{1}", selectItem.name, selectItem.notice);
@@ -774,7 +867,7 @@ public class GameManager : MonoBehaviour
                     case ItemType.special:
                         if (userPlayers[playerIndex].hp > 0)
                         {
-                            if (selectItem.useCharType == -1|| selectItem.useCharType== userPlayers[playerIndex].race)
+                            if (selectItem.useCharType == -1 || (selectItem.useCharType == userPlayers[playerIndex].race && userPlayers[playerIndex].level >= 10))
                             {
                                 buttonUseItem.enabled = true;
                             }
@@ -799,6 +892,7 @@ public class GameManager : MonoBehaviour
             {
                 Item setItem = gameElement.items.Where(x => x.id == item.Key).FirstOrDefault();
                 GameObject newObject = Instantiate(itemUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
+                string typeName = "";
                 newObject.GetComponent<Button>().name = item.Key.ToString();
                 if (item.Key == itemSelectedId)
                 {
@@ -806,7 +900,19 @@ public class GameManager : MonoBehaviour
                     newColor.a = 0.5f;
                     newObject.GetComponent<Image>().color = newColor;
                 }
-                newObject.GetComponent<ItemSelection>().SetItemInfo(setItem.name, setItem.itemType, item.Value);
+                switch (setItem.itemType)
+                {
+                    case ItemType.cure:
+                        typeName = "回復";
+                        break;
+                    case ItemType.resurge:
+                        typeName = "復活";
+                        break;
+                    case ItemType.special:
+                        typeName = "特殊";
+                        break;
+                }
+                newObject.GetComponent<ItemSelection>().SetItemInfo(setItem.name, typeName, item.Value);
                 newObject.transform.SetParent(itemList);
             }
         }
@@ -814,7 +920,7 @@ public class GameManager : MonoBehaviour
 
     public void SellItem()
     {
-        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
+        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
         playerItems[itemSelectedId]--;
         playerGold += selectItem.price;
 
@@ -824,30 +930,57 @@ public class GameManager : MonoBehaviour
 
     public void UseItem()
     {
-        Item selectItem = itemSelectedId <= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
+        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
         playerItems[itemSelectedId]--;
 
-        userPlayers[playerIndex].hp += selectItem.hp;
-        userPlayers[playerIndex].atk += selectItem.atk;
-        userPlayers[playerIndex].def += selectItem.def;
-        userPlayers[playerIndex].dex += selectItem.dex;
-        userPlayers[playerIndex].wis += selectItem.wis;
-        userPlayers[playerIndex].maxHP += selectItem.addHp;
-        playerGold += selectItem.gold;
-        if (userPlayers[playerIndex].hp > userPlayers[playerIndex].maxHP)
+        switch (selectItem.name)
         {
-            userPlayers[playerIndex].hp = userPlayers[playerIndex].maxHP;
-        }
+            case "愛の夢":
+                for (int i = 0; i < userPlayers.Count; i++)
+                {
+                    userPlayers[i].hp = userPlayers[i].maxHP;
+                }
+                TurnEnd(0);
+                break;
+            case "ドカティの鍵":
 
-        if (selectItem.useCharType > 0)
-        {
-            userPlayers[playerIndex].race = selectItem.newCharType;
-            userPlayers[playerIndex].level = 1;
-            userPlayers[playerIndex].exp = 0;
-        }
+                break;
+            default:
+                int hp = selectItem.hp;
+                userPlayers[playerIndex].atk += selectItem.atk;
+                userPlayers[playerIndex].def += selectItem.def;
+                userPlayers[playerIndex].dex += selectItem.dex;
+                userPlayers[playerIndex].wis += selectItem.wis;
+                userPlayers[playerIndex].maxHP += selectItem.addHp;
+                if (userPlayers[playerIndex].hp + hp > userPlayers[playerIndex].maxHP)
+                {
+                    hp = userPlayers[playerIndex].maxHP - userPlayers[playerIndex].hp;
+                }
+                userPlayers[playerIndex].hp += hp;
 
-        itemSelectedId = -1;
-        SetItem();
+                playerGold += selectItem.gold;
+                if (userPlayers[playerIndex].hp > userPlayers[playerIndex].maxHP)
+                {
+                    userPlayers[playerIndex].hp = userPlayers[playerIndex].maxHP;
+                }
+
+                if (selectItem.useCharType > 0)
+                {
+                    userPlayers[playerIndex].race = selectItem.newCharType;
+                    userPlayers[playerIndex].level = 1;
+                    userPlayers[playerIndex].exp = 0;
+                }
+
+                itemSelectedId = -1;
+
+                itemGroup.alpha = 0;
+                itemGroup.interactable = false;
+                itemGroup.blocksRaycasts = false;
+
+                ShowUseItemInfo(userPlayers[playerIndex].playerName, hp, selectItem.atk, selectItem.def, selectItem.dex, selectItem.wis, selectItem.addHp, selectItem.gold, (selectItem.useCharType > 0 ? gameElement.races.Where(x => x.id == selectItem.newCharType).FirstOrDefault().name : ""));
+
+                break;
+        }
     }
 
     private void ClearItemList()
@@ -855,6 +988,109 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < itemList.transform.childCount; i++)
         {
             Destroy(itemList.transform.GetChild(i).gameObject);
+        }
+    }
+
+    public void SetWeapon()
+    {
+        buttonEquipWeapon.enabled = false;
+        buttonSellWeapon.enabled = false;
+
+        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
+        if (selectWeapon != null)
+        {
+            List<string> equipableRace = gameElement.races.Where(x => x.equipWeapon.Contains(weaponSelectedId)).Select(y => y.name).ToList();
+            weaponNotice.text = string.Format("<color=yellow>{0}</color>\r\n{1}\r\n使えるクラスは、<color=yellow>{2}</color>です。", selectWeapon.name, selectWeapon.notice, (string.Join("</color><color=white>、</color><color=yellow>", equipableRace.ToArray())));
+            if (playerIndex >= 0)
+            {
+                if (gameElement.races.Where(x => x.id == userPlayers[playerIndex].race && x.equipWeapon.Contains(weaponSelectedId)).Count() > 0)
+                {
+                    buttonEquipWeapon.enabled = true;
+                }
+            }
+            if (selectWeapon.price > 0)
+            {
+                buttonSellWeapon.enabled = true;
+            }
+        }
+        else
+        {
+            weaponNotice.text = "";
+        }
+
+        ClearWeaponList();
+        foreach (var weapon in playerWeapons)
+        {
+            if (weapon.Value > 0)
+            {
+                Weapon selWeapon = gameElement.weapons.Where(x => x.id == weapon.Key).FirstOrDefault();
+                GameObject newObject = Instantiate(weaponUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
+                newObject.GetComponent<Button>().name = weapon.Key.ToString();
+                if (weapon.Key == weaponSelectedId)
+                {
+                    Color newColor = newObject.GetComponent<Image>().color;
+                    newColor.a = 0.5f;
+                    newObject.GetComponent<Image>().color = newColor;
+                }
+                List<string> weaponRangeText = new List<string>();
+                if (selWeapon.directAtk > 0)
+                {
+                    weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "直接"));
+                }
+                if (selWeapon.indirectAtk > 0)
+                {
+                    weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "間接"));
+                }
+
+                newObject.GetComponent<ItemSelection>().SetItemInfo(selWeapon.name, string.Join("<color=white>/</color>", weaponRangeText.ToArray()), weapon.Value);
+                newObject.transform.SetParent(weaponList);
+            }
+        }
+    }
+
+    public void SellWeapon()
+    {
+        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
+        playerWeapons[weaponSelectedId]--;
+        playerGold += selectWeapon.price;
+
+        itemSelectedId = -1;
+        SetWeapon();
+    }
+
+    public void EquipWeapon()
+    {
+        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
+        playerWeapons[weaponSelectedId]--;
+        if (userPlayers[playerIndex].equipWeapon == weaponSelectedId)
+        {
+            return;
+        }
+
+        string originWeaponName = gameElement.weapons.Where(x => x.id == userPlayers[playerIndex].equipWeapon).FirstOrDefault().name;
+        if (playerWeapons.ContainsKey(userPlayers[playerIndex].equipWeapon))
+        {
+            playerWeapons[userPlayers[playerIndex].equipWeapon]++;
+        }
+        else
+        {
+            playerWeapons.Add(userPlayers[playerIndex].equipWeapon, 1);
+        }
+        userPlayers[playerIndex].equipWeapon = selectWeapon.id;
+        weaponSelectedId = -1;
+
+        weaponGroup.alpha = 0;
+        weaponGroup.interactable = false;
+        weaponGroup.blocksRaycasts = false;
+
+        ShowEquipWeaponInfo(originWeaponName, selectWeapon.name);
+    }
+
+    private void ClearWeaponList()
+    {
+        for (int i = 0; i < weaponList.transform.childCount; i++)
+        {
+            Destroy(weaponList.transform.GetChild(i).gameObject);
         }
     }
 
@@ -1102,6 +1338,14 @@ public class GameManager : MonoBehaviour
         itemGroup.alpha = 1;
         itemGroup.interactable = true;
         itemGroup.blocksRaycasts = true;
+    }
+
+    private void Weapon(int playerIndex)
+    {
+        SetWeapon();
+        weaponGroup.alpha = 1;
+        weaponGroup.interactable = true;
+        weaponGroup.blocksRaycasts = true;
     }
 
 

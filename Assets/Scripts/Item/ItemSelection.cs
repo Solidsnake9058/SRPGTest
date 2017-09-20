@@ -14,7 +14,15 @@ public class ItemSelection : MonoBehaviour {
     {
         if (isWeapon)
         {
-
+            if (GameManager.instance.itemSelectedId.ToString() == transform.name)
+            {
+                GameManager.instance.weaponSelectedId = -1;
+            }
+            else
+            {
+                GameManager.instance.weaponSelectedId = Convert.ToInt32(transform.name);
+            }
+            GameManager.instance.SetWeapon();
         }
         else
         {
@@ -30,20 +38,10 @@ public class ItemSelection : MonoBehaviour {
         }
     }
 
-    public void SetItemInfo(string name, ItemType type, int count)
+    public void SetItemInfo(string name, string type, int count)
     {
         itemName.text = name;
-        itemType.text = Enum.GetName(type.GetType(), type);
+        itemType.text = type;
         itemCount.text = count.ToString();
     }
-
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 }

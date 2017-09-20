@@ -28,6 +28,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public InputField itemDef;
     public InputField itemWis;
     public InputField itemDex;
+    public InputField itemMDef;
     public InputField itemAddHP;
     public InputField itemGold;
     public InputField itemPrice;
@@ -333,6 +334,7 @@ public class ObjectCreatorManager : MonoBehaviour
         itemDef.text = "";
         itemWis.text = "";
         itemDex.text = "";
+        itemMDef.text = "";
         itemAddHP.text = "";
         itemGold.text = "";
         itemPrice.text = "";
@@ -357,6 +359,7 @@ public class ObjectCreatorManager : MonoBehaviour
             int def = Convert.ToInt32(string.IsNullOrEmpty(itemDef.text) ? "0" : itemDef.text);
             int wis = Convert.ToInt32(string.IsNullOrEmpty(itemWis.text) ? "0" : itemWis.text);
             int dex = Convert.ToInt32(string.IsNullOrEmpty(itemDex.text) ? "0" : itemDex.text);
+            int mdef = Convert.ToInt32(string.IsNullOrEmpty(itemMDef.text) ? "0" : itemMDef.text);
             int addHp = Convert.ToInt32(string.IsNullOrEmpty(itemAddHP.text) ? "0" : itemAddHP.text);
             int gold = Convert.ToInt32(string.IsNullOrEmpty(itemGold.text) ? "0" : itemGold.text);
             int price = Convert.ToInt32(string.IsNullOrEmpty(itemPrice.text) ? "0" : itemPrice.text);
@@ -372,7 +375,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 return false;
             }
 
-            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, addHp, gold, price, useCharType, newCharType, sell, notice);
+            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, mdef, addHp, gold, price, useCharType, newCharType, sell, notice);
             items.Add(newItem);
         }
         catch (Exception ex)
@@ -395,6 +398,7 @@ public class ObjectCreatorManager : MonoBehaviour
             itemDef.text =temp.def.ToString();
             itemWis.text =temp.wis.ToString();
             itemDex.text = temp.dex.ToString();
+            itemMDef.text = temp.mdef.ToString();
             itemAddHP.text =temp.addHp.ToString();
             itemGold.text = temp.gold.ToString();
             itemPrice.text = temp.price.ToString();

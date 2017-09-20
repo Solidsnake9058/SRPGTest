@@ -33,7 +33,7 @@ public class TileMenu : MonoBehaviour
     public Vector2 SetMenu(MenuType menuType)
     {
         string[] temp = (string[])GetType().GetField(menuType.ToString()).GetValue(this);
-        Vector2 newSize = new Vector2(180, 20 + temp.Length * 40);
+        Vector2 newSize = new Vector2(220, 20 + temp.Length * 40);
         menuBase.rectTransform.sizeDelta = newSize;
         List<Button> buttons = GetComponentsInChildren<Button>(true).ToList();
         int Count = 0;
@@ -41,7 +41,7 @@ public class TileMenu : MonoBehaviour
         {
             if (temp.Contains(buttons[i].name))
             {
-                buttons[i].image.rectTransform.position = menuBase.rectTransform.position + new Vector3(90, -(10 + 40 * Count), 0);
+                buttons[i].image.rectTransform.position = menuBase.rectTransform.position + new Vector3(newSize.x / 2, -(10 + 40 * Count), 0);
                 Count++;
             }
             else
