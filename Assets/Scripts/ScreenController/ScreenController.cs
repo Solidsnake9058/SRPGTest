@@ -39,7 +39,7 @@ public class ScreenController : MonoBehaviour
     {
         instance = this;
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
-        camera = GetComponentInChildren<Camera>();
+        camera = mainCamera.GetComponentInChildren<Camera>();
         playerUIs = new List<PlayerUI>();
 
         playerUITransform = transform.Find("PlayerUIs");

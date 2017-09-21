@@ -26,15 +26,18 @@ public class CharacterType
     public bool canFly { get; private set; }
     [JsonProperty]
     public bool canHeal { get; private set; }
+    [JsonProperty]
+    public int healRange { get; private set; }
 
     public CharacterType() { }
 
-    public CharacterType(int id, string name, List<int> equipWeapon, bool canFly, bool canHeal)
+    public CharacterType(int id, string name, List<int> equipWeapon, bool canFly, bool canHeal, int healRange)
     {
         this.id = id;
         this.name = name;
         this.equipWeapon = equipWeapon;
         this.canFly = canFly;
         this.canHeal = canHeal;
+        this.healRange = healRange;
     }
 }

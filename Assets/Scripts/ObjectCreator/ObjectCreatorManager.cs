@@ -57,6 +57,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public InputField raceName;
     public Toggle raceCanFly;
     public Toggle raceCanHeal;
+	public InputField raceHealRange;
     public Dropdown raceWeapon;
     public RectTransform raceWeaponList;
     public GameObject raceWeaponSelectPrefab;
@@ -578,6 +579,7 @@ public class ObjectCreatorManager : MonoBehaviour
         raceName.text = "";
         raceCanFly.isOn = false;
         raceCanHeal.isOn = false;
+        raceHealRange.text = "";
         ReloadWeaponRace();
     }
 
@@ -589,18 +591,19 @@ public class ObjectCreatorManager : MonoBehaviour
         }
         try
         {
-            string name = raceName.text.Trim();
+            string raceNameString = raceName.text.Trim();
             bool canFly = raceCanFly.isOn;
             bool canHeal = raceCanHeal.isOn;
+            int healRange = raceCanHeal.isOn ? (Convert.ToInt32(raceHealRange.text) >= 1 ? Convert.ToInt32(raceHealRange.text) : 1) : 0;
 
             int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
-            if (races.Where(x => x.name == name).Count() > 0)
+            if (races.Where(x => x.name == raceNameString).Count() > 0)
             {
                 Debug.LogError("Weapons exist");
                 return false;
             }
 
-            CharacterType newRace = new CharacterType(id, name, raceWeapons, canFly, canHeal);
+            CharacterType newRace = new CharacterType(id, raceNameString, raceWeapons, canFly, canHeal, healRange);
             races.Add(newRace);
         }
         catch (Exception ex)
@@ -621,6 +624,7 @@ public class ObjectCreatorManager : MonoBehaviour
             raceWeapons = temp.equipWeapon;
             raceCanFly.isOn = temp.canFly;
             raceCanHeal.isOn = temp.canHeal;
+            raceHealRange.text = temp.healRange.ToString();
             ReloadWeaponRace();
         }
     }
@@ -629,7 +633,7 @@ public class ObjectCreatorManager : MonoBehaviour
     {
         if (characters.Where(x => x.race == raceId).Count() > 0 || items.Where(x => x.useCharType == raceId).Count() > 0 || items.Where(x => x.newCharType == raceId).Count() > 0)
         {
-            Debug.Log("Race is using");
+            Debug.LogWarning("Race is using");
             return;
         }
 

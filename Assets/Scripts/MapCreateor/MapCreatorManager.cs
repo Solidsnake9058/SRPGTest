@@ -32,7 +32,7 @@ public class MapCreatorManager : MonoBehaviour
 	public int enemyAIIndex = 0;
     public int enemyLevelIndex = 0;
 
-    public float playerScale = 0.7f;
+    public float playerHeight = 0;
 
     Transform mapTransform;
     Transform playerTransform;
@@ -429,7 +429,7 @@ public class MapCreatorManager : MonoBehaviour
                 int id = userPlayerRecords.Count > 0 ? userPlayerRecords.Max(x => x.id) + 1 : 0;
                 userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerIndex, 0, aiTypeSelection, 0));
 
-                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerScale, pos.z), Quaternion.Euler(new Vector3()));
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
                 newPlayer.name = string.Format(userPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
@@ -463,7 +463,7 @@ public class MapCreatorManager : MonoBehaviour
                 int id = enemyPlayerRecords.Count > 0 ? enemyPlayerRecords.Max(x => x.id) + 1 : 0;
                 enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyLevelIndex, aiTypeSelection, intSearchRange));
 
-                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, playerScale, pos.z), Quaternion.Euler(new Vector3()));
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
                 newPlayer.name = string.Format(enemyPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<AIPlayer>().gridPosition = gridPosion;
@@ -751,7 +751,7 @@ public class MapCreatorManager : MonoBehaviour
             int id = userPlayerRecords[i].id;
 
             Vector3 pos = mapHex[userPlayerRecords[i].locY][userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1)].HexTilePos();
-            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerScale, pos.z), Quaternion.Euler(new Vector3()));
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
             newPlayer.name = string.Format(userPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
@@ -762,7 +762,7 @@ public class MapCreatorManager : MonoBehaviour
             int id = enemyPlayerRecords[i].id;
 
             Vector3 pos = mapHex[enemyPlayerRecords[i].locY][enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1)].HexTilePos();
-            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, playerScale, pos.z), Quaternion.Euler(new Vector3()));
+            GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0,180,0)));
             newPlayer.name = string.Format(enemyPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);

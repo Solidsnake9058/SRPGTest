@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class Player : MonoBehaviour, IPointerClickHandler
 {
@@ -10,6 +11,9 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public Vector2 originalGridPosition = Vector2.zero;
 
     public Vector3 moveDestination;
+
+    public Transform visual;
+    public Animator animator;
     public float moveSpeed = 10f;
     public int playerIndex;
 
@@ -82,6 +86,8 @@ public class Player : MonoBehaviour, IPointerClickHandler
     private void Awake()
     {
         moveDestination = transform.position;
+        GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, transform.position, transform.rotation, visual);
+        animator = model.GetComponent<Animator>();
     }
 
     // Use this for initialization
@@ -137,7 +143,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
     {
-        Weapon weapon = GameManager.instance.gameElement.weapons[equipWeapon];
+        Weapon weapon = GameManager.instance.gameElement.weapons.Where(x => x.id == equipWeapon).FirstOrDefault();
         derictAtk = weapon.directAtk;
         inderictAtk = weapon.indirectAtk;
     }
@@ -158,14 +164,12 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public bool GetIsCanHeal()
     {
-        CharacterType race = GameManager.instance.gameElement.races[this.race];
-        return race.canHeal;
+        return GameManager.instance.gameElement.races.Where(x => x.id == this.race).FirstOrDefault().canHeal;
     }
 
     public bool GetIsCanFly()
     {
-        CharacterType race = GameManager.instance.gameElement.races[this.race];
-        return race.canFly;
+        return GameManager.instance.gameElement.races.Where(x => x.id == this.race).FirstOrDefault().canFly;
     }
 
     public virtual PlayerRecord LevelUp()
@@ -229,7 +233,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public virtual List<HexTile> GetHealRange()
     {
-        return HexTile.GetCubeRingTile(gridPosition, 1, mapSizeX, mapSizeY);
+        return HexTile.GetCubeSpiralTile(gridPosition, 1, GameManager.instance.gameElement.races.Where(x => x.id == this.race).FirstOrDefault().healRange, mapSizeX, mapSizeY);
     }
 
     public virtual void OnPointerClick(PointerEventData eventData)

@@ -55,7 +55,8 @@ public class UserPlayer : Player
         if (positionQueue.Count > 0)
         {
             transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
-
+            transform.LookAt(positionQueue[0]);
+            animator.SetBool("walk", true);
             if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
             {
                 transform.position = positionQueue[0];
@@ -63,6 +64,8 @@ public class UserPlayer : Player
                 if (positionQueue.Count == 0)
                 {
                     //actionPoint--;
+                    animator.SetBool("walk", false);
+                    transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
                     GameManager.instance.ShowConfirmMenu();
                 }
             }
@@ -91,7 +94,7 @@ public class UserPlayer : Player
         int addValue = 0;
         for (int i = 0; i < upCount; i++)
         {
-            addValue = Random.Range(1, 2);
+            addValue = Random.Range(1, 3);
             switch (lvprops[i])
             {
                 case LevelProp.hp:

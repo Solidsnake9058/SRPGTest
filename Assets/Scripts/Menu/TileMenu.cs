@@ -33,10 +33,10 @@ public class TileMenu : MonoBehaviour
     public Vector2 SetMenu(MenuType menuType)
     {
         string[] temp = (string[])GetType().GetField(menuType.ToString()).GetValue(this);
-        Vector2 newSize = new Vector2(220, 20 + temp.Length * 40);
-        menuBase.rectTransform.sizeDelta = newSize;
         List<Button> buttons = GetComponentsInChildren<Button>(true).ToList();
-        int Count = 0;
+        Vector2 newSize = new Vector2(buttons[0].GetComponent<Image>().rectTransform.sizeDelta.x + 20, 20 + temp.Length * 40);
+		menuBase.rectTransform.sizeDelta = newSize;
+		int Count = 0;
         for (int i = 0; i < buttons.Count; i++)
         {
             if (temp.Contains(buttons[i].name))

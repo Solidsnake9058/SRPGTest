@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
     public int mapSizeY = 38;
 
     public float cubeSize = 1;
-    public float playerScale = 0.7f;
+    public float playerHeight = 0f;
 
     public bool isShowTile = true;
     public bool isShowPlayerUI = true;
@@ -536,7 +536,7 @@ public class GameManager : MonoBehaviour
             }
             foreach (HexTile t in HexTilePathFinder.FindPath(mapHex[(int)targetPlayer.mapHexIndex.y][(int)targetPlayer.mapHexIndex.x], destTile, userPlayers.Union(enemyPlayers).Where(x => x.gridPosition != targetPlayer.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
             {
-                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + playerScale * Vector3.up);
+                targetPlayer.positionQueue.Add(mapHex[(int)t.mapHexIndex.y][(int)t.mapHexIndex.x].transform.position + playerHeight * Vector3.up);
                 //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
             }
             targetPlayer.gridPosition = destTile.gridPosition;
@@ -1291,7 +1291,7 @@ public class GameManager : MonoBehaviour
         {
             userPlayers[inputPlayerIndex].gridPosition = userPlayers[inputPlayerIndex].originalGridPosition;
             Vector3 oriPos = mapHex[(int)userPlayers[inputPlayerIndex].mapHexIndex.y][(int)userPlayers[inputPlayerIndex].mapHexIndex.x].transform.position;
-            userPlayers[inputPlayerIndex].transform.position = new Vector3(oriPos.x, 1f, oriPos.z);
+            userPlayers[inputPlayerIndex].transform.position = new Vector3(oriPos.x, playerHeight, oriPos.z);
             moving = false;
             Move(inputPlayerIndex);
         }
@@ -1434,7 +1434,7 @@ public class GameManager : MonoBehaviour
             CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
             PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, playerScale, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, playerHeight, tilePOs.z), Quaternion.Euler(new Vector3(0, 180, 0)))).GetComponent<UserPlayer>();
             player.gameObject.name = string.Format(userPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -1443,7 +1443,7 @@ public class GameManager : MonoBehaviour
             player.playerName = playerData.name;
             player.race = playerData.race;
             player.movementPerActionPoint = playerData.move;
-            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 0.3f, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
+            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 1, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
             playerUI.player = player;
             playerUI.gameObject.name = string.Format(userPlayerNameFormat + "UI", i);
             playerUI.transform.SetParent(playerUITransform);
@@ -1491,7 +1491,7 @@ public class GameManager : MonoBehaviour
             CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
             CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[enemyPlayerRecords[i].levelId];
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, playerScale, tilePOs.z), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, playerHeight, tilePOs.z), Quaternion.Euler(new Vector3(0,180,0)))).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
             player.transform.SetParent(playerTransform);
 
@@ -1514,7 +1514,7 @@ public class GameManager : MonoBehaviour
             player.enemyAIType = enemyPlayerRecords[i].aiType;
             player.searchRange = enemyPlayerRecords[i].searchRange;
             player.playerIndex = i;
-            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 0.3f, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
+            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePOs.x, 1, tilePOs.z), playerUIPrefab.transform.rotation)).GetComponent<PlayerUI>();
             playerUI.player = player;
             playerUI.gameObject.name = string.Format(enemyPlayerNameFormat + "UI", i);
             playerUI.transform.SetParent(playerUITransform);

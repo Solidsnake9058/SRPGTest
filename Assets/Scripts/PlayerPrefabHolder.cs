@@ -9,6 +9,8 @@ public class PlayerPrefabHolder : MonoBehaviour {
     public GameObject userPlayer_prefab;
     public GameObject enemyPlayer_prefab;
 
+    public GameObject playerModelPrefab01;
+
     private void Awake()
     {
         instance = this;

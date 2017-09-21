@@ -9,8 +9,8 @@ public class PlayerUI : MonoBehaviour {
     public Image playerHP;
     public Text playerHPText;
     public Text playerEnable;
-    private float uiHeight = 0.3f;
-    public float standradUIHeight = 0.3f;
+    private float uiHeight = 1f;
+    public float standradUIHeight = 1f;
 
     private void Awake()
     {

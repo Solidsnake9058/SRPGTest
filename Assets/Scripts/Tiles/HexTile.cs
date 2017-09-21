@@ -7,7 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Linq;
 
-public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler {
+public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
+{
 
     public HexCoord hex = new HexCoord();
 
@@ -35,7 +36,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public Image menuImage;
 
     [Header("Chest Setting")]
-    public bool isHaveChest =false;
+    public bool isHaveChest = false;
     public bool isChestOpened = false;
     public int gold = 0;
     public int itemId = -1;
@@ -155,6 +156,21 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return results;
     }
 
+    public static List<Vector2> CubeSpiral(Vector2 center, int min, int max)
+    {
+
+        List<Vector2> results = new List<Vector2>();
+        if (min > max)
+        {
+            return new List<Vector2>();
+        }
+        for (int i = min; i < max; i++)
+        {
+            results.AddRange(CubeRing(center, i));
+        }
+        return results;
+    }
+
     public static List<HexTile> GetCubeRingTile(Vector2 center, int radius,int mapSizeX,int mapSizeY)
     {
         List<HexTile> cubeRingTile = new List<HexTile>();
@@ -176,7 +192,29 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return cubeRingTile;
     }
 
-    public static HexCoord Subtract(HexCoord a, HexCoord b)
+	public static List<HexTile> GetCubeSpiralTile(Vector2 center, int min, int max, int mapSizeX, int mapSizeY)
+	{
+		List<HexTile> cubeRingTile = new List<HexTile>();
+        List<Vector2> cubeRing = CubeSpiral(center, min, max);
+
+		for (int i = 0; i < cubeRing.Count; i++)
+		{
+			Vector2 n = MapHexIndex(cubeRing[i]);
+
+			if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
+			{
+				continue;
+			}
+			if (SceneManager.GetActiveScene().name == "GameScene")
+			{
+				cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+			}
+		}
+		return cubeRingTile;
+	}
+
+
+	public static HexCoord Subtract(HexCoord a, HexCoord b)
     {
         return new HexCoord(a.q - b.q, a.r - b.r);
     }
