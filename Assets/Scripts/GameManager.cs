@@ -262,6 +262,11 @@ public class GameManager : MonoBehaviour
         isShowStage = true;
     }
 
+    public bool GetIsWaitingBattle()
+    {
+        return isWaitingBattle;
+    }
+
     public void SetStartWaiting()
     {
         blockUI.blocksRaycasts = blockUI.interactable = isWaitingAct = true;
@@ -855,11 +860,14 @@ public class GameManager : MonoBehaviour
                 amountOfHeal = amountOfHeal > target.maxHP - target.hp ? target.maxHP - target.hp : amountOfHeal;
                 target.hp += amountOfHeal;
 
+                damageByAttacker = amountOfHeal;
+
                 Debug.Log(attacker.playerName + " heal " + target.playerName + " for " + amountOfHeal + " HP point!");
 
                 if (isPlayerTurn)
                 {
                     attacker.exp += amountOfHeal;
+                    getExp = amountOfHeal;
                     Debug.Log(attacker.playerName + " get exp " + amountOfHeal + "!");
                 }
             }
@@ -888,7 +896,7 @@ public class GameManager : MonoBehaviour
             //heal is not finish
             if (isHeal)
             {
-                return;
+                //return;
             }
             battleData = new BattleSendData(attackerName, targetName, backGround, attackerTileName, targetTileName, isPlayerAttack, isHeal, isCounter, isDirectAtk, attackerDefensRate, targetDefensRate, attackerMaxHP, attackerHP, damageByAttacker, targetMaxHP, targetHP, damageByTarget, getItem, playerExp, getExp, level, playerClass, playerData, lvUpProp);
             SceneManager.LoadScene("Battle");

@@ -16,7 +16,10 @@ public class BattleAnimationController : MonoBehaviour {
 
     public void SendDamage()
     {
-        BattleManager.instance.SendDamage();
+        if (!BattleManager.instance.isIndirectAttack)
+        {
+            BattleManager.instance.SendDamage();
+        }
     }
 
     public void EndBattle()
@@ -24,5 +27,9 @@ public class BattleAnimationController : MonoBehaviour {
         BattleManager.instance.EndBattle();
     }
 
+    public void MoveCamera()
+    {
+        BattleManager.instance.MoveCamera();
+    }
 
 }

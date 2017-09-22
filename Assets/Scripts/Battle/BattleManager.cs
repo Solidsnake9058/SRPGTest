@@ -9,7 +9,6 @@ public class BattleManager : MonoBehaviour
     public static BattleManager instance { get; private set; }
 
     public float startWaitTime = 1f;
-    public float moveSpeed = 1f;
     public Transform actor1;
     public Transform actor2;
 
@@ -53,7 +52,9 @@ public class BattleManager : MonoBehaviour
     public string getItemText = "{0}得る";
     public string levelUpText = "{0}はレベル{1}アップする";
     public string turnInfoText = "{0}の攻撃";
+    public string turnHealInfoText = "{0}のヒール";
     public string damageInfoText = "{0}に{1}ダメージ与える";
+    public string healInfoText = "{0}の体力は{1}回復する";
 
 
     public int getItemWeight = 300;
@@ -65,6 +66,7 @@ public class BattleManager : MonoBehaviour
     private bool isShowExp;
     private bool isShowLevel;
     private bool isShowLevelUp;
+    public bool isTest;
 
     [Header("Level UI")]
     public Text playerName;
@@ -91,7 +93,7 @@ public class BattleManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        battleData = new BattleSendData("アーク", "魔軍兵", "", "草原", "道", true, false, true, false, 10, 0, 42, 42, 21, 24, 24, 11, "<color=yellow>50</color>Gold", 85, 21, 2, "ロード", null, null);
+        battleData = new BattleSendData("アーク", "魔軍兵", "", "草原", "道", true, true, true, false, 10, 0, 42, 42, 21, 24, 24, 11, "ショートソード", 85, 21, 2, "ロード", null, null);
 
         battleData.playerData = new PlayerRecord(44, 14, 8, 7, 12, 7);
         battleData.lvUpData = new PlayerRecord(2, 1, 0, 1, 2, 0);
@@ -146,7 +148,15 @@ public class BattleManager : MonoBehaviour
     public void SendDamage()
     {
         target.GetComponent<BattleActorController>().GetDamage();
-        turnInfo.text += "\r\n"+ string.Format(damageInfoText, target.GetComponent<BattleActorController>().playerName, target.GetComponent<BattleActorController>().damage);
+        turnInfo.text += "\r\n" + string.Format(isHeal ? healInfoText : damageInfoText, target.GetComponent<BattleActorController>().playerName, target.GetComponent<BattleActorController>().damage);
+    }
+
+    public void MoveCamera()
+    {
+        if (isHeal || isIndirectAttack)
+        {
+            mainCamera.GetComponent<BattleCameraCotroller>().isStartMove = true;
+        }
     }
 
     public void EndBattle()
@@ -156,6 +166,8 @@ public class BattleManager : MonoBehaviour
 
     private void ResetPlayer()
     {
+        mainCamera.GetComponent<BattleCameraCotroller>().isStartMove = false;
+
         if (isFirstAttack || (isCounter && !isHeal))
         {
             SetPlayer();
@@ -181,20 +193,18 @@ public class BattleManager : MonoBehaviour
         {
             isCounter = false;
         }
-        turnInfo.text = string.Format(turnInfoText, attacker.GetComponent<BattleActorController>().playerName);
+        turnInfo.text = string.Format(isHeal ? turnHealInfoText : turnInfoText, attacker.GetComponent<BattleActorController>().playerName);
     }
 
     public void SetPlayer()
     {
         if (isPlayerAttack || isHeal)
         {
-            moveSpeed = Mathf.Abs(moveSpeed);
             attacker = actor1;
             target = actor2;
         }
         else
         {
-            moveSpeed = Mathf.Abs(moveSpeed) * -1;
             attacker = actor2;
             target = actor1;
         }
@@ -261,7 +271,11 @@ public class BattleManager : MonoBehaviour
             return;
         }
         //End Scene
-        SceneManager.LoadScene("GameScene");
+        if (!isTest)
+        {
+            SceneManager.LoadScene("GameScene");
+        }
+        Debug.Log("End");
     }
 
 }

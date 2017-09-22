@@ -16,6 +16,7 @@ public class BattleActorController : MonoBehaviour
     public float attackDistance = 0.5f;
     public bool isIndirectAttack;
     public bool isHeal;
+    public bool isAttacked;
     public bool isEndAnimation;
     public string playerName;
 
@@ -53,20 +54,44 @@ public class BattleActorController : MonoBehaviour
             }
             else
             {
-                if (Vector3.Distance(transform.position, target.position) > attackDistance)
+                if (!BattleManager.instance.isHeal && !BattleManager.instance.isIndirectAttack)
                 {
-                    animator.SetBool("run", true);
-                    transform.position += transform.forward * moveSpeed * Time.deltaTime;
+                    if (Vector3.Distance(transform.position, target.position) > attackDistance)
+                    {
+                        animator.SetBool("run", true);
+                        transform.position += transform.forward * moveSpeed * Time.deltaTime;
+                    }
+                    else
+                    {
+                        if (!isAttacked)
+                        {
+                            animator.SetTrigger("attack");
+                            Debug.Log(name + " attack 1");
+                            isAttacked = true;
+                        }
+                    }
                 }
                 else
                 {
-                    animator.SetTrigger("attack");
+                    if (!isAttacked)
+                    {
+                        if (BattleManager.instance.isHeal)
+                        {
+                            animator.SetBool("heal", true);
+                        }
+                        else
+                        {
+                            animator.SetTrigger("attack");
+                            Debug.Log(name + " attack");
+                        }
+                        isAttacked = true;
+                    }
                 }
             }
         }
         else
         {
-            animator.SetBool("endDamage", false);
+            //animator.SetBool("endDamage", false);
         }
     }
 
@@ -81,8 +106,23 @@ public class BattleActorController : MonoBehaviour
 
     public void GetDamage()
     {
-        animator.SetTrigger("damage");
-        hp -= damage;
+        if (BattleManager.instance.isHeal)
+        {
+            hp += damage;
+            animator.SetTrigger("cure");
+        }
+        else
+        {
+            hp -= damage;
+            if (hp <= 0)
+            {
+                animator.SetTrigger("dead");
+            }
+            else
+            {
+                animator.SetTrigger("damage");
+            }
+        }
         SetHPBar();
     }
 
@@ -104,4 +144,6 @@ public class BattleActorController : MonoBehaviour
         hpBar.fillAmount = (float)hp / maxHp;
         hpText.text = string.Format("{0}/{1}", hp, maxHp);
     }
+
+
 }
