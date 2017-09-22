@@ -65,7 +65,7 @@ public class UserPlayer : Player
                 {
                     //actionPoint--;
                     animator.SetBool("walk", false);
-                    transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+                    //transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
                     GameManager.instance.ShowConfirmMenu();
                 }
             }

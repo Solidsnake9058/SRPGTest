@@ -164,7 +164,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             return new List<Vector2>();
         }
-        for (int i = min; i < max; i++)
+        for (int i = min; i <= max; i++)
         {
             results.AddRange(CubeRing(center, i));
         }

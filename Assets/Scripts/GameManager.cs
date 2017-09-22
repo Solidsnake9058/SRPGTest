@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
     public GameObject playerUIPrefab;
     public GameObject itemUIPrefab;
     public GameObject weaponUIPrefab;
+    public GameObject gameSceneUI;
 
     public CanvasGroup blockUI;
     public Image menuImage;
@@ -95,6 +97,8 @@ public class GameManager : MonoBehaviour
     public int _playerGold = 1000;
     public Dictionary<int, int> playerItems;
     public Dictionary<int, int> playerWeapons;
+
+    public BattleSendData battleData = new BattleSendData();
 
     [Header("StatusUI")]
     public Text playerName;
@@ -215,6 +219,19 @@ public class GameManager : MonoBehaviour
         //{
         //    nextTurn();
         //}
+    }
+
+    private void OnLevelWasLoaded(int level)
+    {
+        gameSceneUI.SetActive(false);
+        if (level == 0)
+        {
+            ScreenController.instance.SetCameraPos(cameraPosition);
+            ScreenController.instance.SetCameraRot(cameraRotation);
+
+            gameSceneUI.SetActive(true);
+            isWaitingBattle = false;
+        }
     }
 
     private void InitialStage()
@@ -573,6 +590,30 @@ public class GameManager : MonoBehaviour
         SetStopWaiting();
     }
 
+    private void SetTileName(HexTile destTile,out string tileName,out int defRate)
+    {
+        tileName = "";
+        defRate = (int)destTile.defenseRate;
+        switch (destTile.type2D)
+        {
+            case TileType2D.Road:
+                tileName = "道";
+                break;
+            case TileType2D.Plain:
+                tileName = "平原";
+                break;
+            case TileType2D.Wasteland:
+                tileName = "荒地";
+                break;
+            case TileType2D.Villa:
+                tileName = "村";
+                break;
+            case TileType2D.Forest:
+                tileName = "森";
+                break;
+        }
+    }
+
     public void AttackWithCurrentPlayer(HexTile destTile)
     {
         if (destTile.visual.transform.GetComponentInChildren<Renderer>().materials[0].color == Color.white && !destTile.impassible)
@@ -581,30 +622,78 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        cameraPosition = ScreenController.instance.mainCamera.transform.position;
+        cameraRotation = ScreenController.instance.mainCamera.transform.rotation.eulerAngles;
+
+        battleData = null;
+
         Player attacker = null;
         Player target = null;
         bool isHeal = false;
+
+        //set for battle scene
+        string attackerName;
+        string targetName;
+        string backGround = "";
+        string attackerTileName = "";
+        string targetTileName = "";
+        bool isPlayerAttack = isPlayerTurn;
+        bool isCounter = false;
+        int attackerDefensRate = 0;
+        int targetDefensRate = 0;
+
+        int attackerMaxHP;
+        int attackerHP;
+        int damageByAttacker = 0;
+        int targetMaxHP;
+        int targetHP;
+        int damageByTarget = 0;
+
+        string getItem = "";
+        int playerExp = 0;
+        int getExp = 0;
+        int level = 0;
+        string playerClass;
+        PlayerRecord playerData = null;
 
         //Get attacker and target
         if (isPlayerTurn)
         {
             attacker = userPlayers[playerIndex];
+            attackerName = attacker.playerName;
+            attackerMaxHP = attacker.maxHP;
+            attackerHP = attacker.hp;
+            playerExp = attacker.exp;
+            playerClass = gameElement.races.Where(x => x.id == attacker.race).FirstOrDefault().name;
             target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
             if (target == null)
             {
                 target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
                 isHeal = true;
             }
+            targetName = target.playerName;
+            targetMaxHP = target.maxHP;
+            targetHP = target.hp;
+            SetTileName(destTile, out targetTileName, out targetDefensRate);
         }
         else
         {
             attacker = enemyPlayers[currentEnemyPlayerIndex];
+            targetName = attacker.playerName;
+            targetMaxHP = attacker.maxHP;
+            targetHP = attacker.hp;
             target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
             if (target == null)
             {
                 target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
                 isHeal = true;
             }
+            attackerName = target.playerName;
+            attackerMaxHP = target.maxHP;
+            attackerHP = target.hp;
+            playerExp = target.exp;
+            playerClass = gameElement.races.Where(x => x.id == target.race).FirstOrDefault().name;
+            SetTileName(destTile, out attackerTileName, out attackerDefensRate);
         }
 
         if (target != null)
@@ -614,6 +703,15 @@ public class GameManager : MonoBehaviour
 
             int directAtk = 0;
             int indirectAtk = 0;
+
+            if (!isPlayerTurn)
+            {
+                SetTileName(targetTile, out targetTileName, out targetDefensRate);
+            }
+            else
+            {
+                SetTileName(targetTile, out attackerTileName, out attackerDefensRate);
+            }
 
             attacker.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
@@ -632,13 +730,16 @@ public class GameManager : MonoBehaviour
 
                 Debug.Log(attacker.playerName + (isDirectAtk ? " direct attack " : " indirect attack ") + target.playerName + " for " + (amountOfDamage + (target.hp < 0 ? target.hp : 0)) + " damage!");
 
+                damageByTarget = (amountOfDamage + (target.hp < 0 ? target.hp : 0));
                 //Target dead, user player get exp
                 if (target.hp <= 0)
                 {
                     if (isPlayerTurn)
                     {
                         target.gridPosition = new Vector2(-1, -1);
+                        damageByAttacker = (amountOfDamage + (target.hp < 0 ? target.hp : 0));
                         attacker.exp += target.exp;
+                        getExp = target.exp;
                         Debug.Log(attacker.playerName + " get exp " + target.exp + "!");
                     }
                     Debug.Log(attacker.playerName + " defeat " + target.playerName + "!");
@@ -647,6 +748,7 @@ public class GameManager : MonoBehaviour
                     if (UnityEngine.Random.Range(0f, 1f) < 0.5)
                     {
                         playerGold += target.gold;
+                        getItem = "<color=yellow>" + target.gold + "</color>Gold";
                         Debug.Log("Got " + target.gold + " gold!");
                     }
                     else
@@ -659,6 +761,7 @@ public class GameManager : MonoBehaviour
                         {
                             playerWeapons.Add(target.equipWeapon, 1);
                         }
+                        getItem = gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name;
                         Debug.Log("Got " + gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name + "!");
                     }
                 }
@@ -668,12 +771,15 @@ public class GameManager : MonoBehaviour
                     if (isPlayerTurn)
                     {
                         attacker.exp += amountOfDamage;
+                        damageByAttacker = (amountOfDamage + (target.hp < 0 ? target.hp : 0));
+                        getExp = amountOfDamage;
                         Debug.Log(attacker.playerName + " get exp " + amountOfDamage + "!");
                     }
 
                     //Counter
                     if (isDirectAtk && target.GetIsCanAttack(true) || !isDirectAtk && target.GetIsCanAttack(false))
                     {
+                        isCounter = true;
                         target.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
                         amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 100f)));
@@ -686,7 +792,9 @@ public class GameManager : MonoBehaviour
                             if (!isPlayerTurn)
                             {
                                 attacker.gridPosition = new Vector2(-1, -1);
+                                damageByAttacker = (amountOfDamage + (attacker.hp < 0 ? attacker.hp : 0));
                                 target.exp += attacker.exp;
+                                getExp = attacker.exp;
                                 Debug.Log(target.playerName + " get exp " + attacker.exp + "!");
                             }
                             Debug.Log(target.playerName + " defeat " + attacker.playerName + "!");
@@ -695,6 +803,7 @@ public class GameManager : MonoBehaviour
                             if (UnityEngine.Random.Range(0f, 1f) < 0.5)
                             {
                                 playerGold += attacker.gold;
+                                getItem = "<color=yellow>" + attacker.gold + "</color>Gold";
                                 Debug.Log("Got " + attacker.gold + " gold!");
                             }
                             else
@@ -707,6 +816,7 @@ public class GameManager : MonoBehaviour
                                 {
                                     playerWeapons.Add(attacker.equipWeapon, 1);
                                 }
+                                getItem = gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name;
                                 Debug.Log("Got " + gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name + "!");
                             }
                         }
@@ -716,6 +826,8 @@ public class GameManager : MonoBehaviour
                             if (!isPlayerTurn)
                             {
                                 target.exp += amountOfDamage;
+                                damageByAttacker = (amountOfDamage + (attacker.hp < 0 ? attacker.hp : 0));
+                                getExp = amountOfDamage;
                                 Debug.Log(target.playerName + " get exp " + amountOfDamage + "!");
                             }
                         }
@@ -753,25 +865,33 @@ public class GameManager : MonoBehaviour
             }
 
             //level up
-            PlayerRecord lvUpProp = new PlayerRecord();
+            PlayerRecord lvUpProp = null;
             if (isPlayerTurn && attacker.hp > 0 && (attacker.exp / 100) == attacker.level)
             {
                 lvUpProp = attacker.LevelUp();
+                level = attacker.level;
+                playerData = attacker.GetPlayerProp();
                 Debug.Log(attacker.playerName + " is level up to " + attacker.level + "!");
 
             }
             else if (!isPlayerTurn && target.hp > 0 && (target.exp / 100) == target.level)
             {
                 lvUpProp = target.LevelUp();
+                level = target.level;
+                playerData = target.GetPlayerProp();
                 Debug.Log(target.playerName + " is level up to " + target.level + "!");
             }
 
             //send to battle scene
-            if (lvUpProp != null && lvUpProp != default(PlayerRecord))
+            isWaitingBattle = true;
+
+            //heal is not finish
+            if (isHeal)
             {
-                //show level dialog
+                return;
             }
-            //isWaitingBattle = true;
+            battleData = new BattleSendData(attackerName, targetName, backGround, attackerTileName, targetTileName, isPlayerAttack, isHeal, isCounter, isDirectAtk, attackerDefensRate, targetDefensRate, attackerMaxHP, attackerHP, damageByAttacker, targetMaxHP, targetHP, damageByTarget, getItem, playerExp, getExp, level, playerClass, playerData, lvUpProp);
+            SceneManager.LoadScene("Battle");
 
             //else
             //{

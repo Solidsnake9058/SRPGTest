@@ -37,12 +37,36 @@ public class ScreenController : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
-        camera = mainCamera.GetComponentInChildren<Camera>();
         playerUIs = new List<PlayerUI>();
 
         playerUITransform = transform.Find("PlayerUIs");
+    }
+
+    private void Start()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
+        }
+        camera = mainCamera.GetComponentInChildren<Camera>();
+    }
+
+    private void OnLevelWasLoaded(int level)
+    {
+        if (level == 0 && mainCamera == null)
+        {
+            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
+        }
     }
 
     // Update is called once per frame
@@ -179,11 +203,19 @@ public class ScreenController : MonoBehaviour
 
     public void SetCameraPos(Vector3 pos)
     {
+        if (mainCamera == null)
+        {
+            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
+        }
         mainCamera.localPosition = pos;
     }
 
     public void SetCameraRot(Vector3 pos)
     {
+        if (mainCamera == null)
+        {
+            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
+        }
         mainCamera.localRotation = Quaternion.Euler(pos);
         SetPlayerUIRotation();
     }

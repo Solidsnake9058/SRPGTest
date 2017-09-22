@@ -177,6 +177,13 @@ public class Player : MonoBehaviour, IPointerClickHandler
         return new PlayerRecord();
     }
 
+    public PlayerRecord GetPlayerProp()
+    {
+        PlayerRecord pr = new PlayerRecord((uint)maxHP, (uint)atk, (uint)def, (uint)wis, (uint)dex, (uint)mdef);
+
+        return pr;
+    }
+
     public virtual void TurnOnGUI()
     {
 
