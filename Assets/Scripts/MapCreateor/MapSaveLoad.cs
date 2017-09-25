@@ -32,6 +32,9 @@ public class TileXml
     [XmlAttribute("weaponId")]
     public int weaponId;
 
+    [XmlAttribute("isShop")]
+    public bool isShop;
+
 }
 
 [XmlRoot("MapCollection")]
@@ -53,6 +56,15 @@ public class MapXmlContainer
     [XmlArray("EnemyPlayerRecords")]
     [XmlArrayItem("EnemyPlayerRecord")]
     public List<PlayerRecord> enemyPlayerRecords = new List<PlayerRecord>();
+
+    [XmlArray("shopItemList")]
+    [XmlArrayItem("shopItemList")]
+    public List<int> shopItemList = new List<int>();
+
+    [XmlArray("shopWeaponList")]
+    [XmlArrayItem("shopWeaponList")]
+    public List<int> shopWeaponList = new List<int>();
+
 }
 
 public static class MapSaveLoad
@@ -77,7 +89,7 @@ public static class MapSaveLoad
         };
     }
 
-    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords)
+    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList)
     {
         List<TileXml> tiles = new List<TileXml>();
 
@@ -95,8 +107,9 @@ public static class MapSaveLoad
             sizeY = map.Count,
             tiles = tiles,
             userPlayerRecords = userPlayerRecords,
-            enemyPlayerRecords = enemyPlayerRecords
-
+            enemyPlayerRecords = enemyPlayerRecords,
+            shopItemList = shopItemList,
+            shopWeaponList = shopWeaponList
         };
     }
 
@@ -121,7 +134,8 @@ public static class MapSaveLoad
             gold = tile.gold,
             itemId = tile.itemId,
             weaponId = tile.weaponId,
-            spritChestIndex= tile.spritChestIndex
+            spritChestIndex = tile.spritChestIndex,
+            isShop = tile.isShop
         };
 	}
 

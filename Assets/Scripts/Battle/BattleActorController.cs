@@ -66,7 +66,6 @@ public class BattleActorController : MonoBehaviour
                         if (!isAttacked)
                         {
                             animator.SetTrigger("attack");
-                            Debug.Log(name + " attack 1");
                             isAttacked = true;
                         }
                     }
@@ -82,7 +81,6 @@ public class BattleActorController : MonoBehaviour
                         else
                         {
                             animator.SetTrigger("attack");
-                            Debug.Log(name + " attack");
                         }
                         isAttacked = true;
                     }
@@ -91,7 +89,7 @@ public class BattleActorController : MonoBehaviour
         }
         else
         {
-            //animator.SetBool("endDamage", false);
+            animator.SetBool("endDamage", false);
         }
     }
 

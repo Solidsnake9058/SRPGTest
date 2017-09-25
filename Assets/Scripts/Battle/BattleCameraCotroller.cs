@@ -43,8 +43,6 @@ public class BattleCameraCotroller : MonoBehaviour {
                 {
                     BattleManager.instance.SendDamage();
                     isStartMove = false;
-                    Debug.Log("camera send damage");
-
                 }
             }
             

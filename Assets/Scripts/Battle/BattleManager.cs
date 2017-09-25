@@ -38,8 +38,6 @@ public class BattleManager : MonoBehaviour
     public bool isEndBattle = true;
     public bool isEndAnimation;
 
-    public Transform visual;
-    public Animator animator;
     public float attackDistance = 0.5f;
     public bool isIndirectAttack;
     public bool isHeal;
@@ -93,7 +91,7 @@ public class BattleManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        battleData = new BattleSendData("アーク", "魔軍兵", "", "草原", "道", true, true, true, false, 10, 0, 42, 42, 21, 24, 24, 11, "ショートソード", 85, 21, 2, "ロード", null, null);
+        battleData = new BattleSendData("アーク", "魔軍兵", "", "草原", "道", true, false, true, true, 10, 0, 42, 42, 21, 24, 24, 11, "ショートソード", 85, 21, 2, "ロード", null, null);
 
         battleData.playerData = new PlayerRecord(44, 14, 8, 7, 12, 7);
         battleData.lvUpData = new PlayerRecord(2, 1, 0, 1, 2, 0);
@@ -275,7 +273,6 @@ public class BattleManager : MonoBehaviour
         {
             SceneManager.LoadScene("GameScene");
         }
-        Debug.Log("End");
     }
 
 }

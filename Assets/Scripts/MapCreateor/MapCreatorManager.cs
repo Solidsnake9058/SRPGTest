@@ -47,6 +47,15 @@ public class MapCreatorManager : MonoBehaviour
     public Dropdown chestWeaponInput;
     public int chestItem = -1;
     public int chestWeapon =-1;
+    public CanvasGroup chestGroup;
+    public CanvasGroup shopGroup;
+    public Toggle isShop;
+    public Dropdown shopItemInput;
+    public Dropdown shopWeaponInput;
+    public List<int> shopItemList;
+    public List<int> shopWeaponList;
+    public GameObject shopSelectionPrefab;
+    public RectTransform shopList;
 
     [Header("Player UI")]
 	public Text playerTypeName;
@@ -196,6 +205,18 @@ public class MapCreatorManager : MonoBehaviour
         GetSpriteSize();
         SetSprite();
         tileTypeName.text = pallerSelection2D.ToString();
+
+        DisableGroup(chestGroup);
+        DisableGroup(shopGroup);
+        switch (pallerSelection2D)
+        {
+            case TileType2D.Plain:
+                EnableGroup(chestGroup);
+                break;
+            case TileType2D.Villa:
+                EnableGroup(shopGroup);
+                break;
+        }
     }
 
     public void NextType()
@@ -513,15 +534,21 @@ public class MapCreatorManager : MonoBehaviour
         dicItem.Add(-1, "None");
 
         chestItemInput.options.Clear();
-
+        shopItemInput.options.Clear();
         chestItemInput.options.Add(new Dropdown.OptionData() { text = "None" });
+        shopItemInput.options.Add(new Dropdown.OptionData() { text = "None" });
 
         foreach (Item item in gameElement.items)
         {
             dicItem.Add(item.id, item.name);
             chestItemInput.options.Add(new Dropdown.OptionData() { text = item.name });
+            if (!item.sell && item.price > 0)
+            {
+                shopItemInput.options.Add(new Dropdown.OptionData() { text = item.name });
+            }
         }
         chestItemInput.RefreshShownValue();
+        shopItemInput.RefreshShownValue();
     }
 
     private void SetWeapon()
@@ -531,15 +558,80 @@ public class MapCreatorManager : MonoBehaviour
         dicWeapon.Add(-1, "None");
 
         chestWeaponInput.options.Clear();
-
+        shopWeaponInput.options.Clear();
         chestWeaponInput.options.Add(new Dropdown.OptionData() { text = "None" });
-
+        shopWeaponInput.options.Add(new Dropdown.OptionData() { text = "None" });
         foreach (Weapon weapon in gameElement.weapons)
         {
             dicWeapon.Add(weapon.id, weapon.name);
             chestWeaponInput.options.Add(new Dropdown.OptionData() { text = weapon.name });
+            if (!weapon.sell && weapon.price > 0)
+            {
+                shopWeaponInput.options.Add(new Dropdown.OptionData() { text = weapon.name });
+            }
         }
         chestWeaponInput.RefreshShownValue();
+        shopWeaponInput.RefreshShownValue();
+    }
+
+    public void AddShopItem(bool isWeapon)
+    {
+        if (isWeapon)
+        {
+            int id = dicWeapon.Where(x => x.Value == shopWeaponInput.options[shopWeaponInput.value].text).FirstOrDefault().Key;
+            if (!shopWeaponList.Contains(id))
+            {
+                shopWeaponList.Add(id);
+            }
+        }
+        else
+        {
+            int id = dicItem.Where(x => x.Value == shopItemInput.options[shopItemInput.value].text).FirstOrDefault().Key;
+            if (!shopItemList.Contains(id))
+            {
+                shopItemList.Add(id);
+            }
+        }
+        SetShopList();
+    }
+
+    public void RemoveShopItem(bool isWeapon,string id)
+    {
+        if (isWeapon)
+        {
+            if (shopWeaponList.Contains(Convert.ToInt32(id)))
+            {
+                shopWeaponList.Remove(shopWeaponList.Where(x => x.ToString() == id).FirstOrDefault());
+            }
+        }
+        else
+        {
+            if (shopItemList.Contains(Convert.ToInt32(id)))
+            {
+                shopItemList.Remove(shopItemList.Where(x => x.ToString() == id).FirstOrDefault());
+            }
+        }
+        SetShopList();
+    }
+
+    private void SetShopList()
+    {
+        for (int i = 0; i < shopList.transform.childCount; i++)
+        {
+            Destroy(shopList.transform.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < shopItemList.Count; i++)
+        {
+            GameObject item = Instantiate(shopSelectionPrefab, new Vector3(), Quaternion.identity, shopList);
+            item.GetComponent<ShopEditSelect>().SetName(gameElement.items.Where(x => x.id == shopItemList[i]).FirstOrDefault().name, false, shopItemList[i]);
+        }
+
+        for (int i = 0; i < shopWeaponList.Count; i++)
+        {
+            GameObject item = Instantiate(shopSelectionPrefab, new Vector3(), Quaternion.identity, shopList);
+            item.GetComponent<ShopEditSelect>().SetName(gameElement.weapons.Where(x => x.id == shopWeaponList[i]).FirstOrDefault().name, false, shopWeaponList[i]);
+        }
     }
 
     public void TrimFileName()
@@ -566,6 +658,9 @@ public class MapCreatorManager : MonoBehaviour
         mapSizeX = mSizeX;
         mapSizeY = mSizeY;
 
+        shopItemList = new List<int>();
+        shopWeaponList = new List<int>();
+
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
             Destroy(mapTransform.transform.GetChild(i).gameObject);
@@ -591,7 +686,7 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                tile.TileInitializer(mapTransform, TileType.Normal, TileType2D.Plain, 0, 0, j, i, mapSizeX, mapSizeY, 0, -1, -1);
+                tile.TileInitializer(mapTransform, TileType.Normal, TileType2D.Plain, 0, 0, j, i, mapSizeX, mapSizeY, 0, -1, -1, false);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -641,7 +736,7 @@ public class MapCreatorManager : MonoBehaviour
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
 
-        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex,userPlayerRecords, enemyPlayerRecords), fileName.text + ".txt");
+        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex, userPlayerRecords, enemyPlayerRecords, shopItemList, shopWeaponList), fileName.text + ".txt");
     }
 
     public void loadMapFromXml()
@@ -668,6 +763,10 @@ public class MapCreatorManager : MonoBehaviour
 
         inputMapSizeX.text = mapSizeX.ToString();
         inputMapSizeY.text = mapSizeY.ToString();
+
+        shopItemList = container.shopItemList;
+        shopWeaponList = container.shopWeaponList;
+        SetShopList();
 
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
@@ -705,7 +804,7 @@ public class MapCreatorManager : MonoBehaviour
                 }
                 HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
                 TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
-                tile.TileInitializer(mapTransform, (TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId);
+                tile.TileInitializer(mapTransform, (TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId, temp.isShop);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -768,58 +867,6 @@ public class MapCreatorManager : MonoBehaviour
             newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
         }
 
-    }
-
-    private void OnGUI()
-    {
-        /*
-        Rect rect = new Rect(10, Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect,"Normal"))
-        {
-            pallerSelection = TileType.Normal;
-        }
-        rect = new Rect(10 + (100 + 10) * 1, Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Difficult"))
-        {
-            pallerSelection = TileType.Difficult;
-        }
-        rect = new Rect(10 + (100 + 10) * 2, Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Very Difficult"))
-        {
-            pallerSelection = TileType.VeryDifficult;
-        }
-        rect = new Rect(10 + (100 + 10) * 3, Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Impassible"))
-        {
-            pallerSelection = TileType.Impassible;
-        }
-
-        //IO
-        rect = new Rect(Screen.width - (10 + (100 + 10) * 2), Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Clear Map"))
-        {
-            genetareBlankMap(mapSizeX, mapSizeY);
-        }
-
-        rect = new Rect(Screen.width -(10+ (100 + 10) * 2), Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Load Map"))
-        {
-            loadMapFromXml();
-        }
-
-        rect = new Rect(Screen.width - (10 + (100 + 10) * 1), Screen.height - 80, 100, 60);
-
-        if (GUI.Button(rect, "Save Map"))
-        {
-            saveMapFromXml();
-        }
-        */
     }
 
 }

@@ -38,6 +38,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     [Header("Chest Setting")]
     public bool isHaveChest = false;
     public bool isChestOpened = false;
+    public bool isShop = false;
     public int gold = 0;
     public int itemId = -1;
     public int weaponId = -1;
@@ -234,7 +235,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return new Vector2(pos.x + (((int)pos.y) >> 1), pos.y);
     }
 
-    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY, int gold, int itemId, int weaponId)
+    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY, int gold, int itemId, int weaponId, bool isShop)
     {
         transform.parent = mapTransform;
         //SetType(tileType);
@@ -247,6 +248,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         this.gold = gold;
         this.itemId = itemId;
         this.weaponId = weaponId;
+        this.isShop = isShop;
         if (gold > 0 || itemId > 0 || weaponId > 0)
         {
             isHaveChest = true;
@@ -335,7 +337,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                                     isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Where(y => y.hp < y.maxHP && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
                                 }
                                 isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
-                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? MenuType.playerMenu : MenuType.playerMoveMenu) : MenuType.playerStandMenu) : MenuType.playerDeadMenu;
+                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? (isShop ? MenuType.playerShopMenu : MenuType.playerMenu) : (isShop ? MenuType.playerMoveShopMenu : MenuType.playerMoveMenu)) : (isShop ? MenuType.playerStandShopMenu : MenuType.playerStandMenu)) : MenuType.playerDeadMenu;
                                 GameManager.instance.SetPlayerIndex(player.playerIndex);
                             }
                         }
@@ -359,7 +361,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                 {
                     if (!GameManager.instance.moving&& !GameManager.instance.attacking)
                     {
-                        GameManager.instance.HideMenu();
+                        GameManager.instance.DisableGroup(GameManager.instance.menu);
                         GameManager.instance.RemoveHighlightTiles();
                     }
                 }
@@ -383,9 +385,14 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                         itemId = MapCreatorManager.instance.chestItem;
                         weaponId = MapCreatorManager.instance.chestWeapon;
                     }
+                    else if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Villa && MapCreatorManager.instance.isShop.isOn)
+                    {
+                        isShop = true;
+                    }
                     else
                     {
                         isHaveChest = false;
+                        isShop = false;
                         gold = 0;
                         itemId = -1;
                         weaponId = -1;

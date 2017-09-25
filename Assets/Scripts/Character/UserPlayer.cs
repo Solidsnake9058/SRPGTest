@@ -79,7 +79,7 @@ public class UserPlayer : Player
         //hp atk def dex wis mdef
         if (level >= 20)
         {
-            return new PlayerRecord();
+            return null;
         }
 
         List<LevelProp> lvprops = new List<LevelProp>();
@@ -88,7 +88,14 @@ public class UserPlayer : Player
             lvprops.Add((LevelProp)i);
         }
         lvprops = Shuffle(lvprops);
-        int upCount = Random.Range(1, 4);
+        int upCount = Random.Range(1, 5);
+
+        int addHP = 0;
+        int addAtk = 0;
+        int addDef = 0;
+        int addDex = 0;
+        int addWis = 0;
+        int addMDef = 0;
 
         level++;
         int addValue = 0;
@@ -98,42 +105,46 @@ public class UserPlayer : Player
             switch (lvprops[i])
             {
                 case LevelProp.hp:
-                    maxHP += addValue;
+                    if (maxHP + addValue > 150)
+                    {
+                        addValue = 150 - maxHP;
+                    }
+                    maxHP += addHP = addValue;
                     break;
                 case LevelProp.atk:
                     if (atk + addValue > 45)
                     {
                         addValue = 45 - atk;
                     }
-                    atk += addValue;
+                    atk += addAtk = addValue;
                     break;
                 case LevelProp.def:
                     if (atk + addValue > 45)
                     {
                         addValue = 45 - def;
                     }
-                    def += addValue;
+                    def += addDef = addValue;
                     break;
                 case LevelProp.dex:
                     if (atk + addValue > 45)
                     {
                         addValue = 45 - dex;
                     }
-                    dex += addValue;
+                    dex += addDex = addValue;
                     break;
                 case LevelProp.wis:
                     if (atk + addValue > 45)
                     {
                         addValue = 45 - wis;
                     }
-                    wis += addValue;
+                    wis += addWis = addValue;
                     break;
                 case LevelProp.mdef:
                     if (atk + addValue > 45)
                     {
                         addValue = 45 - mdef;
                     }
-                    mdef += addValue;
+                    mdef += addMDef = addValue;
                     break;
             }
             if (addValue == 0 && upCount <= (int)LevelProp.max)
@@ -142,7 +153,7 @@ public class UserPlayer : Player
             }
         }
 
-        return new PlayerRecord((uint)hp, (uint)atk, (uint)def, (uint)wis, (uint)dex, (uint)mdef);
+        return new PlayerRecord((uint)addHP, (uint)addAtk, (uint)addDef, (uint)addWis, (uint)addDex, (uint)addMDef);
     }
 
     public override void TurnOnGUI()

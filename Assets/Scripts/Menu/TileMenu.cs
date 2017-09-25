@@ -15,9 +15,15 @@ public class TileMenu : MonoBehaviour
     [HideInInspector]
     public string[] playerMenu = { "Move", "Action", "Weapon", "Item", "Status" };
     [HideInInspector]
+    public string[] playerShopMenu = { "Move", "Action", "Shop", "Weapon", "Item", "Status" };
+    [HideInInspector]
     public string[] playerMoveMenu = { "Move", "Weapon", "Item", "Status" };
     [HideInInspector]
+    public string[] playerMoveShopMenu = { "Move", "Weapon", "Shop", "Item", "Status" };
+    [HideInInspector]
     public string[] playerStandMenu = { "Weapon", "Item", "Status" };
+    [HideInInspector]
+    public string[] playerStandShopMenu = { "Shop", "Weapon", "Item", "Status" };
     [HideInInspector]
     public string[] playerDeadMenu = { "Status" };
     [HideInInspector]

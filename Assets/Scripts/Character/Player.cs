@@ -99,7 +99,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
     // Update is called once per frame
     public virtual void Update()
     {
-        if (!GameManager.instance.GetIsWaitingBattle() && hp <= 0)
+        if (SceneManager.GetActiveScene().name == "GameScene" && !GameManager.instance.GetIsWaitingBattle() && hp <= 0)
         {
             hp = 0;
             isActable = false;

@@ -116,7 +116,7 @@ public class AIPlayer : Player
             Player opponent = null;
             if (opppnetsNotCanBeCount.Count > 0)
             {
-                opponent = opppnetsNotCanBeCount.OrderBy(x => -x.hp).FirstOrDefault();
+                opponent = opppnetsNotCanBeCount.OrderBy(x => x.hp).FirstOrDefault();
             }
 
             if (opponent != null && opponent != default(Player))

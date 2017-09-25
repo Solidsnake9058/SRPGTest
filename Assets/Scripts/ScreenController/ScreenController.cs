@@ -35,6 +35,8 @@ public class ScreenController : MonoBehaviour
     Transform playerUITransform;
     List<PlayerUI> playerUIs;
 
+    public Transform cameraPos;
+
     private void Awake()
     {
         if (instance == null)
@@ -79,6 +81,22 @@ public class ScreenController : MonoBehaviour
         imageUp.rectTransform.position = new Vector2(mPoint.x, imageUp.rectTransform.position.y);
         imageDown.rectTransform.position = new Vector2(mPoint.x, imageDown.rectTransform.position.y);
 
+        if (SceneManager.GetActiveScene().name == "GameScene" || SceneManager.GetActiveScene().name == "MapCreatorScene")
+        {
+            if (mainCamera == null)
+            {
+                mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
+            }
+            if (mainCamera.localPosition != cameraPos.localPosition)
+            {
+                mainCamera.localPosition = cameraPos.localPosition;
+            }
+            if (mainCamera.rotation != cameraPos.rotation)
+            {
+                mainCamera.rotation = cameraPos.rotation;
+                SetPlayerUIRotation();
+            }
+        }
     }
 
     public void ResetCamera()
@@ -107,7 +125,7 @@ public class ScreenController : MonoBehaviour
         btnDown.pivot = btnRight.pivot;
         btnRight.pivot = temp;
         mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y > 0 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y + 360) - 90, 0);
-        GameManager.instance.cameraPosition = mainCamera.rotation.eulerAngles;
+        cameraPos.rotation = mainCamera.rotation;
         SetPlayerUIRotation();
     }
 
@@ -124,7 +142,7 @@ public class ScreenController : MonoBehaviour
         btnLeft.pivot = btnUp.pivot;
         btnUp.pivot = temp;
         mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y < 360 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y - 360) + 90, 0);
-        GameManager.instance.cameraPosition = mainCamera.rotation.eulerAngles;
+        cameraPos.rotation = mainCamera.rotation;
         SetPlayerUIRotation();
     }
 
@@ -193,7 +211,7 @@ public class ScreenController : MonoBehaviour
             return;
         }
 
-        mainCamera.localPosition = newPoint;
+        cameraPos.localPosition = newPoint;
 
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
@@ -203,21 +221,12 @@ public class ScreenController : MonoBehaviour
 
     public void SetCameraPos(Vector3 pos)
     {
-        if (mainCamera == null)
-        {
-            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
-        }
-        mainCamera.localPosition = pos;
+        cameraPos.localPosition = pos;
     }
 
     public void SetCameraRot(Vector3 pos)
     {
-        if (mainCamera == null)
-        {
-            mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
-        }
-        mainCamera.localRotation = Quaternion.Euler(pos);
-        SetPlayerUIRotation();
+        cameraPos.rotation = Quaternion.Euler(pos);
     }
 
 

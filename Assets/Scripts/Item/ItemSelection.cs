@@ -9,32 +9,48 @@ public class ItemSelection : MonoBehaviour {
     public Text itemType;
     public Text itemCount;
     public bool isWeapon;
+    public bool isShop;
 
     public void ClickAction()
     {
-        if (isWeapon)
+        if (isShop)
         {
-            if (GameManager.instance.itemSelectedId.ToString() == transform.name)
+            if (GameManager.instance.shopSelectedId == transform.name)
             {
-                GameManager.instance.weaponSelectedId = -1;
+                GameManager.instance.shopSelectedId = "";
             }
             else
             {
-                GameManager.instance.weaponSelectedId = Convert.ToInt32(transform.name);
+                GameManager.instance.shopSelectedId = transform.name;
             }
-            GameManager.instance.SetWeapon();
+            GameManager.instance.SetShop();
         }
         else
         {
-            if (GameManager.instance.itemSelectedId.ToString() == transform.name)
+            if (isWeapon)
             {
-                GameManager.instance.itemSelectedId = -1;
+                if (GameManager.instance.itemSelectedId.ToString() == transform.name)
+                {
+                    GameManager.instance.weaponSelectedId = -1;
+                }
+                else
+                {
+                    GameManager.instance.weaponSelectedId = Convert.ToInt32(transform.name);
+                }
+                GameManager.instance.SetWeapon();
             }
             else
             {
-                GameManager.instance.itemSelectedId = Convert.ToInt32(transform.name);
+                if (GameManager.instance.itemSelectedId.ToString() == transform.name)
+                {
+                    GameManager.instance.itemSelectedId = -1;
+                }
+                else
+                {
+                    GameManager.instance.itemSelectedId = Convert.ToInt32(transform.name);
+                }
+                GameManager.instance.SetItem();
             }
-            GameManager.instance.SetItem();
         }
     }
 
