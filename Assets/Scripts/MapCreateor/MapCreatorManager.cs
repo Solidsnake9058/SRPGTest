@@ -15,6 +15,7 @@ public class MapCreatorManager : MonoBehaviour
     public List<List<Tile>> map = new List<List<Tile>>();
     public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
+    public CanvasGroup stageGroup;
     public CanvasGroup tileGroup;
 	public CanvasGroup playerGroup;
 	public CanvasGroup enemyGroup;
@@ -22,6 +23,7 @@ public class MapCreatorManager : MonoBehaviour
     public MapSettingType settingSelection = MapSettingType.Tile;
     public TileType pallerSelection = TileType.Normal;
     public TileType2D pallerSelection2D = TileType2D.Plain;
+    public bool isScenarioMode = false;
     public int spriteIndex = 0;
     public int spritesMax = 0;
     public int spriteChestIndex = 0;
@@ -29,13 +31,18 @@ public class MapCreatorManager : MonoBehaviour
 
     public int playerIndex = 0;
     public int enemyIndex = 0;
-	public int enemyAIIndex = 0;
+
+    public int enemyAIIndex = 0;
     public int enemyLevelIndex = 0;
 
     public float playerHeight = 0;
 
     Transform mapTransform;
     Transform playerTransform;
+    Transform actorPlayerTransform;
+
+    [Header("Main UI")]
+    public Text changeModeText;
 
     [Header("Tile UI")]
 	public Text tileTypeName;
@@ -74,12 +81,47 @@ public class MapCreatorManager : MonoBehaviour
     public InputField inputMapSizeX;
     public InputField inputMapSizeY;
 
+    [Header("Scenario UI")]
+    public CanvasGroup scenarioGroup;
+    public CanvasGroup createScenarioGroup;
+    public CanvasGroup getPositionGroup;
+
+    public CanvasGroup createActorGroup;
+    public CanvasGroup controlActorGroup;
+    public CanvasGroup controlCameraGroup;
+    public CanvasGroup dialogGroup;
+
+    public Dropdown scenarioType;
+    public Dropdown scenarioConditionType;
+    public Dropdown userPlayer;
+    public Dropdown enemyPlayer;
+    public Toggle isOnceEvent;
+    public Dropdown actionType;
+    public RectTransform scenarioActionItemList;
+    public Dropdown characterTemplate;
+    public Dropdown createActorPivot;
+    public InputField createActorX;
+    public InputField createActorY;
+    public RectTransform createActorItemList;
+    public Dropdown selectedActor;
+    public Dropdown selectedActorPivot;
+    public InputField controlActorX;
+    public InputField controlActorY;
+    public InputField controlCameraX;
+    public InputField controlCameraY;
+    public InputField dialogName;
+    public InputField dialogContect;
+    public InputField getPosX;
+    public InputField getPosY;
+
     private GameElement gameElement;
     private List<CharacterTemplate> playerTypes;
 	private List<CharacterTemplate> enemyTypes;
     private List<CharacterLevelTemplate> enemyLevels;
     private List<PlayerRecord> userPlayerRecords;
     private List<PlayerRecord> enemyPlayerRecords;
+    private List<Player> stagePlayer;
+    private List<Player> actorPlayer;
     private Dictionary<int, string> dicItem;
     private Dictionary<int, string> dicWeapon;
 
@@ -94,11 +136,16 @@ public class MapCreatorManager : MonoBehaviour
         instance = this;
         mapTransform = transform.Find("Map");
         playerTransform = transform.Find("Players");
-	}
+        actorPlayerTransform = transform.Find("ActorPlayers");
+    }
 
     private void Start()
     {
         generateBlankMap(Convert.ToInt32(inputMapSizeX.text), Convert.ToInt32(inputMapSizeY.text));
+        isScenarioMode = false;
+        InitialScenarioUI();
+        EnableGroup(stageGroup);
+        DisableGroup(scenarioGroup);
         ControlGroup();
         LoadGameElements();
         ResetTileType();
@@ -166,11 +213,15 @@ public class MapCreatorManager : MonoBehaviour
 	}
 
 
-	private void ControlGroup()
+	private void ControlGroup(bool hideAll = false)
     {
         DisableGroup(tileGroup);
         DisableGroup(playerGroup);
         DisableGroup(enemyGroup);
+        if (hideAll)
+        {
+            return;
+        }
         switch (settingSelection)
         {
             case MapSettingType.Tile:
@@ -421,8 +472,34 @@ public class MapCreatorManager : MonoBehaviour
         }
     }
 
+    public void ChangeMode()
+    {
+        isScenarioMode = !isScenarioMode;
+        if (isScenarioMode)
+        {
+            changeModeText.text = "Stage Mode";
+            EnableGroup(scenarioGroup);
+            EnableGroup(createScenarioGroup);
+            SetUserPlayer();
+            SetEnemyPlayer();
+            DisableGroup(stageGroup);
+            ControlGroup(true);
+            playerTransform.position = new Vector3(0, -100, 0);
+            actorPlayerTransform.position = new Vector3(0, 0, 0);
+        }
+        else
+        {
+            changeModeText.text = "Scenario Mode";
+            EnableGroup(stageGroup);
+            DisableGroup(scenarioGroup);
+            ControlGroup();
+            playerTransform.position = new Vector3(0, 0, 0);
+            actorPlayerTransform.position = new Vector3(0, -100, 0);
+        }
+    }
     #endregion
 
+    #region Stage
     public void SetPlayer(Vector2 gridPosion, Vector3 pos,bool isDelete = false)
     {
         if (isDelete)
@@ -439,21 +516,29 @@ public class MapCreatorManager : MonoBehaviour
         {
             if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
             {
-                if (userPlayerRecords.Where(x => x.characterId == playerIndex).Count() > 0)
+                //playerId=
+                if (userPlayerRecords.Where(x => x.characterId == playerTypes[playerIndex].id).Count() > 0)
                 {
-                    PlayerRecord prtemp = userPlayerRecords.Where(x => x.characterId == playerIndex).FirstOrDefault();
+                    PlayerRecord prtemp = userPlayerRecords.Where(x => x.characterId == playerTypes[playerIndex].id).FirstOrDefault();
                     Transform temp = playerTransform.Find(string.Format(userPlayerNameFormat, prtemp.id));
                     Destroy(temp.gameObject);
                     userPlayerRecords.Remove(prtemp);
                 }
 
                 int id = userPlayerRecords.Count > 0 ? userPlayerRecords.Max(x => x.id) + 1 : 0;
-                userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerIndex, 0, aiTypeSelection, 0));
+                userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerTypes[playerIndex].id, 0, aiTypeSelection, 0));
 
-                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
+                GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)), isScenarioMode ? actorPlayerTransform : playerTransform);
                 newPlayer.name = string.Format(userPlayerNameFormat, id);
-                newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
+                if (isScenarioMode) 
+                {
+                    actorPlayer.Add(newPlayer.GetComponent<UserPlayer>());
+                }
+                else
+                {
+                    stagePlayer.Add(newPlayer.GetComponent<UserPlayer>());
+                }
             }
         }
     }
@@ -482,7 +567,7 @@ public class MapCreatorManager : MonoBehaviour
                 }
 
                 int id = enemyPlayerRecords.Count > 0 ? enemyPlayerRecords.Max(x => x.id) + 1 : 0;
-                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyLevelIndex, aiTypeSelection, intSearchRange));
+                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyTypes[enemyLevelIndex].id, aiTypeSelection, intSearchRange));
 
                 GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
                 newPlayer.name = string.Format(enemyPlayerNameFormat, id);
@@ -633,7 +718,122 @@ public class MapCreatorManager : MonoBehaviour
             item.GetComponent<ShopEditSelect>().SetName(gameElement.weapons.Where(x => x.id == shopWeaponList[i]).FirstOrDefault().name, false, shopWeaponList[i]);
         }
     }
+    #endregion
 
+    #region Scenario
+    private void InitialScenarioUI()
+    {
+        SetScenarioType();
+        SetScenarioConditionType();
+        SetActionType();
+        SetActorPivotType();
+        EnableGroup(createScenarioGroup);
+        DisableGroup(createActorGroup);
+        DisableGroup(controlActorGroup);
+        DisableGroup(controlCameraGroup);
+        DisableGroup(dialogGroup);
+        DisableGroup(getPositionGroup);
+        ChangeActionType();
+    }
+
+    private void SetScenarioType()
+    {
+        scenarioType.options.Clear();
+
+        for (int i = 0; i < (int)ScenarioType.Max; i++)
+        {
+            scenarioType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioType), (ScenarioType)i) });
+        }
+        scenarioType.RefreshShownValue();
+    }
+
+    private void SetScenarioConditionType()
+    {
+        scenarioConditionType.options.Clear();
+
+        for (int i = 0; i < (int)ScenarioConditionType.Max; i++)
+        {
+            scenarioConditionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioConditionType), (ScenarioConditionType)i) });
+        }
+        scenarioConditionType.RefreshShownValue();
+    }
+
+    private void SetUserPlayer()
+    {
+        userPlayer.options.Clear();
+        userPlayer.options.Add(new Dropdown.OptionData() { text = "-1,Any" });
+
+        for (int i = 0; i < userPlayerRecords.Count; i++)
+        {
+            userPlayer.options.Add(new Dropdown.OptionData() { text = string.Format("{0},{1}", userPlayerRecords[i].id, gameElement.characters.Where(x => !x.enemy && x.id == userPlayerRecords[i].characterId).FirstOrDefault().name) });
+        }
+        userPlayer.RefreshShownValue();
+    }
+
+    private void SetEnemyPlayer()
+    {
+        enemyPlayer.options.Clear();
+        enemyPlayer.options.Add(new Dropdown.OptionData() { text = "-1,Any" });
+
+        for (int i = 0; i < enemyPlayerRecords.Count; i++)
+        {
+            enemyPlayer.options.Add(new Dropdown.OptionData() { text = string.Format("{0},{1}", enemyPlayerRecords[i].id, gameElement.characters.Where(x => x.enemy && x.id == enemyPlayerRecords[i].characterId).FirstOrDefault().name) });
+        }
+        enemyPlayer.RefreshShownValue();
+    }
+
+    private void SetActionType()
+    {
+        actionType.options.Clear();
+
+        for (int i = 0; i < (int)ScenarioActionType.Max; i++)
+        {
+            actionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActionType), (ScenarioActionType)i) });
+        }
+        actionType.RefreshShownValue();
+    }
+
+    private void SetActorPivotType()
+    {
+        createActorPivot.options.Clear();
+        selectedActorPivot.options.Clear();
+
+        for (int i = 0; i < (int)ScenarioActorPivotType.Max; i++)
+        {
+            createActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActorPivotType), (ScenarioActorPivotType)i) });
+            selectedActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActorPivotType), (ScenarioActorPivotType)i) });
+        }
+        createActorPivot.RefreshShownValue();
+        selectedActorPivot.RefreshShownValue();
+    }
+
+    public void ChangeActionType()
+    {
+        DisableGroup(createActorGroup);
+        DisableGroup(controlActorGroup);
+        DisableGroup(controlCameraGroup);
+        DisableGroup(dialogGroup);
+        ScenarioActionType temp = (ScenarioActionType)Enum.Parse(typeof(ScenarioActionType), actionType.options[actionType.value].text);
+        switch (temp)
+        {
+            case ScenarioActionType.Dialog:
+                EnableGroup(dialogGroup);
+                break;
+            case ScenarioActionType.CreateActor:
+                EnableGroup(createActorGroup);
+                break;
+            case ScenarioActionType.ControlActor:
+                EnableGroup(controlActorGroup);
+                break;
+            case ScenarioActionType.SetCamera:
+            case ScenarioActionType.ControlCamera:
+                EnableGroup(controlCameraGroup);
+                break;
+        }
+    }
+    #endregion
+
+    #region IO
     public void TrimFileName()
     {
         fileName.text = fileName.text.Trim();
@@ -826,6 +1026,12 @@ public class MapCreatorManager : MonoBehaviour
         ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
         LoadPlayers();
+
+        isScenarioMode = false;
+        InitialScenarioUI();
+        EnableGroup(stageGroup);
+        DisableGroup(scenarioGroup);
+        ControlGroup();
         /*
         for (int i = 0; i < mapSizeX; i++)
         {
@@ -868,5 +1074,6 @@ public class MapCreatorManager : MonoBehaviour
         }
 
     }
+    #endregion
 
 }

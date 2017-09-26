@@ -87,7 +87,7 @@ public class UserPlayer : Player
         {
             lvprops.Add((LevelProp)i);
         }
-        lvprops = Shuffle(lvprops);
+        lvprops = GenericFunction.Shuffle(lvprops);
         int upCount = Random.Range(1, 5);
 
         int addHP = 0;
@@ -156,61 +156,4 @@ public class UserPlayer : Player
         return new PlayerRecord((uint)addHP, (uint)addAtk, (uint)addDef, (uint)addWis, (uint)addDex, (uint)addMDef);
     }
 
-    public override void TurnOnGUI()
-    {
-        //float buttonHeight = 50;
-        //float buttonWight = 150;
-
-        //Rect buttonRect = new Rect(0, Screen.height - buttonHeight * 3, buttonWight, buttonHeight);
-
-        ////move button
-        //if (GUI.Button(buttonRect, "Move"))
-        //{
-        //    if (!moving)
-        //    {
-        //        GameManager.instance.RemoveHighlightTiles();
-        //        moving = true;
-        //        attacking = false;
-        //        GameManager.instance.HighlightTileAt(gridPosition, Color.blue, (int)movementPerActionPoint, false);
-        //    }
-        //    else
-        //    {
-        //        moving = false;
-        //        attacking = false;
-        //        GameManager.instance.RemoveHighlightTiles();
-        //    }
-        //}
-        ////attack button
-        //buttonRect = new Rect(0, Screen.height - buttonHeight * 2, buttonWight, buttonHeight);
-
-        //if (GUI.Button(buttonRect, "Attack"))
-        //{
-        //    if (!attacking)
-        //    {
-        //        GameManager.instance.RemoveHighlightTiles();
-        //        moving = false;
-        //        attacking = true;
-        //        GameManager.instance.HighlightTileAt(gridPosition, Color.red, attackRange);
-        //    }
-        //    else
-        //    {
-        //        moving = false;
-        //        attacking = false;
-        //        GameManager.instance.RemoveHighlightTiles();
-        //    }
-        //}
-        ////end turn button
-        //buttonRect = new Rect(0, Screen.height - buttonHeight * 1, buttonWight, buttonHeight);
-
-        //if (GUI.Button(buttonRect,"End Turn"))
-        //{
-        //    GameManager.instance.RemoveHighlightTiles();
-        //    actionPoint = 2;
-        //    moving = false;
-        //    attacking = false;
-        //    GameManager.instance.NextTurn();
-        //}
-
-        //base.TurnOnGUI();
-    }
 }

@@ -141,6 +141,16 @@ public class Player : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    public void HidePlayer()
+    {
+        transform.position = new Vector3(transform.position.x, -100, transform.position.z);
+    }
+
+    public void ShowPlayer()
+    {
+        transform.position = new Vector3(transform.position.x, 0, transform.position.z);
+    }
+
     public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
     {
         Weapon weapon = GameManager.instance.gameElement.weapons.Where(x => x.id == equipWeapon).FirstOrDefault();
@@ -194,21 +204,6 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     }
 
-    public static List<T> Shuffle<T>(IEnumerable<T> values)
-    {
-        List<T> list = new List<T>(values);
-        T tmp;
-        int iS;
-        for (int N1 = 0; N1 < list.Count; N1++)
-        {
-            iS = Random.Range(0, list.Count);
-            tmp = list[N1];
-            list[N1] = list[iS];
-            list[iS] = tmp;
-        }
-        return list;
-    }
-
     public virtual List<HexTile> GetAttackRange()
     {
         List<HexTile> range = new List<HexTile>();
@@ -257,13 +252,28 @@ public class Player : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void OnGUI()
+    public void SetPivot(ScenarioActorPivotType scenarioActorPivotType)
     {
-        //display HP
-        //Vector3 location = Camera.main.WorldToScreenPoint(transform.position);// + Vector3.up * 35;
-        //GUIStyle style = new GUIStyle();
-        //style.normal.textColor = Color.black;
-        //GUI.Label(new Rect(location.x, Screen.height - location.y, 30, 20), (hp.ToString() + "//" + maxHP.ToString()), style);
-        //Debug.Log(playerName + ":(" + location.x + "," + location.y + "," + location.z + ")");
+        switch (scenarioActorPivotType)
+        {
+            case ScenarioActorPivotType.Right:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
+                break;
+            case ScenarioActorPivotType.UpRight:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 150, 0));
+                break;
+            case ScenarioActorPivotType.UpLeft:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 210, 0));
+                break;
+            case ScenarioActorPivotType.Left:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 270, 0));
+                break;
+            case ScenarioActorPivotType.DownLeft:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 330, 0));
+                break;
+            case ScenarioActorPivotType.DownRight:
+                transform.rotation = Quaternion.Euler(new Vector3(0, 30, 0));
+                break;
+        }
     }
 }

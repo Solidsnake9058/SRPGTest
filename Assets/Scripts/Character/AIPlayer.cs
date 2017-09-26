@@ -25,7 +25,7 @@ public class AIPlayer : Player
         //}
         if (hp <= 0)
         {
-            transform.position = new Vector3(transform.position.x, -100, transform.position.x);
+            HidePlayer();
         }
 
         base.Update();
@@ -453,14 +453,4 @@ public class AIPlayer : Player
         base.TurnOnGUI();
     }
 
-    public override void OnMouseDown()
-    {
-        //if (GameManager.instance.attacking)
-        //{
-        //    HexTile attTile = GameManager.instance.mapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
-        //    GameManager.instance.AttackWithCurrentPlayer(attTile);
-        //}
-
-        base.OnMouseDown();
-    }
 }

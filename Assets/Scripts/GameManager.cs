@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
 
     public CanvasGroup blockUI;
     public Image menuImage;
+    public CanvasGroup mapController;
     public CanvasGroup menu;
     public CanvasGroup endTurnConfirm;
     public CanvasGroup stageMessage;
@@ -58,6 +59,9 @@ public class GameManager : MonoBehaviour
     //public List<Player> players = new List<Player>();
     public List<Player> userPlayers = new List<Player>();
     public List<Player> enemyPlayers = new List<Player>();
+    public List<Player> actorPlayers = new List<Player>();
+    public List<Scenario> stageScenatios = new List<Scenario>();
+    public Scenario runningScenario;
     public List<int> shopItemList;
     public List<int> shopWeaponList;
 
@@ -73,10 +77,10 @@ public class GameManager : MonoBehaviour
     #region game parament
     [HideInInspector]
     public bool isPlayerTurn = true;
-    private bool isWaitingAct = false;
+    private bool isWaitingActor = false;
     private bool isWaitingBattle = false;
     private bool isWaitingMsg = false;
-    private bool isShowStage = true;
+    private bool isShowStage = false;
     [HideInInspector]
     public bool isSetCamera = false;
 
@@ -163,6 +167,10 @@ public class GameManager : MonoBehaviour
     public RectTransform shopList;
     public Button buttonBuyItem;
 
+    [Header("Dialog UI")]
+    public CanvasGroup dialogGroup;
+    public Text dialogName;
+    public Text dialogText;
     #endregion
 
     public int playerGold
@@ -211,37 +219,112 @@ public class GameManager : MonoBehaviour
             playerItems = new Dictionary<int, int>();
             playerWeapons = new Dictionary<int, int>();
             StartGame();
-            ShowStageInfo(false);
+            Scenario opening = stageScenatios.Where(x => x.scenarioType == ScenarioType.Openning).FirstOrDefault();
+
+            //test
+            //List<ScenarioAction> testDialog = new List<ScenarioAction>();
+            //testDialog.Add(new ScenarioAction(0, "Name1", "Test1"));
+            //testDialog.Add(new ScenarioAction(1, "Name2", "Test2"));
+            //opening = new Scenario(0, ScenarioType.Openning, ScenarioConditionType.None, null, null, true, testDialog, null);
+            if (opening != null)
+            {
+                runningScenario = opening;
+                if (runningScenario.isOnceEvent)
+                {
+                    stageScenatios.Remove(opening);
+                }
+            }
+            else
+            {
+                ShowStageInfo(false);
+                Debug.Log("No opening ");
+            }
         }
     }
 
     void Update()
     {
-        if (!isWaitingMsg && !isWaitingBattle)
+        //play mode
+        if (runningScenario == null)
         {
-            if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
+            if (!isWaitingMsg && !isWaitingBattle)
             {
-                if (isPlayerTurn)
+                if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
                 {
-                    if (!isWaitingAct)
+                    if (isPlayerTurn)
                     {
-
-                    }
-                }
-                else
-                {
-                    if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
-                    {
-                        StartCoroutine(RunEnemyTurn());
-                        //enemyPlayers[currentEnemyPlayerIndex].TurnUpdate();
                     }
                     else
                     {
-                        NextEnemyTurn();
+                        if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
+                        {
+                            StartCoroutine(RunEnemyTurn());
+                            //enemyPlayers[currentEnemyPlayerIndex].TurnUpdate();
+                        }
+                        else
+                        {
+                            NextEnemyTurn();
+                        }
                     }
+                }
+                else if (enemyPlayers.Count == 0 || enemyPlayers.Where(x => x.hp > 0).Count() == 0)
+                {
+                    //Win
+                }
+                else if (userPlayers.Where(x => gameElement.races.Where(y => y.name == "ロード").FirstOrDefault().id == x.race && x.hp < 0).Count() > 0)
+                {
+                    //Game Over
                 }
             }
         }
+        //scenario mode
+        else
+        {
+            DisableGroup(mapController);
+            if (!isWaitingActor)
+            {
+                //run scenario
+                if (runningScenario.scenarioActionStep < runningScenario.scenarioActions.Count)
+                {
+                    //play action
+                    if (runningScenario.scenarioType == ScenarioType.Openning)
+                    {
+                        //Hide all players
+                        HidePlayers();
+                    }
+                    switch (runningScenario.scenarioActions[runningScenario.scenarioActionStep].scenarioActionType)
+                    {
+                        case ScenarioActionType.Dialog:
+                            //Show dialog
+                            EnableGroup(dialogGroup);
+                            dialogName.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogName;
+                            dialogText.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogText;
+                            isWaitingActor = true;
+                            break;
+                        case ScenarioActionType.CreateActor:
+                            //Create actors
+                            break;
+                        case ScenarioActionType.ControlActor:
+                            //Control actors
+                            isWaitingActor = true;
+                            break;
+                    }
+                    runningScenario.scenarioActionStep++;
+                }
+                else
+                {
+                    //Scenario is end
+                    EnableGroup(mapController);
+                    if (runningScenario.scenarioType == ScenarioType.Openning)
+                    {
+                        ShowPlayers();
+                        ShowStageInfo(false);
+                    }
+                    runningScenario = null;
+                }
+            }
+        }
+
         //if (players[currentPlayerIndex].HP > 0)
         //{
         //    players[currentPlayerIndex].TurnUpdate();
@@ -269,7 +352,7 @@ public class GameManager : MonoBehaviour
     {
         turnCount = 1;
         isPlayerTurn = true;
-        isWaitingAct = false;
+        isWaitingActor = false;
         isWaitingMsg = false;
         currentEnemyPlayerIndex = 0;
         playerIndex = -1;
@@ -288,6 +371,7 @@ public class GameManager : MonoBehaviour
         DisableGroup(weaponGroup);
         DisableGroup(unitGroup);
         DisableGroup(shopGroup);
+        DisableGroup(dialogGroup);
         isShowStage = true;
     }
 
@@ -307,12 +391,12 @@ public class GameManager : MonoBehaviour
 
     public void SetStartWaiting()
     {
-        blockUI.blocksRaycasts = blockUI.interactable = isWaitingAct = true;
+        blockUI.blocksRaycasts = blockUI.interactable = true;
     }
 
     public void SetStopWaiting()
     {
-        blockUI.blocksRaycasts = blockUI.interactable = isWaitingAct = false;
+        blockUI.blocksRaycasts = blockUI.interactable = false;
     }
 
     public void ShowStageInfo(bool turnMsg = true)
@@ -410,6 +494,46 @@ public class GameManager : MonoBehaviour
         isWaitingMsg = true;
     }
 
+    private void HidePlayers()
+    {
+        foreach (Player p in userPlayers.Union(enemyPlayers))
+        {
+            if (p.hp <= 0)
+            {
+                continue;
+            }
+            p.HidePlayer();
+        }
+    }
+
+    private void ShowPlayers()
+    {
+        foreach (Player p in userPlayers.Union(enemyPlayers))
+        {
+            if (p.hp <= 0)
+            {
+                continue;
+            }
+            p.ShowPlayer();
+        }
+    }
+
+    private void HideActor()
+    {
+        foreach (Player p in actorPlayers)
+        {
+            p.HidePlayer();
+        }
+    }
+
+    private void ShowActor()
+    {
+        foreach (Player p in actorPlayers)
+        {
+            p.ShowPlayer();
+        }
+    }
+
 
     public void HideStageInfo()
     {
@@ -420,6 +544,12 @@ public class GameManager : MonoBehaviour
             isShowStage = false;
             ShowStageInfo();
         }
+    }
+
+    public void ConfirmDialog()
+    {
+        DisableGroup(dialogGroup);
+        isWaitingActor = false;
     }
 
     public void DisableGroup(CanvasGroup group)
@@ -473,11 +603,6 @@ public class GameManager : MonoBehaviour
     public void SetPlayerIndex(int index)
     {
         playerIndex = index;
-    }
-
-    private void OnGUI()
-    {
-        //players[currentPlayerIndex].TurnOnGUI();
     }
 
     public void NextTurn()
