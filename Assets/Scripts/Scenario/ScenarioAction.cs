@@ -6,10 +6,10 @@ public class ScenarioAction
 {
     public int scenarioActionId;
     public ScenarioActionType scenarioActionType;
-    public List<CharacterTemplate> createActors;
+    public List<PlayerRecord> createActors;
     public Player controlActor;
     public bool isMoveCamera;
-    public Vector3 setCameraPos;
+    public HexTile.HexCoord setCameraPos;
     public HexTile.HexCoord targetMoveTile;
     public ScenarioActorPivotType actorPivot;
     public string dialogName;
@@ -17,11 +17,10 @@ public class ScenarioAction
 
     public ScenarioAction() { }
 
-    public ScenarioAction(int scenarioActionId, Vector3 setCameraPos, List<CharacterTemplate> createActors)
+    public ScenarioAction(int scenarioActionId, List<PlayerRecord> createActors)
     {
         scenarioActionType = ScenarioActionType.CreateActor;
         this.scenarioActionId = scenarioActionId;
-        this.setCameraPos = setCameraPos;
         this.createActors = createActors;
     }
 
@@ -34,7 +33,7 @@ public class ScenarioAction
         this.actorPivot = actorPivot;
     }
 
-    public ScenarioAction(int scenarioActionId, bool isMoveCamera, Vector3 setCameraPos, HexTile.HexCoord targetMoveTile)
+    public ScenarioAction(int scenarioActionId, bool isMoveCamera, HexTile.HexCoord setCameraPos, HexTile.HexCoord targetMoveTile)
     {
         scenarioActionType = isMoveCamera? ScenarioActionType .ControlCamera: ScenarioActionType.SetCamera;
         this.scenarioActionId = scenarioActionId;

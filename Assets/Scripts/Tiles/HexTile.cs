@@ -425,6 +425,12 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             else
             {
 
+                if (MapCreatorManager.instance.isGetPos)
+                {
+                    MapCreatorManager.instance.getPosX.text = hex.q.ToString();
+                    MapCreatorManager.instance.getPosY.text = hex.r.ToString();
+                    MapCreatorManager.instance.pointer.position = transform.position;
+                }
             }
         }
     }
@@ -433,24 +439,27 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     {
         if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
         {
-            switch (MapCreatorManager.instance.settingSelection)
+            if (!MapCreatorManager.instance.isScenarioMode)
             {
-                case MapSettingType.Tile:
-                    //SetType(MapCreatorManager.instance.pallerSelection);
-                    SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
-                    if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
-                    {
-                        gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
-                        itemId = MapCreatorManager.instance.chestItem;
-                        weaponId = MapCreatorManager.instance.chestWeapon;
-                    }
-                    break;
-                case MapSettingType.Player:
-                    break;
-                case MapSettingType.Enemy:
-                    break;
-            }
+                switch (MapCreatorManager.instance.settingSelection)
+                {
+                    case MapSettingType.Tile:
+                        //SetType(MapCreatorManager.instance.pallerSelection);
+                        SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
+                        if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
+                        {
+                            gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                            itemId = MapCreatorManager.instance.chestItem;
+                            weaponId = MapCreatorManager.instance.chestWeapon;
+                        }
+                        break;
+                    case MapSettingType.Player:
+                        break;
+                    case MapSettingType.Enemy:
+                        break;
+                }
 
+            }
         }
     }
 

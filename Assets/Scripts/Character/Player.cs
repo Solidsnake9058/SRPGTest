@@ -260,19 +260,19 @@ public class Player : MonoBehaviour, IPointerClickHandler
                 transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
                 break;
             case ScenarioActorPivotType.UpRight:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 150, 0));
+                transform.rotation = Quaternion.Euler(new Vector3(0, 30, 0));
                 break;
             case ScenarioActorPivotType.UpLeft:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 210, 0));
+                transform.rotation = Quaternion.Euler(new Vector3(0, 330, 0));
                 break;
             case ScenarioActorPivotType.Left:
                 transform.rotation = Quaternion.Euler(new Vector3(0, 270, 0));
                 break;
             case ScenarioActorPivotType.DownLeft:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 330, 0));
+                transform.rotation = Quaternion.Euler(new Vector3(0, 210, 0));
                 break;
             case ScenarioActorPivotType.DownRight:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 30, 0));
+                transform.rotation = Quaternion.Euler(new Vector3(0, 150, 0));
                 break;
         }
     }

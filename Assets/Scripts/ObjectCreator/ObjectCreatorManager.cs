@@ -878,7 +878,7 @@ public class ObjectCreatorManager : MonoBehaviour
             uint gold = Convert.ToUInt32(string.IsNullOrEmpty(charGold.text) || !charIsEnemy.isOn ? "0" : charGold.text);
             int equipWeapon = dicWeapon.Where(x => x.Value == charWeapon.options[charWeapon.value].text).FirstOrDefault().Key;
 
-            int id = newId == -1 ? (races.Count > 0 ? races.Select(x => x.id).Max() + 1 : 0) : newId;
+            int id = newId == -1 ? (characterLevels.Count > 0 ? characterLevels.Select(x => x.id).Max() + 1 : 0) : newId;
             //if (characterLevels.Where(x => x.level == level).Count() > 0)
             //{
             //    Debug.LogError("Level exist");

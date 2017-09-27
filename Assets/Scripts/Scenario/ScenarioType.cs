@@ -25,6 +25,8 @@ public enum ScenarioActionType
     ControlActor,
     SetCamera,
     ControlCamera,
+    AddUserPlayer,
+    AddEnemyPlayer,
     Max
 }
 

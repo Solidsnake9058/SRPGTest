@@ -41,6 +41,8 @@ public class PlayerRecord
     public uint mdef { get; private set; }
     [JsonProperty]
     public int equipWeapon { get; private set; }
+    [JsonProperty]
+    public ScenarioActorPivotType scenarioActorPivotType { get; private set; }
 
     //For create enemy
     [JsonProperty]
@@ -64,6 +66,16 @@ public class PlayerRecord
         this.levelId = levelId;
         this.aiType = aiType;
         this.searchRange = searchRange;
+    }
+
+    public PlayerRecord(int id, int locX, int locY, int characterId, ScenarioActorPivotType scenarioActorPivotType)
+    {
+        this.id = id;
+        this.locX = locX;
+        this.locY = locY;
+        this.characterId = characterId;
+        this.scenarioActorPivotType = scenarioActorPivotType;
+        levelId = 0;
     }
 
     public PlayerRecord(int id, bool isEnemy, bool isNewPlayer, int locX, int locY, int characterId, int levelId, uint level, uint exp, uint hp, uint atk, uint def, uint wis, uint dex, uint mdef, int equipWeapon, EnemyAIType aiType, int searchRange)

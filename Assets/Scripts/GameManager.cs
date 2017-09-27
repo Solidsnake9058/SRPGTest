@@ -1878,8 +1878,8 @@ public class GameManager : MonoBehaviour
             int x = userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1);
             int y = userPlayerRecords[i].locY;
             Vector3 tilePOs = mapHex[y][x].HexTilePos();
-            CharacterTemplate playerData = playerTypes[userPlayerRecords[i].characterId];
-            CharacterLevelTemplate playerLvData = playerTypes[userPlayerRecords[i].characterId].levelData[0];
+            CharacterTemplate playerData = playerTypes.Where(t=>t.id== userPlayerRecords[i].characterId).FirstOrDefault();
+            CharacterLevelTemplate playerLvData = playerData.levelData[0];
             PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePOs.x, playerHeight, tilePOs.z), Quaternion.Euler(new Vector3(0, 180, 0))).GetComponent<UserPlayer>();
@@ -1936,8 +1936,8 @@ public class GameManager : MonoBehaviour
             int x = enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1);
             int y = enemyPlayerRecords[i].locY;
             Vector3 tilePOs = mapHex[y][x].HexTilePos();
-            CharacterTemplate playerData = enemyTypes[enemyPlayerRecords[i].characterId];
-            CharacterLevelTemplate playerLvData = enemyTypes[enemyPlayerRecords[i].characterId].levelData[enemyPlayerRecords[i].levelId];
+            CharacterTemplate playerData = enemyTypes.Where(t=>t.id== enemyPlayerRecords[i].characterId).FirstOrDefault();
+            CharacterLevelTemplate playerLvData = playerData.levelData.Where(t => t.id == enemyPlayerRecords[i].levelId).FirstOrDefault();
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePOs.x, playerHeight, tilePOs.z), Quaternion.Euler(new Vector3(0,180,0)))).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
