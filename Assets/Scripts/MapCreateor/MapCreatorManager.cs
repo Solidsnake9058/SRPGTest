@@ -102,22 +102,30 @@ public class MapCreatorManager : MonoBehaviour
     public Dropdown enemyPlayer;
     public Toggle isOnceEvent;
     public Dropdown actionType;
+	public InputField waitTime;
+	public Toggle isToDark;
     public RectTransform scenarioActionItemList;
     public GameObject createrActionSelectorPrefab;
+    //create actor
+    public int selectedActionId = -1;
     public Dropdown characterTemplate;
     public Dropdown createActorPivot;
     public InputField createActorX;
     public InputField createActorY;
     public RectTransform createActorItemList;
     public GameObject createrActorSelectorPrefab;
+    //control actor
     public Dropdown selectedActor;
     public Dropdown selectedActorPivot;
     public InputField controlActorX;
     public InputField controlActorY;
+    //control camera
     public InputField controlCameraX;
     public InputField controlCameraY;
+    //dialog
     public InputField dialogName;
     public InputField dialogContect;
+    //get pos
     public InputField getPosX;
     public InputField getPosY;
 
@@ -864,6 +872,7 @@ public class MapCreatorManager : MonoBehaviour
                 break;
             case ScenarioActionType.ControlActor:
                 EnableGroup(controlActorGroup);
+                SetActorSelector();
                 break;
             case ScenarioActionType.SetCamera:
             case ScenarioActionType.ControlCamera:
@@ -956,6 +965,7 @@ public class MapCreatorManager : MonoBehaviour
     {
         int actionId = scenarioActions.Count > 0 ? scenarioActions.OrderBy(x => -x.scenarioActionId).FirstOrDefault().scenarioActionId + 1 : 0;
         ScenarioActionType temp = (ScenarioActionType)Enum.Parse(typeof(ScenarioActionType), actionType.options[actionType.value].text);
+        float afterWaitTime = string.IsNullOrEmpty(waitTime.text) ? 0 : (float)Convert.ToDouble(waitTime.text);
         switch (temp)
         {
             case ScenarioActionType.Dialog:
@@ -966,10 +976,11 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     return;
                 }
-                scenarioActions.Add(new ScenarioAction(actionId, scenarioActorPlayerRecords));
+                scenarioActions.Add(new ScenarioAction(actionId, scenarioActorPlayerRecords, afterWaitTime, isToDark.isOn));
                 break;
             case ScenarioActionType.ControlActor:
-                break;
+                
+				scenarioActions.Add(new ScenarioAction(actionId, scenarioActorPlayerRecords, afterWaitTime, isToDark.isOn)); break;
             case ScenarioActionType.SetCamera:
                 break;
             case ScenarioActionType.ControlCamera:
@@ -990,7 +1001,6 @@ public class MapCreatorManager : MonoBehaviour
         createActorPivot.value = 0;
         createActorX.text = "";
         createActorY.text = "";
-        scenarioActorPlayerRecords = new List<PlayerRecord>();
         ClearCreateActorList();
     }
 
@@ -1032,7 +1042,7 @@ public class MapCreatorManager : MonoBehaviour
         ScenarioActorPivotType tempPivot = (ScenarioActorPivotType)Enum.Parse(typeof(ScenarioActorPivotType), createActorPivot.options[createActorPivot.value].text);
 
         int val = 0;
-        if (!Int32.TryParse(createActorX.text,out val)|| !Int32.TryParse(createActorY.text, out val))
+        if (!Int32.TryParse(createActorX.text, out val) || !Int32.TryParse(createActorY.text, out val))
         {
             return;
         }
@@ -1057,6 +1067,19 @@ public class MapCreatorManager : MonoBehaviour
         ReloadCreateActorList();
     }
 
+    private void SetActorSelector()
+    {
+        selectedActor.options.Clear();
+        for (int i = 0; i < (selectedActionId == -1 ? selectedActionId : scenarioActions.Count); i++)
+        {
+            List<PlayerRecord> actors = scenarioActions[i].createActors;
+            Debug.Log("");
+            for (int j = 0; j < actors.Count; j++)
+            {
+                selectedActor.options.Add(new Dropdown.OptionData() { text = string.Format("{0},{1}", actors[j].id, gameElement.characters.Where(x => x.id == actors[j].characterId).FirstOrDefault().name) });
+            }
+        }
+    }
 
     #endregion
 
