@@ -40,3 +40,11 @@ public enum ScenarioActorPivotType
     DownRight,
     Max
 }
+
+public enum ScenarioSelectType
+{
+    Scenario,
+    Action,
+    Actor,
+    Max
+}

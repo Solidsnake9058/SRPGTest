@@ -39,13 +39,19 @@ public class ScenarioAction
 		this.isToDark = isToDark;
 	}
 
-    public ScenarioAction(int scenarioActionId, bool isMoveCamera, HexTile.HexCoord setCameraPos, HexTile.HexCoord targetMoveTile, float waitTime, bool isToDark)
+    public ScenarioAction(int scenarioActionId, bool isMoveCamera, HexTile.HexCoord targetMoveTile, float waitTime, bool isToDark)
     {
-        scenarioActionType = isMoveCamera? ScenarioActionType .ControlCamera: ScenarioActionType.SetCamera;
+        scenarioActionType = isMoveCamera? ScenarioActionType.ControlCamera: ScenarioActionType.SetCamera;
         this.scenarioActionId = scenarioActionId;
-        this.setCameraPos = setCameraPos;
-        this.targetMoveTile = targetMoveTile;
-		this.waitTime = waitTime;
+        if (isMoveCamera)
+        {
+            this.targetMoveTile = targetMoveTile;
+        }
+        else
+        {
+            setCameraPos = targetMoveTile;
+        }
+        this.waitTime = waitTime;
 		this.isToDark = isToDark;
 	}
 

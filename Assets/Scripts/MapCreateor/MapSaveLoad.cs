@@ -65,6 +65,10 @@ public class MapXmlContainer
     [XmlArrayItem("shopWeaponList")]
     public List<int> shopWeaponList = new List<int>();
 
+    [XmlArray("scenarioList")]
+    [XmlArrayItem("scenarioList")]
+    public List<Scenario> scenarioList = new List<Scenario>();
+
 }
 
 public static class MapSaveLoad
@@ -89,7 +93,7 @@ public static class MapSaveLoad
         };
     }
 
-    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList)
+    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenario> scenarioList)
     {
         List<TileXml> tiles = new List<TileXml>();
 
@@ -109,7 +113,8 @@ public static class MapSaveLoad
             userPlayerRecords = userPlayerRecords,
             enemyPlayerRecords = enemyPlayerRecords,
             shopItemList = shopItemList,
-            shopWeaponList = shopWeaponList
+            shopWeaponList = shopWeaponList,
+            scenarioList = scenarioList
         };
     }
 
