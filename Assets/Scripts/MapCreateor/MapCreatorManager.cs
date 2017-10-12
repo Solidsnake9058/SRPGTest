@@ -770,7 +770,13 @@ public class MapCreatorManager : MonoBehaviour
         DisableGroup(dialogGroup);
         DisableGroup(getPositionGroup);
         actionType.value = 0;
-        ChangeActionType();
+        actionType.RefreshShownValue(); ChangeActionType();
+        scenarioType.interactable = true;
+        scenarioType.value = 0;
+        scenarioType.RefreshShownValue();
+        scenarioConditionType.interactable = true;
+        scenarioConditionType.value = 0;
+        scenarioConditionType.RefreshShownValue();
     }
 
     private void SetScenarioType()
@@ -924,9 +930,15 @@ public class MapCreatorManager : MonoBehaviour
     public void ResetScenario()
     {
         selectedScenarioId = -1;
-        scenarioType.value = 0;
-        scenarioConditionType.value = 0;
-        userPlayer.value = 0;
+		actionType.value = 0;
+		actionType.RefreshShownValue(); ChangeActionType();
+		scenarioType.interactable = true;
+		scenarioType.value = 0;
+		scenarioType.RefreshShownValue();
+		scenarioConditionType.interactable = true;
+		scenarioConditionType.value = 0;
+		scenarioConditionType.RefreshShownValue();
+		userPlayer.value = 0;
         enemyPlayer.value = 0;
         isOnceEvent.isOn = true;
         scenarioActions = new List<ScenarioAction>();
@@ -1213,9 +1225,12 @@ public class MapCreatorManager : MonoBehaviour
                 controlActorY.text = action.targetMoveTile.r.ToString();
                 break;
             case ScenarioActionType.SetCamera:
-            case ScenarioActionType.ControlCamera:
-                controlCameraX.text = action.setCameraPos.q.ToString();
-                controlCameraY.text = action.setCameraPos.r.ToString();
+				controlCameraX.text = action.setCameraPos.q.ToString();
+				controlCameraY.text = action.setCameraPos.r.ToString();
+				break;
+			case ScenarioActionType.ControlCamera:
+                controlCameraX.text = action.targetMoveTile.q.ToString();
+                controlCameraY.text = action.targetMoveTile.r.ToString();
                 break;
             case ScenarioActionType.AddUserPlayer:
                 break;
