@@ -6,8 +6,8 @@ public class Scenario
     public int scenarioId;
     public ScenarioType scenarioType;
     public ScenarioConditionType scenarioConditionType;
-    public Player userPlayer;
-    public Player enemyPlayer;
+    public int userPlayer;
+    public int enemyPlayer;
     public bool isOnceEvent;
     public List<ScenarioAction> scenarioActions;
     public int scenarioActionStep = 0;
@@ -15,7 +15,7 @@ public class Scenario
 
     public Scenario() { }
 
-    public Scenario(int scenarioId, ScenarioType scenarioType, ScenarioConditionType scenarioConditionType, Player userPlayer, Player enemyPlayer, bool isOnceEvent, List<ScenarioAction> scenarioActions, HexTile battleAfterEvent)
+    public Scenario(int scenarioId, ScenarioType scenarioType, ScenarioConditionType scenarioConditionType, int userPlayer, int enemyPlayer, bool isOnceEvent, List<ScenarioAction> scenarioActions)
     {
         this.scenarioId = scenarioId;
         this.scenarioType = scenarioType;
@@ -24,7 +24,6 @@ public class Scenario
         this.enemyPlayer = enemyPlayer;
         this.isOnceEvent = isOnceEvent;
         this.scenarioActions = scenarioActions;
-        this.battleAfterEvent = battleAfterEvent;
     }
 
     public Scenario(int scenarioId, ScenarioType scenarioType, ScenarioConditionType scenarioConditionType, bool isOnceEvent, List<ScenarioAction> scenarioActions)

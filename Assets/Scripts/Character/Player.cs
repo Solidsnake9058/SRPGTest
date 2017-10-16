@@ -48,6 +48,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public float defenseReduction = 0.15f;
     public int damageBase = 5;
     public float damageRollSides = 6;
+    public ScenarioActorPivotType playerPivot = ScenarioActorPivotType.Right;
 
     //movement animation
     public List<Vector3> positionQueue = new List<Vector3>();
@@ -86,14 +87,11 @@ public class Player : MonoBehaviour, IPointerClickHandler
     private void Awake()
     {
         moveDestination = transform.position;
-        GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, transform.position, transform.rotation, visual);
-        animator = model.GetComponent<Animator>();
     }
 
     // Use this for initialization
     void Start()
     {
-
     }
 
     // Update is called once per frame
@@ -106,6 +104,12 @@ public class Player : MonoBehaviour, IPointerClickHandler
             transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
             transform.GetComponent<Renderer>().material.color = Color.gray;
         }
+    }
+
+    public void SetPlayerModel()
+    {
+        GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, transform.position, transform.rotation, visual);
+        animator = model.GetComponent<Animator>();
     }
 
     public virtual void TurnUpdate()

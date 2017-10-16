@@ -557,6 +557,7 @@ public class MapCreatorManager : MonoBehaviour
                 GameObject newPlayer = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)), isScenarioMode ? actorPlayerTransform : playerTransform);
                 newPlayer.name = string.Format(userPlayerNameFormat, id);
                 newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
+                newPlayer.GetComponent<UserPlayer>().SetPlayerModel();
                 if (isScenarioMode) 
                 {
                     actorPlayer.Add(newPlayer.GetComponent<UserPlayer>());
@@ -599,6 +600,7 @@ public class MapCreatorManager : MonoBehaviour
                 newPlayer.name = string.Format(enemyPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
                 newPlayer.GetComponent<AIPlayer>().gridPosition = gridPosion;
+                newPlayer.GetComponent<AIPlayer>().SetPlayerModel();
             }
         }
     }
@@ -1005,6 +1007,11 @@ public class MapCreatorManager : MonoBehaviour
             }
         }
         Scenario scenario = new Scenario(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, isOnceEvent.isOn, scenarioActions);
+        if (scenarioConditionTypeValue == ScenarioConditionType.BeforeBattle || scenarioConditionTypeValue == ScenarioConditionType.AfterBattle)
+        {
+            scenario = new Scenario(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, Convert.ToInt32(userPlayerId), Convert.ToInt32(enemyPlayerId), isOnceEvent.isOn, scenarioActions);
+        }
+
         if (selectedScenarioId == -1)
         {
             scenarios.Add(scenario);
@@ -1057,6 +1064,7 @@ public class MapCreatorManager : MonoBehaviour
                             player.playerIndex = temp.scenarioActions[i].createActors[j].id;
                             player.gameObject.name = temp.scenarioActions[i].createActors[j].id.ToString();
                             player.SetPivot(temp.scenarioActions[i].createActors[j].scenarioActorPivotType);
+                            player.SetPlayerModel();
                             actorPlayer.Add(player);
                         }
                     }
@@ -1306,6 +1314,7 @@ public class MapCreatorManager : MonoBehaviour
             player.playerIndex = actorId;
             player.gameObject.name = actorId.ToString();
             player.SetPivot(tempPivot);
+            player.SetPlayerModel();
             actorPlayer.Add(player);
         }
         ResetCreateActor();
@@ -1633,6 +1642,7 @@ public class MapCreatorManager : MonoBehaviour
             newPlayer.name = string.Format(userPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
+            newPlayer.GetComponent<UserPlayer>().SetPlayerModel();
         }
 
         for (int i = 0; i < enemyPlayerRecords.Count; i++)
@@ -1644,6 +1654,7 @@ public class MapCreatorManager : MonoBehaviour
             newPlayer.name = string.Format(enemyPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
             newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
+            newPlayer.GetComponent<AIPlayer>().SetPlayerModel();
         }
 
         ClearActor();

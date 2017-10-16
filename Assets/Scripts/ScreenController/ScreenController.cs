@@ -129,11 +129,6 @@ public class ScreenController : MonoBehaviour
         SetPlayerUIRotation();
     }
 
-    public void RemoveUI(string uiName)
-    {
-        playerUIs.Remove(playerUIs.Where(x => x.name == uiName).FirstOrDefault());
-    }
-
     public void TurnCameraLeft()
     {
         PivotType temp = btnRight.pivot;
@@ -144,6 +139,11 @@ public class ScreenController : MonoBehaviour
         mainCamera.eulerAngles = new Vector3(0, (mainCamera.eulerAngles.y < 360 ? mainCamera.eulerAngles.y : mainCamera.eulerAngles.y - 360) + 90, 0);
         cameraPos.rotation = mainCamera.rotation;
         SetPlayerUIRotation();
+    }
+
+    public void RemoveUI(string uiName)
+    {
+        playerUIs.Remove(playerUIs.Where(x => x.name == uiName).FirstOrDefault());
     }
 
     public void SetPlayerUIRotation()

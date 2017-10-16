@@ -14,7 +14,7 @@ public class UserPlayer : Player
     // Use this for initialization
     void Start()
     {
-
+        //SetPlayerModel();
     }
 
     public override void SetOriginalPos()

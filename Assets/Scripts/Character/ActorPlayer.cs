@@ -4,6 +4,11 @@ using System.Collections.Generic;
 
 public class ActorPlayer : Player
 {
+    private void Start()
+    {
+        //SetPlayerModel();
+    }
+
     // Update is called once per frame
     public override void Update()
     {
@@ -31,6 +36,8 @@ public class ActorPlayer : Player
                 positionQueue.RemoveAt(0);
                 if (positionQueue.Count == 0)
                 {
+                    GameManager.instance.StopWaitActor();
+                    SetPivot(playerPivot);
                     animator.SetBool("walk", false);
                 }
             }

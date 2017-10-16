@@ -7,10 +7,11 @@ using UnityEngine.EventSystems;
 public class AIPlayer : Player
 {
 
-	// Use this for initialization
-	void Start () {
-	
-	}
+    // Use this for initialization
+    void Start()
+    {
+        //SetPlayerModel();
+    }
 
     // Update is called once per frame
     public override void Update()
