@@ -6,8 +6,8 @@ public class Scenario
     public int scenarioId;
     public ScenarioType scenarioType;
     public ScenarioConditionType scenarioConditionType;
-    public int userPlayer;
-    public int enemyPlayer;
+    public int userPlayer = -1;
+    public int enemyPlayer = -1;
     public bool isOnceEvent;
     public List<ScenarioAction> scenarioActions;
     public int scenarioActionStep = 0;

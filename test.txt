@@ -13471,8 +13471,8 @@
       "scenarioId": 0,
       "scenarioType": "Openning",
       "scenarioConditionType": "None",
-      "userPlayer": null,
-      "enemyPlayer": null,
+      "userPlayer": -1,
+      "enemyPlayer": -1,
       "isOnceEvent": true,
       "scenarioActions": [
         {
@@ -14815,8 +14815,8 @@
       "scenarioId": 1,
       "scenarioType": "Event",
       "scenarioConditionType": "AfterShop",
-      "userPlayer": null,
-      "enemyPlayer": null,
+      "userPlayer": -1,
+      "enemyPlayer": -1,
       "isOnceEvent": true,
       "scenarioActions": [
         {
