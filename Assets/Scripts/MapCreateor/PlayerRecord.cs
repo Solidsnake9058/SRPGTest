@@ -30,6 +30,8 @@ public class PlayerRecord
     [JsonProperty]
     public uint hp { get; private set; }
     [JsonProperty]
+    public uint currentHp { get; private set; }
+    [JsonProperty]
     public uint atk { get; private set; }
     [JsonProperty]
     public uint def { get; private set; }
@@ -43,6 +45,8 @@ public class PlayerRecord
     public int equipWeapon { get; private set; }
     [JsonProperty]
     public ScenarioActorPivotType scenarioActorPivotType { get; private set; }
+    [JsonProperty]
+    public bool isActable { get; private set; }
 
     //For create enemy
     [JsonProperty]
@@ -98,6 +102,30 @@ public class PlayerRecord
         this.equipWeapon = equipWeapon;
         this.aiType = aiType;
         this.searchRange = searchRange;
+    }
+
+    public PlayerRecord(int id, bool isEnemy, bool isNewPlayer, int locX, int locY, int characterId, int levelId, uint level, uint exp, uint hp, uint currentHp, uint atk, uint def, uint wis, uint dex, uint mdef, int equipWeapon, EnemyAIType aiType, int searchRange, bool isActable = true)
+    {
+        this.id = id;
+        this.isEnemy = isEnemy;
+        this.isNewPlayer = isNewPlayer;
+        this.locX = locX;
+        this.locY = locY;
+        this.characterId = characterId;
+        this.levelId = levelId;
+        this.level = level;
+        this.exp = exp;
+        this.hp = hp;
+        this.currentHp = currentHp;
+        this.atk = atk;
+        this.def = def;
+        this.wis = wis;
+        this.dex = dex;
+        this.mdef = mdef;
+        this.equipWeapon = equipWeapon;
+        this.aiType = aiType;
+        this.searchRange = searchRange;
+        this.isActable = isActable;
     }
 
     public PlayerRecord(uint hp, uint atk, uint def, uint wis, uint dex, uint mdef)

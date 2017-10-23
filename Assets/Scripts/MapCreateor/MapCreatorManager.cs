@@ -84,6 +84,20 @@ public class MapCreatorManager : MonoBehaviour
     public InputField inputMapSizeX;
     public InputField inputMapSizeY;
 
+    [Header("Condition UI")]
+    public CanvasGroup conditionGroup;
+    public CanvasGroup conditionGetPosGroup;
+    public ScrollController conditionList;
+    public Dropdown conditionType;
+    public InputField conditionDefeatCount;
+    public InputField conditionTileX;
+    public InputField conditionTileY;
+    public Dropdown conditionEnemy;
+    public ScrollController conditionEnemyList;
+
+    public InputField conditionGetPosX;
+    public InputField conditionGetPosY;
+
     [Header("Scenario UI")]
     public CanvasGroup scenarioGroup;
     public CanvasGroup createScenarioGroup;
@@ -145,6 +159,10 @@ public class MapCreatorManager : MonoBehaviour
     private Dictionary<int, string> dicItem;
     private Dictionary<int, string> dicWeapon;
 
+    private List<StageClearCondition> stageClearCondition;
+    private List<int> defeatList;
+
+
     private string userPlayerNameFormat = "UserPlayer{0}";
     private string enemyPlayerNameFormat = "EnemyPlayer{0}";
 
@@ -165,12 +183,15 @@ public class MapCreatorManager : MonoBehaviour
         isScenarioMode = false;
         EnableGroup(stageGroup);
         DisableGroup(scenarioGroup);
+        DisableGroup(conditionGroup);
+        DisableGroup(conditionGetPosGroup);
         ControlGroup();
         LoadGameElements();
         InitialScenarioUI();
         ResetTileType();
         ResetPointer();
-
+        SetConditionType();
+        SetConditionEnemy();
         if (playerTypes.Count > 0)
         {
             playerTypeName.text = playerTypes[playerIndex].name;
@@ -745,6 +766,125 @@ public class MapCreatorManager : MonoBehaviour
             GameObject item = Instantiate(shopSelectionPrefab, new Vector3(), Quaternion.identity, shopList);
             item.GetComponent<ShopEditSelect>().SetName(gameElement.weapons.Where(x => x.id == shopWeaponList[i]).FirstOrDefault().name, false, shopWeaponList[i]);
         }
+    }
+
+    private void SetConditionType()
+    {
+        conditionType.options.Clear();
+
+        for (int i = 0; i < (int)StageClearConditionType.Max; i++)
+        {
+            conditionType.options.Add(new Dropdown.OptionData() { text = string.Format("{0}", Enum.GetName(typeof(StageClearConditionType), (StageClearConditionType)i)) });
+        }
+        conditionType.RefreshShownValue();
+    }
+
+    private void SetConditionEnemy()
+    {
+        conditionEnemy.options.Clear();
+
+        for (int i = 0; i < enemyPlayerRecords.Count; i++)
+        {
+            conditionEnemy.options.Add(new Dropdown.OptionData() { text = string.Format("{0},{1}", enemyPlayerRecords[i].id, gameElement.characters.Where(x => x.enemy && x.id == enemyPlayerRecords[i].characterId).FirstOrDefault().name) });
+        }
+        conditionEnemy.RefreshShownValue();
+    }
+
+    public void AddConditionEnemy()
+    {
+        string enemyPlayerId = conditionEnemy.options[conditionEnemy.value].text.Split(',')[0];
+        if (!defeatList.Contains(Convert.ToInt32(enemyPlayerId)))
+        {
+            defeatList.Add(Convert.ToInt32(enemyPlayerId));
+            LoadConditionEnemy();
+        }
+    }
+
+    public void RemoveConditionEnemy(GameObject id)
+    {
+        defeatList.Remove(Convert.ToInt32(id.name));
+        LoadConditionEnemy();
+    }
+
+    public void LoadConditionEnemy()
+    {
+        conditionEnemyList.ClearElement();
+        for (int i = 0; i < defeatList.Count; i++)
+        {
+            PlayerRecord temp = enemyPlayerRecords.Where(x => x.id == defeatList[i]).FirstOrDefault();
+            if (temp != null)
+            {
+                conditionEnemyList.AddElement(defeatList[i], string.Format("{0},{1}", temp.id, gameElement.characters.Where(x => x.enemy && x.id == temp.characterId).FirstOrDefault().name));
+            }
+        }
+    }
+
+    public void AddCondition()
+    {
+        int id = stageClearCondition.Count == 0 ? 0 : stageClearCondition.Select(x => x.id).Max() + 1;
+
+        StageClearConditionType stageClearConditionTypeValue = (StageClearConditionType)Enum.Parse(typeof(StageClearConditionType), conditionType.options[conditionType.value].text);
+        switch (stageClearConditionTypeValue)
+        {
+            case StageClearConditionType.EnemyDead:
+                int count = Mathf.Max(Mathf.Min(Convert.ToInt32(string.IsNullOrEmpty(conditionDefeatCount.text) ? "1" : conditionDefeatCount.text), 1), defeatList.Count);
+                stageClearCondition.Add(new StageClearCondition(defeatList, count));
+                break;
+            case StageClearConditionType.SpecifyTile:
+                stageClearCondition.Add(new StageClearCondition(new HexTile.HexCoord(Convert.ToInt32(conditionTileX.text), Convert.ToInt32(conditionTileY.text))));
+                break;
+        }
+        ReesetConditionUI();
+    }
+
+    public void RemoveCondition(GameObject id)
+    {
+        stageClearCondition.Remove(stageClearCondition.Where(x => x.id == Convert.ToInt32(id.name)).FirstOrDefault());
+        LoadCondition();
+    }
+
+    private void LoadCondition()
+    {
+        conditionList.ClearElement();
+        for (int i = 0; i < stageClearCondition.Count; i++)
+        {
+            conditionList.AddElement(stageClearCondition[i].id, string.Format("{0},{1}:{2}", stageClearCondition[i].id, Enum.GetName(typeof(StageClearConditionType), stageClearCondition[i].stageClearConditionType), stageClearCondition[i].enemyDeadCount == 0 ? string.Format("({0},{1})", stageClearCondition[i].specifyTile.q, stageClearCondition[i].specifyTile.r) : stageClearCondition[i].enemyDeadCount.ToString()));
+        }
+    }
+
+    public void ReesetConditionUI()
+    {
+        conditionDefeatCount.text = "";
+        conditionTileX.text = "";
+        conditionTileY.text = "";
+        conditionType.value = 0;
+        conditionEnemy.value = 0;
+        conditionType.RefreshShownValue();
+        conditionEnemy.RefreshShownValue();
+        defeatList = new List<int>();
+        SetConditionEnemy();
+        LoadConditionEnemy();
+        LoadCondition();
+    }
+
+    public void SetConditionGetPos()
+    {
+        DisableGroup(conditionGroup);
+        EnableGroup(conditionGetPosGroup);
+        isGetPos = true;
+
+        conditionGetPosX.text = "";
+        conditionGetPosY.text = "";
+    }
+
+    public void SetConditionPos()
+    {
+        DisableGroup(conditionGetPosGroup);
+        EnableGroup(conditionGroup);
+        isGetPos = false;
+
+        conditionTileX.text = conditionGetPosX.text;
+        conditionTileY.text = conditionGetPosY.text;
     }
     #endregion
 
@@ -1438,6 +1578,8 @@ public class MapCreatorManager : MonoBehaviour
         scenarios = new List<Scenario>();
         actorPlayer = new List<Player>();
 
+        stageClearCondition = new List<StageClearCondition>();
+
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
             Destroy(mapTransform.transform.GetChild(i).gameObject);
@@ -1513,7 +1655,7 @@ public class MapCreatorManager : MonoBehaviour
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
 
-        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex, userPlayerRecords, enemyPlayerRecords, shopItemList, shopWeaponList, scenarios), fileName.text + ".txt");
+        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex, userPlayerRecords, enemyPlayerRecords, shopItemList, shopWeaponList, scenarios, stageClearCondition), fileName.text + ".txt");
     }
 
     public void loadMapFromXml()
@@ -1547,6 +1689,8 @@ public class MapCreatorManager : MonoBehaviour
 
         scenarios = container.scenarioList;
         actorPlayer = new List<Player>();
+
+        stageClearCondition = container.stageClearConditionList;
 
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
@@ -1611,6 +1755,8 @@ public class MapCreatorManager : MonoBehaviour
         InitialScenarioUI();
         EnableGroup(stageGroup);
         DisableGroup(scenarioGroup);
+        DisableGroup(conditionGroup);
+        DisableGroup(conditionGetPosGroup);
         ControlGroup();
         ReloadScenarioList();
 

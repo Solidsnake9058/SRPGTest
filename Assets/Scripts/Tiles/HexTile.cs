@@ -375,51 +375,60 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             if (!MapCreatorManager.instance.isScenarioMode)
             {
-                switch (MapCreatorManager.instance.settingSelection)
+                if (MapCreatorManager.instance.isGetPos)
                 {
-                    case MapSettingType.Tile:
-                        //SetType(MapCreatorManager.instance.pallerSelection);
-                        SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
-                        if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
-                        {
-                            isHaveChest = true;
-                            gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
-                            itemId = MapCreatorManager.instance.chestItem;
-                            weaponId = MapCreatorManager.instance.chestWeapon;
-                        }
-                        else if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Villa && MapCreatorManager.instance.isShop.isOn)
-                        {
-                            isShop = true;
-                        }
-                        else
-                        {
-                            isHaveChest = false;
-                            isShop = false;
-                            gold = 0;
-                            itemId = -1;
-                            weaponId = -1;
-                        }
-                        break;
-                    case MapSettingType.Player:
-                        if (eventData.button == PointerEventData.InputButton.Left)
-                        {
-                            MapCreatorManager.instance.SetPlayer(gridPosition, transform.position);
-                        }
-                        else if (eventData.button == PointerEventData.InputButton.Right)
-                        {
-                            MapCreatorManager.instance.SetPlayer(gridPosition, transform.position, true);
-                        }
-                        break;
-                    case MapSettingType.Enemy:
-                        if (eventData.button == PointerEventData.InputButton.Left)
-                        {
-                            MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position);
-                        }
-                        else if (eventData.button == PointerEventData.InputButton.Right)
-                        {
-                            MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position, true);
-                        }
-                        break;
+                    MapCreatorManager.instance.conditionGetPosX.text = hex.q.ToString();
+                    MapCreatorManager.instance.conditionGetPosY.text = hex.r.ToString();
+                    MapCreatorManager.instance.pointer.position = transform.position;
+                }
+                else
+                {
+                    switch (MapCreatorManager.instance.settingSelection)
+                    {
+                        case MapSettingType.Tile:
+                            //SetType(MapCreatorManager.instance.pallerSelection);
+                            SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
+                            if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
+                            {
+                                isHaveChest = true;
+                                gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                                itemId = MapCreatorManager.instance.chestItem;
+                                weaponId = MapCreatorManager.instance.chestWeapon;
+                            }
+                            else if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Villa && MapCreatorManager.instance.isShop.isOn)
+                            {
+                                isShop = true;
+                            }
+                            else
+                            {
+                                isHaveChest = false;
+                                isShop = false;
+                                gold = 0;
+                                itemId = -1;
+                                weaponId = -1;
+                            }
+                            break;
+                        case MapSettingType.Player:
+                            if (eventData.button == PointerEventData.InputButton.Left)
+                            {
+                                MapCreatorManager.instance.SetPlayer(gridPosition, transform.position);
+                            }
+                            else if (eventData.button == PointerEventData.InputButton.Right)
+                            {
+                                MapCreatorManager.instance.SetPlayer(gridPosition, transform.position, true);
+                            }
+                            break;
+                        case MapSettingType.Enemy:
+                            if (eventData.button == PointerEventData.InputButton.Left)
+                            {
+                                MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position);
+                            }
+                            else if (eventData.button == PointerEventData.InputButton.Right)
+                            {
+                                MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position, true);
+                            }
+                            break;
+                    }
                 }
             }
             else

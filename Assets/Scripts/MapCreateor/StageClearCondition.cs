@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class StageClearCondition
 {
+    public int id;
     public StageClearConditionType stageClearConditionType;
     public List<int> enemyDeadList = new List<int>();
     public int enemyDeadCount = 0;
@@ -11,10 +12,11 @@ public class StageClearCondition
 
     public StageClearCondition() { }
 
-    public StageClearCondition(List<int> enemyDeadList)
+    public StageClearCondition(List<int> enemyDeadList, int enemyDeadCount)
     {
         stageClearConditionType = StageClearConditionType.EnemyDead;
         this.enemyDeadList = enemyDeadList;
+        this.enemyDeadCount = enemyDeadCount;
     }
 
     public StageClearCondition(HexTile.HexCoord specifyTile)
