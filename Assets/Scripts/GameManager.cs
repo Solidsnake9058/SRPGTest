@@ -501,6 +501,13 @@ public class GameManager : MonoBehaviour
         gameSceneUI.SetActive(false);
         if (level == 0)
         {
+            int loadIndex = PlayerPrefs.GetInt("loadIndex");
+            if (loadIndex != -1)
+            {
+                //Load game save
+
+            }
+            PlayerPrefs.SetInt("loadIndex", -1);
             //ScreenController.instance.SetCameraPos(cameraPosition);
             //ScreenController.instance.SetCameraRot(cameraRotation);
 
@@ -2160,7 +2167,7 @@ public class GameManager : MonoBehaviour
             playerUI.gameObject.name = string.Format(enemyPlayerNameFormat + "UI", i);
             //playerUI.transform.SetParent(playerUITransform);
 
-            if (userPlayerRecords[i].isNewPlayer || record == null)
+            if (record == null)
             {
                 player.atk = (int)playerLvData.atk;
                 player.def = (int)playerLvData.def;
