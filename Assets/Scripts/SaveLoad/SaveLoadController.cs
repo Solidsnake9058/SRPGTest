@@ -9,15 +9,18 @@ public class SaveLoadController : MonoBehaviour
 {
     public List<Button> recordButtonList;
     public bool isSaveMode;
-    public Text saveTip;
-    public Text loadTip;
+    public Text tipText;
     private List<GameSaveRecord> recordList;
     private string infoFormat = "Stage {0}…『{1}』";
     private string dateFormat = "yyyy/MM/dd HH:mm";
+    private string saveTip = "セーブする場所を指定して下さい";
+    private string loadTip = "ロードするデータを選択して下さい";
+
 
     public void SetUI(bool isSaveMode)
     {
         this.isSaveMode = isSaveMode;
+        tipText.text = isSaveMode ? saveTip : loadTip;
         try
         {
             recordList = JsonConvert.DeserializeObject<List<GameSaveRecord>>(PlayerPrefs.GetString("recordList"));

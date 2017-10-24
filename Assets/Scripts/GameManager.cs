@@ -501,12 +501,21 @@ public class GameManager : MonoBehaviour
         gameSceneUI.SetActive(false);
         if (level == 0)
         {
-            int loadIndex = PlayerPrefs.GetInt("loadIndex");
+            int loadIndex;
+            try
+            {
+                loadIndex = PlayerPrefs.GetInt("loadIndex");
+            }
+            catch 
+            {
+                loadIndex = -1;
+            }
             if (loadIndex != -1)
             {
                 //Load game save
 
             }
+            loadIndex = -1;
             PlayerPrefs.SetInt("loadIndex", -1);
             //ScreenController.instance.SetCameraPos(cameraPosition);
             //ScreenController.instance.SetCameraRot(cameraRotation);
