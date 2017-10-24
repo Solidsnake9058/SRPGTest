@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class GameSaveRecord {
@@ -14,5 +15,6 @@ public class GameSaveRecord {
     public List<PlayerRecord> saveEnemyPlayerRecords;
     public List<int> defeatedEnemyList;
     public List<int> removeScenaroList;
+    public DateTime saveDate;
 
 }
