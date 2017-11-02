@@ -499,7 +499,7 @@ public class GameManager : MonoBehaviour
     private void OnLevelWasLoaded(int level)
     {
         gameSceneUI.SetActive(false);
-        if (level == 0)
+        if (level == 1)
         {
             int loadIndex;
             try
