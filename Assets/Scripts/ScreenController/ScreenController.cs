@@ -65,7 +65,7 @@ public class ScreenController : MonoBehaviour
 
     private void OnLevelWasLoaded(int level)
     {
-        if (level == 0 && mainCamera == null)
+        if (level == 1 && mainCamera == null)
         {
             mainCamera = GameObject.Find("MainCameraController").GetComponent<Transform>();
         }

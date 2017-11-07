@@ -181,6 +181,10 @@ public class BattleManager : MonoBehaviour
                 //show get exp dialog
                 ShowDialog();
             }
+            else
+            {
+                SceneManager.LoadScene("GameScene");
+            }
         }
         if (isFirstAttack)
         {

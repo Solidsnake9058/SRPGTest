@@ -16,6 +16,7 @@ public class TitleManager : MonoBehaviour
     {
         AsyncOperation ao = SceneManager.LoadSceneAsync("GameScene");
         ao.allowSceneActivation = false;
+        PlayerPrefs.SetInt("isLoadMap", 1);
         while (!ao.isDone)
         {
             if (ao.progress >= 0.9f)

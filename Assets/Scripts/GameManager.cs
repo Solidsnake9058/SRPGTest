@@ -89,6 +89,7 @@ public class GameManager : MonoBehaviour
     private bool isMoveCarema = false;
     private bool isToDark = false;
     private bool isWin = false;
+    private bool isLose = false;
     private Vector3 moveCaremaPos = new Vector3();
     public float cameraMoveSpeed = 1;
     [HideInInspector]
@@ -223,277 +224,249 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        ScreenController.instance.SetCameraPos(cameraPosition);
-        ScreenController.instance.SetCameraRot(cameraRotation);
-
-        isWaitingBattle = false;
-        InitialStage();
-        if (isStartGame)
-        {
-            isStartGame = false;
-            saveUserPlayerRecords = new List<PlayerRecord>();
-            saveEnemyPlayerRecords = new List<PlayerRecord>();
-            defeatedEnemyList = new List<int>();
-            playerItems = new Dictionary<int, int>();
-            playerWeapons = new Dictionary<int, int>();
-            StartGame();
-            Scenario opening = stageScenatios.Where(x => x.scenarioType == ScenarioType.Openning).FirstOrDefault();
-
-            //skip opening
-            //opening = null;
-
-            //test
-            //List<ScenarioAction> testDialog = new List<ScenarioAction>();
-            //testDialog.Add(new ScenarioAction(0, "Name1", "Test1"));
-            //testDialog.Add(new ScenarioAction(1, "Name2", "Test2"));
-            //opening = new Scenario(0, ScenarioType.Openning, ScenarioConditionType.None, null, null, true, testDialog, null);
-            if (opening != null)
-            {
-                runningScenario = opening;
-                SetStartWaiting();
-                if (runningScenario.isOnceEvent)
-                {
-                    stageScenatios.Remove(opening);
-                }
-            }
-            else
-            {
-                ShowStageInfo(false);
-                Debug.Log("No opening ");
-            }
-        }
+        //GameLoading();
     }
 
     void Update()
     {
-        if (currentWaitingTime >= waitingTime)
+        if (SceneManager.GetActiveScene().name == "GameScene")
         {
-            waitingTime = 0;
-            currentWaitingTime = 0;
-            if (isMoveCarema)
+            if (currentWaitingTime >= waitingTime)
             {
-                isMoveCarema = false;
-                isWaitingActor = false;
-                ScreenController.instance.SetCameraPos(new Vector3(moveCaremaPos.x, 0, moveCaremaPos.z));
-            }
-            if (isToDark)
-            {
-                Color temp = darkFront.color;
-                temp.a = 0;
-                darkFront.color = temp;
-            }
-        }
-        else
-        {
-            currentWaitingTime += Time.deltaTime;
-            if (isMoveCarema)
-            {
-                if (Vector3.Distance(moveCaremaPos, ScreenController.instance.cameraPos.position) > 0.1f)
+                waitingTime = 0;
+                currentWaitingTime = 0;
+                if (isMoveCarema)
                 {
-                    Vector3 newPosition = ScreenController.instance.cameraPos.position + (moveCaremaPos - ScreenController.instance.cameraPos.position).normalized * cameraMoveSpeed * Time.deltaTime;
-                    ScreenController.instance.SetCameraPos(new Vector3(newPosition.x, 0, newPosition.z));
+                    isMoveCarema = false;
+                    isWaitingActor = false;
+                    ScreenController.instance.SetCameraPos(new Vector3(moveCaremaPos.x, 0, moveCaremaPos.z));
+                }
+                if (isToDark)
+                {
+                    Color temp = darkFront.color;
+                    temp.a = 0;
+                    darkFront.color = temp;
                 }
             }
-            if (isToDark)
+            else
             {
-                Color temp = darkFront.color;
-                temp.a += (Time.deltaTime / waitingTime);
-                darkFront.color = temp;
-            }
-            return;
-        }
-
-        //play mode
-        if (runningScenario == null && !isWin)
-        {
-            if (!isWaitingMsg && !isWaitingBattle)
-            {
-                for (int i = 0; i < stageClearConditions.Count; i++)
+                currentWaitingTime += Time.deltaTime;
+                if (isMoveCarema)
                 {
-                    switch (stageClearConditions[i].stageClearConditionType)
+                    if (Vector3.Distance(moveCaremaPos, ScreenController.instance.cameraPos.position) > 0.1f)
                     {
-                        case StageClearConditionType.EnemyDead:
-                            int deadCount = 0;
-                            int deadCondition = stageClearConditions[i].enemyDeadCount;
-                            if (stageClearConditions[i].enemyDeadCount == 0 || stageClearConditions[i].enemyDeadCount > stageClearConditions[i].enemyDeadList.Count)
-                            {
-                                deadCondition = stageClearConditions[i].enemyDeadList.Count;
-                            }
-                            List<int> deatList = stageClearConditions[i].enemyDeadList;
-                            for (int j = 0; j < deatList.Count; j++)
-                            {
-                                Player tempPlayer = enemyPlayers.Where(x => x.playerIndex == deatList[j]).FirstOrDefault();
-                                if (tempPlayer == null || tempPlayer.hp <= 0)
-                                {
-                                    deadCount++;
-                                }
-                            }
-                            if (deadCount >= deadCondition)
-                            {
-                                isWin = true;
-                            }
-                            break;
-                        case StageClearConditionType.SpecifyTile:
-                            if (userPlayers.Where(x=>x.hex== stageClearConditions[i].specifyTile).Count() > 0)
-                            {
-                                isWin = true;
-                            }
-                            break;
+                        Vector3 newPosition = ScreenController.instance.cameraPos.position + (moveCaremaPos - ScreenController.instance.cameraPos.position).normalized * cameraMoveSpeed * Time.deltaTime;
+                        ScreenController.instance.SetCameraPos(new Vector3(newPosition.x, 0, newPosition.z));
                     }
-                    if (isWin)
+                }
+                if (isToDark)
+                {
+                    Color temp = darkFront.color;
+                    temp.a += (Time.deltaTime / waitingTime);
+                    darkFront.color = temp;
+                }
+                return;
+            }
+
+            //play mode
+            if (runningScenario == null && !isWin && !isLose)
+            {
+                if (!isWaitingMsg && !isWaitingBattle)
+                {
+                    for (int i = 0; i < stageClearConditions.Count; i++)
                     {
-                        //Win
-                        Scenario temp = stageScenatios.Where(x => x.scenarioType == ScenarioType.StageClear).FirstOrDefault();
-                        if (temp != null)
+                        switch (stageClearConditions[i].stageClearConditionType)
                         {
-                            runningScenario = temp;
+                            case StageClearConditionType.EnemyDead:
+                                int deadCount = 0;
+                                int deadCondition = stageClearConditions[i].enemyDeadCount;
+                                if (stageClearConditions[i].enemyDeadCount == 0 || stageClearConditions[i].enemyDeadCount > stageClearConditions[i].enemyDeadList.Count)
+                                {
+                                    deadCondition = stageClearConditions[i].enemyDeadList.Count;
+                                }
+                                List<int> deatList = stageClearConditions[i].enemyDeadList;
+                                for (int j = 0; j < deatList.Count; j++)
+                                {
+                                    Player tempPlayer = enemyPlayers.Where(x => x.playerIndex == deatList[j]).FirstOrDefault();
+                                    if (tempPlayer == null || tempPlayer.hp <= 0)
+                                    {
+                                        deadCount++;
+                                    }
+                                }
+                                if (deadCount >= deadCondition)
+                                {
+                                    isWin = true;
+                                }
+                                break;
+                            case StageClearConditionType.SpecifyTile:
+                                if (userPlayers.Where(x => x.hex == stageClearConditions[i].specifyTile).Count() > 0)
+                                {
+                                    isWin = true;
+                                }
+                                break;
+                        }
+                        if (isWin)
+                        {
+                            //Win
+                            Scenario temp = stageScenatios.Where(x => x.scenarioType == ScenarioType.StageClear).FirstOrDefault();
+                            if (temp != null)
+                            {
+                                runningScenario = temp;
+                            }
+                            else
+                            {
+                                Debug.Log("No Clear Scenario");
+                            }
+                            break;
+                        }
+                    }
+
+                    if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
+                    {
+                        if (isPlayerTurn)
+                        {
                         }
                         else
                         {
-                            Debug.Log("No Clear Scenario");
+                            if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
+                            {
+                                StartCoroutine(RunEnemyTurn());
+                                //enemyPlayers[currentEnemyPlayerIndex].TurnUpdate();
+                            }
+                            else
+                            {
+                                NextEnemyTurn();
+                            }
                         }
-                        break;
                     }
+                    //else if (enemyPlayers.Count == 0 || enemyPlayers.Where(x => x.hp > 0).Count() == 0)
+                    //{
+                    //    //Win
+                    //}
                 }
-
-                if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
+            }
+            //scenario mode
+            else if (!isWin && !isLose)
+            {
+                DisableGroup(mapController);
+                if (!isWaitingActor)
                 {
-                    if (isPlayerTurn)
+                    //run scenario
+                    if (runningScenario.scenarioActionStep < runningScenario.scenarioActions.Count)
                     {
+                        //play action
+                        if (runningScenario.scenarioType == ScenarioType.Openning)
+                        {
+                            //Hide all players
+                            HidePlayers();
+                        }
+
+                        switch (runningScenario.scenarioActions[runningScenario.scenarioActionStep].scenarioActionType)
+                        {
+                            case ScenarioActionType.Dialog:
+                                //Show dialog
+                                EnableGroup(dialogGroup);
+                                dialogName.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogName;
+                                dialogText.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogText;
+                                isWaitingActor = true;
+                                break;
+                            case ScenarioActionType.CreateActor:
+                                for (int i = 0; i < runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors.Count; i++)
+                                {
+                                    PlayerRecord temp = runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors[i];
+                                    Vector3 pos = getMapTile(new HexTile.HexCoord(temp.locX, temp.locY)).HexTilePos();
+                                    ActorPlayer player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<ActorPlayer>();
+                                    player.gridPosition = new Vector2(temp.locX, temp.locY);
+                                    player.playerIndex = temp.id;
+                                    player.gameObject.name = temp.id.ToString();
+                                    player.SetPivot(temp.scenarioActorPivotType);
+                                    player.SetPlayerModel();
+                                    actorPlayers.Add(player);
+                                }
+                                break;
+                            case ScenarioActionType.ControlActor:
+                                Player tempPlayer = actorPlayers.Where(x => x.playerIndex == runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorId).FirstOrDefault();
+                                HexTile targetTile = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile);
+                                if (getMapTile(tempPlayer.mapHexIndex) != targetTile)
+                                {
+                                    foreach (HexTile t in HexTilePathFinder.FindPath(getMapTile(tempPlayer.mapHexIndex), targetTile, true).listOfTiles)
+                                    {
+                                        tempPlayer.positionQueue.Add(getMapTile(t.mapHexIndex).transform.position + playerHeight * Vector3.up);
+                                    }
+                                    isWaitingActor = true;
+                                }
+                                tempPlayer.gridPosition = targetTile.gridPosition;
+
+                                tempPlayer.playerPivot = runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorPivot;
+                                tempPlayer.SetPivot(tempPlayer.playerPivot);
+                                break;
+                            case ScenarioActionType.SetCamera:
+                                Vector3 tilePos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].setCameraPos).HexTilePos();
+                                ScreenController.instance.SetCameraPos(new Vector3(tilePos.x, 0, tilePos.z));
+                                break;
+                            case ScenarioActionType.ControlCamera:
+                                moveCaremaPos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile).HexTilePos();
+                                isMoveCarema = true;
+                                isWaitingActor = true;
+                                break;
+                            case ScenarioActionType.AddUserPlayer:
+                                break;
+                            case ScenarioActionType.AddEnemyPlayer:
+                                break;
+                        }
+                        currentWaitingTime = 0;
+                        isToDark = runningScenario.scenarioActions[runningScenario.scenarioActionStep].isToDark;
+                        waitingTime = runningScenario.scenarioActions[runningScenario.scenarioActionStep].waitTime;
+                        runningScenario.scenarioActionStep++;
                     }
                     else
                     {
-                        if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
+                        //Scenario is end
+                        SetStopWaiting();
+                        EnableGroup(mapController);
+                        if (runningScenario.scenarioType == ScenarioType.Openning)
                         {
-                            StartCoroutine(RunEnemyTurn());
-                            //enemyPlayers[currentEnemyPlayerIndex].TurnUpdate();
+                            ShowPlayers();
+                            HideActor();
+                            ClearActorPlayer();
+                            Player temp = userPlayers.Where(x => x.playerIndex == 0).FirstOrDefault();
+                            ScreenController.instance.SetCameraPos(new Vector3(temp.transform.position.x, 0, temp.transform.position.z));
+                            ShowStageInfo(false);
                         }
-                        else
+
+                        if (runningScenario.scenarioConditionType == ScenarioConditionType.BeforeBattle)
                         {
-                            NextEnemyTurn();
+                            AttackWithCurrentPlayer(runningScenario.battleAfterEvent);
                         }
+                        if (runningScenario.isOnceEvent)
+                        {
+                            removeScenaroList.Add(runningScenario.scenarioId);
+                        }
+                        runningScenario = null;
                     }
-                }
-                //else if (enemyPlayers.Count == 0 || enemyPlayers.Where(x => x.hp > 0).Count() == 0)
-                //{
-                //    //Win
-                //}
-                else if (userPlayers.Where(x => gameElement.races.Where(y => y.name == "ロード").FirstOrDefault().id == x.race && x.hp < 0).Count() > 0)
-                {
-                    //Game Over
                 }
             }
-        }
-        //scenario mode
-        else
-        {
-            DisableGroup(mapController);
-            if (!isWaitingActor)
+            else
             {
-                //run scenario
-                if (runningScenario.scenarioActionStep < runningScenario.scenarioActions.Count)
+                if (isWin)
                 {
-                    //play action
-                    if (runningScenario.scenarioType == ScenarioType.Openning)
-                    {
-                        //Hide all players
-                        HidePlayers();
-                    }
-
-                    switch (runningScenario.scenarioActions[runningScenario.scenarioActionStep].scenarioActionType)
-                    {
-                        case ScenarioActionType.Dialog:
-                            //Show dialog
-                            EnableGroup(dialogGroup);
-                            dialogName.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogName;
-                            dialogText.text = runningScenario.scenarioActions[runningScenario.scenarioActionStep].dialogText;
-                            isWaitingActor = true;
-                            break;
-                        case ScenarioActionType.CreateActor:
-                            for (int i = 0; i < runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors.Count; i++)
-                            {
-                                PlayerRecord temp = runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors[i];
-                                Vector3 pos = getMapTile(new HexTile.HexCoord(temp.locX, temp.locY)).HexTilePos();
-                                ActorPlayer player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<ActorPlayer>();
-                                player.gridPosition = new Vector2(temp.locX, temp.locY);
-                                player.playerIndex = temp.id;
-                                player.gameObject.name = temp.id.ToString();
-                                player.SetPivot(temp.scenarioActorPivotType);
-                                player.SetPlayerModel();
-                                actorPlayers.Add(player);
-                            }
-                            break;
-                        case ScenarioActionType.ControlActor:
-                            Player tempPlayer = actorPlayers.Where(x => x.playerIndex == runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorId).FirstOrDefault();
-                            HexTile targetTile = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile);
-                            if (getMapTile(tempPlayer.mapHexIndex) != targetTile)
-                            {
-                                foreach (HexTile t in HexTilePathFinder.FindPath(getMapTile(tempPlayer.mapHexIndex), targetTile, true).listOfTiles)
-                                {
-                                    tempPlayer.positionQueue.Add(getMapTile(t.mapHexIndex).transform.position + playerHeight * Vector3.up);
-                                }
-                                isWaitingActor = true;
-                            }
-                            tempPlayer.gridPosition = targetTile.gridPosition;
-
-                            tempPlayer.playerPivot = runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorPivot;
-                            tempPlayer.SetPivot(tempPlayer.playerPivot);
-                            break;
-                        case ScenarioActionType.SetCamera:
-                            Vector3 tilePos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].setCameraPos).HexTilePos();
-                            ScreenController.instance.SetCameraPos(new Vector3(tilePos.x, 0, tilePos.z));
-                            break;
-                        case ScenarioActionType.ControlCamera:
-                            moveCaremaPos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile).HexTilePos();
-                            isMoveCarema = true;
-                            isWaitingActor = true;
-                            break;
-                        case ScenarioActionType.AddUserPlayer:
-                            break;
-                        case ScenarioActionType.AddEnemyPlayer:
-                            break;
-                    }
-                    currentWaitingTime = 0;
-                    isToDark= runningScenario.scenarioActions[runningScenario.scenarioActionStep].isToDark;
-                    waitingTime = runningScenario.scenarioActions[runningScenario.scenarioActionStep].waitTime;
-                    runningScenario.scenarioActionStep++;
+                    PlayerPrefs.SetInt("endTpye", 0);
                 }
                 else
                 {
-                    //Scenario is end
-                    SetStopWaiting();
-                    EnableGroup(mapController);
-                    if (runningScenario.scenarioType == ScenarioType.Openning)
-                    {
-                        ShowPlayers();
-                        HideActor();
-                        ClearActorPlayer();
-                        Player temp = userPlayers.Where(x => x.playerIndex == 0).FirstOrDefault();
-                        ScreenController.instance.SetCameraPos(new Vector3(temp.transform.position.x, 0, temp.transform.position.z));
-                        ShowStageInfo(false);
-                    }
-
-                    if (runningScenario.scenarioConditionType == ScenarioConditionType.BeforeBattle)
-                    {
-                        AttackWithCurrentPlayer(runningScenario.battleAfterEvent);
-                    }
-                    if (runningScenario.isOnceEvent)
-                    {
-                        removeScenaroList.Add(runningScenario.scenarioId);
-                    }
-                    runningScenario = null;
+                    PlayerPrefs.SetInt("endTpye", 1);
                 }
+                SceneManager.LoadScene("GameEnd");
             }
+            //if (players[currentPlayerIndex].HP > 0)
+            //{
+            //    players[currentPlayerIndex].TurnUpdate();
+            //}
+            //else
+            //{
+            //    nextTurn();
+            //}
         }
-
-        //if (players[currentPlayerIndex].HP > 0)
-        //{
-        //    players[currentPlayerIndex].TurnUpdate();
-        //}
-        //else
-        //{
-        //    nextTurn();
-        //}
     }
 
     private void OnLevelWasLoaded(int level)
@@ -502,26 +475,41 @@ public class GameManager : MonoBehaviour
         if (level == 1)
         {
             int loadIndex;
+            bool isLoadMap = false;
             try
             {
                 loadIndex = PlayerPrefs.GetInt("loadIndex");
+                isLoadMap = PlayerPrefs.GetInt("isLoadMap") == 1;
             }
             catch 
             {
                 loadIndex = -1;
             }
-            if (loadIndex != -1)
+            if (isLoadMap)
             {
-                //Load game save
-
+                isStartGame = true;
+                if (loadIndex != -1)
+                {
+                    //Load game save
+                    isStartGame = false;
+                }
+                GameLoading();
             }
             loadIndex = -1;
+            isLoadMap = false;
             PlayerPrefs.SetInt("loadIndex", -1);
+            PlayerPrefs.SetInt("isLoadMap", 0);
             //ScreenController.instance.SetCameraPos(cameraPosition);
             //ScreenController.instance.SetCameraRot(cameraRotation);
 
             gameSceneUI.SetActive(true);
             isWaitingBattle = false;
+
+            if (userPlayers.Where(x => gameElement.races.Where(y => y.name == "ロード").FirstOrDefault().id == x.race && x.hp < 0).Count() > 0)
+            {
+                isLose = true;
+                //Game Over
+            }
         }
     }
 
@@ -531,6 +519,8 @@ public class GameManager : MonoBehaviour
         isPlayerTurn = true;
         isWaitingActor = false;
         isWaitingMsg = false;
+        isWin = false;
+        isLose = false;
         currentEnemyPlayerIndex = 0;
         playerIndex = -1;
         moving = false;
@@ -562,9 +552,43 @@ public class GameManager : MonoBehaviour
     {
         GenetareMap();
         GenetarePlayers();
-        int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
-        playerItems.Add(herbId, 4);
+    }
 
+    private void GameLoading()
+    {
+        ScreenController.instance.SetCameraPos(cameraPosition);
+        ScreenController.instance.SetCameraRot(cameraRotation);
+
+        isWaitingBattle = false;
+        InitialStage();
+        if (isStartGame)
+        {
+            isStartGame = false;
+            saveUserPlayerRecords = new List<PlayerRecord>();
+            saveEnemyPlayerRecords = new List<PlayerRecord>();
+            defeatedEnemyList = new List<int>();
+            playerItems = new Dictionary<int, int>();
+            playerWeapons = new Dictionary<int, int>();
+            int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
+            playerItems.Add(herbId, 4);
+        }
+        StartGame();
+        Scenario opening = stageScenatios.Where(x => x.scenarioType == ScenarioType.Openning).FirstOrDefault();
+
+        if (opening != null)
+        {
+            runningScenario = opening;
+            SetStartWaiting();
+            if (runningScenario.isOnceEvent)
+            {
+                stageScenatios.Remove(opening);
+            }
+        }
+        else
+        {
+            ShowStageInfo(false);
+            Debug.Log("No opening ");
+        }
     }
 
     public bool GetIsWaitingBattle()
@@ -1354,7 +1378,7 @@ public class GameManager : MonoBehaviour
         ShowGetItemInfo(gold, itemId, weaponId);
     }
 
-
+    #region Item
     public void SetItem()
     {
         itemGold.text = string.Format("所持金 <color=yellow>{0}</color> Gold", playerGold);
@@ -1737,6 +1761,7 @@ public class GameManager : MonoBehaviour
             SetShop();
         }
     }
+    #endregion
 
     public void RemoveHighlightTiles()
     {
