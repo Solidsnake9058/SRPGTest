@@ -1313,6 +1313,7 @@ public class GameManager : MonoBehaviour
             isWaitingBattle = true;
 
             battleData = new BattleSendData(attackerName, targetName, backGround, attackerTileName, targetTileName, isPlayerAttack, isHeal, isCounter, isDirectAtk, attackerDefensRate, targetDefensRate, attackerMaxHP, attackerHP, damageByAttacker, targetMaxHP, targetHP, damageByTarget, getItem, playerExp, getExp, level, playerClass, playerData, lvUpProp);
+            Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(battleData));
             SceneManager.LoadScene("Battle");
 
             //else

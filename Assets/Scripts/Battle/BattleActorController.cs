@@ -81,6 +81,7 @@ public class BattleActorController : MonoBehaviour
                         else
                         {
                             animator.SetTrigger("attack");
+                            //Debug.Log("attack");
                         }
                         isAttacked = true;
                     }
@@ -96,6 +97,7 @@ public class BattleActorController : MonoBehaviour
     public void ResetActor(bool attacker)
     {
         isAttacker = attacker;
+        isAttacked = !attacker;
         animator.SetBool("run", false);
         animator.SetBool("endDamage", true);
         transform.position = startPos.position;

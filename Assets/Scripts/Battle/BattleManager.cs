@@ -91,7 +91,7 @@ public class BattleManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        battleData = new BattleSendData("アーク", "魔軍兵", "", "草原", "道", true, false, true, true, 10, 0, 42, 42, 21, 24, 24, 11, "ショートソード", 85, 21, 2, "ロード", null, null);
+        battleData = new BattleSendData("ランテイア", "魔軍隊長", "", "平原", "村", false, false, true, false, 10, 50, 48, 48,16,36,36,16,"",72,16,0,"ナイト",null,null);
 
         battleData.playerData = new PlayerRecord(44, 14, 8, 7, 12, 7);
         battleData.lvUpData = new PlayerRecord(2, 1, 0, 1, 2, 0);
