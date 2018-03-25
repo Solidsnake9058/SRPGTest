@@ -98,7 +98,7 @@ public class ObjectCreatorManager : MonoBehaviour
     private Dictionary<int, string> dicRace;
     private Dictionary<int, string> dicWeapon;
 
-    private string filename = "ObjectJson.txt";
+    private string filename = "/Resources/ObjectJson.txt";
 
     #region UI Method
     public void DisableGroup(CanvasGroup group)
@@ -959,7 +959,7 @@ public class ObjectCreatorManager : MonoBehaviour
 
         if (!System.IO.File.Exists(filename))
         {
-            Debug.Log("File is not exist!");
+            Debug.Log(filename + ":File is not exist!");
             return;
         }
         try
@@ -990,6 +990,7 @@ public class ObjectCreatorManager : MonoBehaviour
 
     private void Awake()
     {
+        filename = Application.dataPath + filename;
         instance = this;
     }
 

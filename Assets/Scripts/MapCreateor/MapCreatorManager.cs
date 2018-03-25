@@ -47,6 +47,14 @@ public class MapCreatorManager : MonoBehaviour
     [Header("Main UI")]
     public Text changeModeText;
 
+    private string file
+    {
+        get
+        {
+            return Application.dataPath + "/Resources/" + fileName.text;
+        }
+    }
+
     [Header("Tile UI")]
 	public Text tileTypeName;
     public Image tileSprite;
@@ -166,7 +174,7 @@ public class MapCreatorManager : MonoBehaviour
     private string userPlayerNameFormat = "UserPlayer{0}";
     private string enemyPlayerNameFormat = "EnemyPlayer{0}";
 
-    private string gameElementfilename = "ObjectJson.txt";
+    private string gameElementfilename = Application.dataPath + "/Resources/ObjectJson.txt";
 
     // Use this for initialization
     void Awake()
@@ -1646,7 +1654,7 @@ public class MapCreatorManager : MonoBehaviour
 
     public void saveMapFromXml()
     {
-        if (String.IsNullOrEmpty(fileName.text))
+        if (String.IsNullOrEmpty(file))
         {
             Debug.Log("File name cannot be empty!");
             return;
@@ -1655,17 +1663,17 @@ public class MapCreatorManager : MonoBehaviour
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(map), fileName.text + ".xml");
         //MapSaveLoad.Save(MapSaveLoad.CreateMapContainer(mapHex), fileName.text + ".xml");
 
-        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex, userPlayerRecords, enemyPlayerRecords, shopItemList, shopWeaponList, scenarios, stageClearCondition), fileName.text + ".txt");
+        ObjectSaveLoad.JsonSave(MapSaveLoad.CreateMapContainer(mapHex, userPlayerRecords, enemyPlayerRecords, shopItemList, shopWeaponList, scenarios, stageClearCondition), file + ".txt");
     }
 
     public void loadMapFromXml()
     {
-		if (String.IsNullOrEmpty(fileName.text))
+		if (String.IsNullOrEmpty(file))
 		{
 			Debug.Log("File name cannot be empty!");
 			return;
 		}
-        if (!System.IO.File.Exists(fileName.text + ".txt"))
+        if (!System.IO.File.Exists(file + ".txt"))
 		{
             Debug.Log("File is not exist!");
             return;
@@ -1676,7 +1684,7 @@ public class MapCreatorManager : MonoBehaviour
         Vector3 connerPointC = Vector3.zero;
         Vector3 connerPointD = Vector3.zero;
 
-        MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>(fileName.text + ".txt");
+        MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>(file + ".txt");
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
 
