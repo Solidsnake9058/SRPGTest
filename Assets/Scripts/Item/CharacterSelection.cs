@@ -6,26 +6,42 @@ using UnityEngine.UI;
 
 public class CharacterSelection : MonoBehaviour
 {
-    public Text playerName;
-    public Text playerClass;
-    public Text playerLevel;
-    public Text playerHP;
-    public Text playerActable;
+    [SerializeField]
+    private Text m_PlayerName;
+    [SerializeField]
+    private Text m_PlayerClass;
+    [SerializeField]
+    private Text m_PlayerLevel;
+    [SerializeField]
+    private Text m_PlayerHP;
+    [SerializeField]
+    private Text m_PlayerActable;
+    [SerializeField]
+    private Button m_ClickButton;
+    private Vector3 m_FocusPos = Vector3.zero;
+    private Action m_ClickEvent;
 
+    public void SetClickEvent(Action action)
+    {
+        m_ClickEvent = action;
+        m_ClickButton.onClick.AddListener(CilckActoin);
+    }
     public void CilckActoin()
     {
-        ScreenController.instance.SetCameraPos(new Vector3((float)Convert.ToDouble(name.Split(',')[0]), 0, (float)Convert.ToDouble(name.Split(',')[1])));
-        GameManager.instance.DisableGroup(GameManager.instance.unitGroup);
+        ScreenController.instance.SetCameraPos(m_FocusPos);
+        m_ClickEvent?.Invoke();
+        //GameManager.instance.DisableGroup(GameManager.instance.unitGroup);
     }
 
     public void SetText(string pName, string pClass, int pLevel, int pHP, int pMaxHP, bool pActable, Vector3 pPos)
     {
-        playerName.text = pName;
-        playerClass.text = pClass;
-        playerLevel.text = pLevel.ToString();
-        playerHP.text = string.Format("{0,3}/{1,3}",pHP, pMaxHP);
-        playerActable.text = "<color=" + (pHP > 0 ? (pActable ? "lightblue>移動可" : "lime>移動済") : "red>行動不可") + "</color>";
-        name = string.Format("{0},{1}", pPos.x, pPos.z);
+        m_PlayerName.text = pName;
+        m_PlayerClass.text = pClass;
+        m_PlayerLevel.text = pLevel.ToString();
+        m_PlayerHP.text = string.Format("{0,3}/{1,3}",pHP, pMaxHP);
+        m_PlayerActable.text = $"<color={(pHP > 0 ? (pActable ? "lightblue>移動可" : "lime>移動済") : "red>行動不可")}</color>";
+        m_FocusPos = pPos;
+        name = $"{pName}({pPos.x},{pPos.z})";
     }
 
 }

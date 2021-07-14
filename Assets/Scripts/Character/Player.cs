@@ -155,7 +155,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
         transform.position = new Vector3(transform.position.x, 0, transform.position.z);
     }
 
-    public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
+    public void GetWeaponAttack(out int derictAtk, out int inderictAtk)
     {
         Weapon weapon = GameManager.instance.gameElement.weapons.Where(x => x.id == equipWeapon).FirstOrDefault();
         derictAtk = weapon.directAtk;
@@ -167,7 +167,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
         int directAtk = 0;
         int indirectAtk = 0;
 
-        GetWeaponAttack(ref directAtk, ref indirectAtk);
+        GetWeaponAttack(out directAtk, out indirectAtk);
 
         if (isDirect)
         {

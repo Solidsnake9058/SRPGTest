@@ -29,4 +29,9 @@ public class ObjectSaveLoad
             return JsonConvert.DeserializeObject<T>(text);
         }
     }
+
+    public static T JsonDataLoad<T>(string json)
+    {
+        return JsonConvert.DeserializeObject<T>(json);
+    }
 }

@@ -32,6 +32,7 @@ public class ObjectCreatorManager : MonoBehaviour
     public InputField itemAddHP;
     public InputField itemGold;
     public InputField itemPrice;
+    public InputField m_ItemInitialCount;
     public Dropdown itemUseRace;
     public Dropdown itemNewRace;
     public Toggle itemCanSell;
@@ -339,6 +340,7 @@ public class ObjectCreatorManager : MonoBehaviour
         itemAddHP.text = "";
         itemGold.text = "";
         itemPrice.text = "";
+        m_ItemInitialCount.text = "";
         itemItemType.value = 0;
         itemUseRace.value = 0;
         itemNewRace.value = 0;
@@ -364,6 +366,7 @@ public class ObjectCreatorManager : MonoBehaviour
             int addHp = Convert.ToInt32(string.IsNullOrEmpty(itemAddHP.text) ? "0" : itemAddHP.text);
             int gold = Convert.ToInt32(string.IsNullOrEmpty(itemGold.text) ? "0" : itemGold.text);
             int price = Convert.ToInt32(string.IsNullOrEmpty(itemPrice.text) ? "0" : itemPrice.text);
+            int initialCount = Convert.ToInt32(string.IsNullOrEmpty(m_ItemInitialCount.text) ? "0" : m_ItemInitialCount.text);
             int itemType = dicItemType.Where(x=>x.Value == itemItemType.options[itemItemType.value].text).FirstOrDefault().Key;
             int useCharType = dicRace.Where(x => x.Value == itemUseRace.options[itemUseRace.value].text).FirstOrDefault().Key;
             int newCharType = dicRace.Where(x => x.Value == itemNewRace.options[itemNewRace.value].text).FirstOrDefault().Key;
@@ -376,7 +379,7 @@ public class ObjectCreatorManager : MonoBehaviour
                 return false;
             }
 
-            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, mdef, addHp, gold, price, useCharType, newCharType, sell, notice);
+            Item newItem = new Item(id, (ItemType)itemType, name, hp, atk, def, wis, dex, mdef, addHp, gold, price, initialCount, useCharType, newCharType, sell, notice);
             items.Add(newItem);
         }
         catch (Exception ex)
@@ -403,6 +406,7 @@ public class ObjectCreatorManager : MonoBehaviour
             itemAddHP.text =temp.addHp.ToString();
             itemGold.text = temp.gold.ToString();
             itemPrice.text = temp.price.ToString();
+            m_ItemInitialCount.text = temp.initialCount.ToString();
             itemItemType.value = itemItemType.options.FindIndex(x => x.text == dicItemType[(int)temp.itemType]);
             itemUseRace.value = itemUseRace.options.FindIndex(x => x.text == dicRace[temp.useCharType]);
             itemNewRace.value = itemNewRace.options.FindIndex(x => x.text == dicRace[temp.newCharType]); 
@@ -1010,9 +1014,14 @@ public class ObjectCreatorManager : MonoBehaviour
 
     private void SetItemType()
     {
-        dicItemType.Add((int)ItemType.cure, "Cure");
-        dicItemType.Add((int)ItemType.resurge, "Resurge");
-        dicItemType.Add((int)ItemType.special, "Special");
+        //dicItemType.Add((int)ItemType.Cure, "Cure");
+        //dicItemType.Add((int)ItemType.Resurge, "Resurge");
+        //dicItemType.Add((int)ItemType.Special, "Special");
+
+        for (ItemType i = 0; i <= ItemType.Special; i++)
+        {
+            dicItemType.Add((int)i, i.ToString());
+        }
 
         itemItemType.options.Clear();
         foreach (string value in dicItemType.Values)

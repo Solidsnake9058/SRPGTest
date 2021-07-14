@@ -21,6 +21,12 @@ public class Item
     [JsonProperty]
     public int hp { get; private set; }
     [JsonProperty]
+    public bool m_FullCure { get; private set; }
+    [JsonProperty]
+    public bool m_IsTurnEnd { get; private set; }
+    [JsonProperty]
+    public bool m_IsKeyItem { get; private set; }
+    [JsonProperty]
     public int atk { get; private set; }
     [JsonProperty]
     public int def { get; private set; }
@@ -37,6 +43,8 @@ public class Item
     [JsonProperty]
     public int price { get; private set; }
     [JsonProperty]
+    public int initialCount { get; private set; }
+    [JsonProperty]
     public int useCharType { get; private set; }
     [JsonProperty]
     public int newCharType { get; private set; }
@@ -44,10 +52,11 @@ public class Item
     public bool sell { get; private set; }
     [JsonProperty]
     public string notice { get; private set; }
+    
 
     public Item() { }
 
-    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int mdef, int addHp, int gold, int price, int useCharType, int newCharType, bool sell, string notice)
+    public Item(int id, ItemType itemType, string name, int hp, int atk, int def, int wis, int dex, int mdef, int addHp, int gold, int price,int initialCount, int useCharType, int newCharType, bool sell, string notice)
     {
         this.id = id;
         this.itemType = itemType;
@@ -61,6 +70,7 @@ public class Item
         this.addHp = addHp;
         this.gold = gold;
         this.price = price;
+        this.initialCount = initialCount;
         this.useCharType = useCharType;
         this.newCharType = newCharType;
         this.sell = sell;
@@ -70,7 +80,7 @@ public class Item
 
 public enum ItemType
 {
-    cure,
-    resurge,
-    special,
+    Cure,
+    Resurge,
+    Special,
 }

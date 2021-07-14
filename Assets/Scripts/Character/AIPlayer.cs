@@ -82,7 +82,7 @@ public class AIPlayer : Player
             int directAtk = 0;
             int indirectAtk = 0;
 
-            GetWeaponAttack(ref directAtk, ref indirectAtk);
+            GetWeaponAttack(out directAtk, out indirectAtk);
 
             List<Player> opppnets = new List<Player>();
             List<Player> opppnetsNotCanBeCount = new List<Player>();

@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance { get; private set; }
 
+    [SerializeField]
+    private GameUIManager m_GameUIManager = default;
+
     #region parament
 
     //public GameObject tilePrefab;
@@ -34,11 +37,6 @@ public class GameManager : MonoBehaviour
     public CanvasGroup menu;
     public CanvasGroup endTurnConfirm;
     public CanvasGroup stageMessage;
-    public CanvasGroup status;
-    public CanvasGroup shopGroup;
-    public CanvasGroup itemGroup;
-    public CanvasGroup weaponGroup;
-    public CanvasGroup unitGroup;
     public CanvasGroup gameSetting;
     public Text stageInfo;
     public Image msgBox;
@@ -60,13 +58,13 @@ public class GameManager : MonoBehaviour
     private List<PlayerRecord> userPlayerRecords;
     private List<PlayerRecord> enemyPlayerRecords;
     //public List<Player> players = new List<Player>();
-    public List<Player> userPlayers = new List<Player>();
-    public List<Player> enemyPlayers = new List<Player>();
-    public List<Player> actorPlayers = new List<Player>();
+    public List<Player> userPlayers { get; private set; }
+    public List<Player> enemyPlayers { get; private set; }
+    public List<Player> actorPlayers { get; private set; }
     public List<Scenario> stageScenatios = new List<Scenario>();
     public Scenario runningScenario;
-    public List<int> shopItemList;
-    public List<int> shopWeaponList;
+    public List<int> m_ShopItemList { get; private set; }
+    public List<int> m_ShopWeaponList { get; private set; }
     public List<int> defeatedEnemyList;
     public List<int> removeScenaroList;
 
@@ -98,7 +96,7 @@ public class GameManager : MonoBehaviour
 
     private UnityAction _Update = Utility.Nothing;
 
-    private int turnCount = 1;
+    public int m_TurnCount { get; private set; }
 
     private float waitingTime = 0;
     private float currentWaitingTime = 0;
@@ -117,7 +115,7 @@ public class GameManager : MonoBehaviour
 
     private string gameElementfilename = "ObjectJson.txt";
 
-    private bool isStartGame = true;
+    private bool m_IsNewGame = true;
     public Vector3 cameraPosition;
     public Vector3 cameraRotation;
 
@@ -126,63 +124,20 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public bool attacking = false;
 
+    [SerializeField]
+    private int m_PlayerGoldMax = 60000;
     public int _playerGold = 1000;
-    public Dictionary<int, int> playerItems;
-    public Dictionary<int, int> playerWeapons;
+    public Dictionary<int, int> m_PlayerItems { get; private set; }
+    public Dictionary<int, int> m_PlayerWeapons { get; private set; }
 
     public BattleSendData battleData = new BattleSendData();
     #endregion
 
     #region UI parament
 
-    [Header("StatusUI")]
-    public Text playerName;
-    public Text playerClass;
-    public Text playerLevel;
-    public Text playerHP;
-    public Text playerMaxHP;
-    public Text playerExp;
-    public Text playerAtk;
-    public Text playerWeaponAtk;
-    public Text playerDef;
-    public Text playerWis;
-    public Text playerDex;
-    public Text playerMdef;
-    public Text playerEquip;
-    public Text playerEquipRange;
-
     [Header("UI Setting UI")]
     public Toggle isShowTileLine;
     public Toggle isShowPlayHP;
-
-    [Header("Item UI")]
-    public int itemSelectedId = -1;
-    public Text itemGold;
-    public Text itemNotice;
-    public RectTransform itemList;
-    public Button buttonUseItem;
-    public Button buttonSellItem;
-
-    [Header("Weapon UI")]
-    public int weaponSelectedId = -1;
-    public Text weaponNotice;
-    public RectTransform weaponList;
-    public Button buttonEquipWeapon;
-    public Button buttonSellWeapon;
-
-    [Header("Unit UI")]
-    public RectTransform userPanel;
-    public RectTransform enemyPanel;
-    public RectTransform userPlayerList;
-    public RectTransform enemyPlayerList;
-    public Text turnText;
-
-    [Header("Shop UI")]
-    public string shopSelectedId = "";
-    public Text shopGold;
-    public Text shopNotice;
-    public RectTransform shopList;
-    public Button buttonBuyItem;
 
     [Header("Dialog UI")]
     public CanvasGroup dialogGroup;
@@ -192,25 +147,18 @@ public class GameManager : MonoBehaviour
     public Image darkFront;
     #endregion
 
-    public int playerGold
+    public int m_PlayerGold
     {
         get
         {
-            if (_playerGold > 600000)
-            {
-                return 600000;
-            }
-            else
-            {
-                return _playerGold;
-            }
+            return _playerGold;
         }
-        set { _playerGold = value; }
+        set { _playerGold = Mathf.Clamp(value, 0, m_PlayerGoldMax); }
     }
 
     void Awake()
     {
-        if (instance==null)
+        if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(this);
@@ -219,6 +167,7 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        m_GameUIManager.Initialize(instance);
         mapTransform = transform.Find("Map");
         playerTransform = transform.Find("Players");
         playerUITransform = transform.Find("PlayerUIs");
@@ -228,6 +177,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         //GameLoading();
+        m_GameUIManager.GameSetting();
     }
 
     void Update()
@@ -344,9 +294,9 @@ public class GameManager : MonoBehaviour
                 }
             }
 
-            if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
+            if (!isPlayerTurn)
             {
-                if (!isPlayerTurn)
+                if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
                 {
                     if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
                     {
@@ -491,17 +441,17 @@ public class GameManager : MonoBehaviour
                 loadIndex = PlayerPrefs.GetInt("loadIndex");
                 isLoadMap = PlayerPrefs.GetInt("isLoadMap") == 1;
             }
-            catch 
+            catch
             {
                 loadIndex = -1;
             }
             if (isLoadMap)
             {
-                isStartGame = true;
+                m_IsNewGame = true;
                 if (loadIndex != -1)
                 {
                     //Load game save
-                    isStartGame = false;
+                    m_IsNewGame = false;
                 }
                 GameLoading();
             }
@@ -526,7 +476,7 @@ public class GameManager : MonoBehaviour
 
     private void InitialStage()
     {
-        turnCount = 1;
+        m_TurnCount = 1;
         isPlayerTurn = true;
         isWaitingActor = false;
         isWaitingMsg = false;
@@ -549,12 +499,12 @@ public class GameManager : MonoBehaviour
 
         DisableGroup(menu);
         DisableGroup(endTurnConfirm);
-        DisableGroup(status);
+        //DisableGroup(status);
         DisableGroup(gameSetting);
-        DisableGroup(itemGroup);
-        DisableGroup(weaponGroup);
-        DisableGroup(unitGroup);
-        DisableGroup(shopGroup);
+        //DisableGroup(itemGroup);
+        //DisableGroup(weaponGroup);
+        //DisableGroup(unitGroup);
+        //DisableGroup(shopGroup);
         DisableGroup(dialogGroup);
         isShowStage = true;
     }
@@ -572,16 +522,20 @@ public class GameManager : MonoBehaviour
 
         isWaitingBattle = false;
         InitialStage();
-        if (isStartGame)
+        if (m_IsNewGame)
         {
-            isStartGame = false;
+            m_IsNewGame = false;
             saveUserPlayerRecords = new List<PlayerRecord>();
             saveEnemyPlayerRecords = new List<PlayerRecord>();
             defeatedEnemyList = new List<int>();
-            playerItems = new Dictionary<int, int>();
-            playerWeapons = new Dictionary<int, int>();
-            int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
-            playerItems.Add(herbId, 4);
+            m_PlayerItems = new Dictionary<int, int>();
+            m_PlayerWeapons = new Dictionary<int, int>();
+            //int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
+            //m_PlayerItems.Add(herbId, 4);
+            for (int i = 0; i < m_PlayerItems.Count; i++)
+            {
+                m_PlayerItems.Add(gameElement.items[i].id, gameElement.items[i].initialCount);
+            }
         }
         StartGame();
         Scenario opening = stageScenatios.Where(x => x.scenarioType == ScenarioType.Openning).FirstOrDefault();
@@ -621,10 +575,10 @@ public class GameManager : MonoBehaviour
 
     public void ShowStageInfo(bool turnMsg = true)
     {
-        stageInfo.text = string.Format("Stage {0}\n{1}",1,"旅立ち");
+        stageInfo.text = string.Format("Stage {0}\n{1}", 1, "旅立ち");
         if (turnMsg)
         {
-            stageInfo.text = string.Format("ターン {0}\n{1}の行動", turnCount, isPlayerTurn ? "アークたち" : "魔軍");
+            stageInfo.text = string.Format("ターン {0}\n{1}の行動", m_TurnCount, isPlayerTurn ? "アークたち" : "魔軍");
         }
 
         Vector2 newSize = new Vector2(350, 150);
@@ -637,9 +591,9 @@ public class GameManager : MonoBehaviour
     public void ShowGetItemInfo(int gold, int itemId, int weaponId)
     {
         List<string> msg = new List<string>();
-        if (gold>0)
+        if (gold > 0)
         {
-            msg.Add("<color=orange>"+gold + "</color>Gold");
+            msg.Add("<color=orange>" + gold + "</color>Gold");
         }
         if (itemId > 0)
         {
@@ -658,7 +612,7 @@ public class GameManager : MonoBehaviour
         isWaitingMsg = true;
     }
 
-    public void ShowUseItemInfo(string name, int hp, int atk, int def, int dex, int wis, int maxHP, int gold,string newCharType)
+    public void ShowUseItemInfo(string name, int hp, int atk, int def, int dex, int wis, int maxHP, int gold, string newCharType)
     {
         Vector2 newSize = new Vector2(350, 150);
         msgBox.rectTransform.sizeDelta = newSize;
@@ -813,34 +767,8 @@ public class GameManager : MonoBehaviour
     {
         CharacterType race = gameElement.races[player.race];
         Weapon weapon = gameElement.weapons[player.equipWeapon];
-        int directAtk = 0;
-        int indirectAtk = 0;
-        player.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
-        List<string> weaponRangeText = new List<string>();
-        if (directAtk > 0)
-        {
-            weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "直接"));
-        }
-        if (indirectAtk > 0)
-        {
-            weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "間接"));
-        }
-
-        playerName.text = player.playerName;
-        playerClass.text = race.name;
-        playerLevel.text = player.level.ToString();
-        playerHP.text = player.hp.ToString() + "/";
-        playerMaxHP.text = player.maxHP.ToString();
-        playerExp.text = player.exp.ToString();
-        playerAtk.text = player.atk.ToString();
-        playerWeaponAtk.text = string.Format("<color=white>(</color><color=orange>{0}</color><color=white>/</color><color=lime>{1}</color><color=white>)</color>", directAtk > 0 ? "+" + directAtk.ToString() : "✕", indirectAtk > 0 ? "+" + indirectAtk.ToString() : "✕");
-        playerDef.text = player.def.ToString();
-        playerWis.text = player.wis.ToString();
-        playerDex.text = player.dex.ToString();
-        playerMdef.text = player.mdef.ToString();
-        playerEquip.text = weapon.name;
-        playerEquipRange.text = string.Join("<color=white>/</color>", weaponRangeText.ToArray());
+        m_GameUIManager.SetPlayerStatusUI(player, race, weapon);
     }
 
     public void SetPlayerIndex(int index)
@@ -872,7 +800,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentEnemyPlayerIndex == enemyPlayers.Count - 1)
         {
-            turnCount++;
+            m_TurnCount++;
             isPlayerTurn = true;
             SetStopWaiting();
             foreach (Player p in userPlayers)
@@ -909,7 +837,7 @@ public class GameManager : MonoBehaviour
         foreach (var p in temp)
         {
             enemyPlayers.Remove(p);
-            Transform ui = playerUITransform.Find(p.name+"UI");
+            Transform ui = playerUITransform.Find(p.name + "UI");
             ScreenController.instance.RemoveUI(p.name + "UI");
             Destroy(ui.gameObject);
             Destroy(p.gameObject);
@@ -990,7 +918,7 @@ public class GameManager : MonoBehaviour
         SetStopWaiting();
     }
 
-    private void SetTileName(HexTile destTile,out string tileName,out int defRate)
+    private void SetTileName(HexTile destTile, out string tileName, out int defRate)
     {
         tileName = "";
         defRate = (int)destTile.defenseRate;
@@ -1140,7 +1068,7 @@ public class GameManager : MonoBehaviour
                 SetTileName(targetTile, out attackerTileName, out attackerDefensRate);
             }
 
-            attacker.GetWeaponAttack(ref directAtk, ref indirectAtk);
+            attacker.GetWeaponAttack(out directAtk, out indirectAtk);
 
             //if (attacker.gridPosition.x >= target.gridPosition.x - 1 && attacker.gridPosition.x <= target.gridPosition.x + 1 &&
             //    attacker.gridPosition.y >= target.gridPosition.y - 1 && attacker.gridPosition.y <= target.gridPosition.y + 1)
@@ -1181,19 +1109,19 @@ public class GameManager : MonoBehaviour
                     //Got item/weapon/gold by enemy
                     if (UnityEngine.Random.Range(0f, 1f) < 0.5)
                     {
-                        playerGold += target.gold;
+                        m_PlayerGold += target.gold;
                         getItem = "<color=yellow>" + target.gold + "</color>Gold";
                         //Debug.Log("Got " + target.gold + " gold!");
                     }
                     else
                     {
-                        if (playerWeapons.ContainsKey(target.equipWeapon))
+                        if (m_PlayerWeapons.ContainsKey(target.equipWeapon))
                         {
-                            playerWeapons[target.equipWeapon]++;
+                            m_PlayerWeapons[target.equipWeapon]++;
                         }
                         else
                         {
-                            playerWeapons.Add(target.equipWeapon, 1);
+                            m_PlayerWeapons.Add(target.equipWeapon, 1);
                         }
                         getItem = gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name;
                         //Debug.Log("Got " + gameElement.weapons.Where(x => x.id == target.equipWeapon).FirstOrDefault().name + "!");
@@ -1214,7 +1142,7 @@ public class GameManager : MonoBehaviour
                     if (isDirectAtk && target.GetIsCanAttack(true) || !isDirectAtk && target.GetIsCanAttack(false))
                     {
                         isCounter = true;
-                        target.GetWeaponAttack(ref directAtk, ref indirectAtk);
+                        target.GetWeaponAttack(out directAtk, out indirectAtk);
 
                         amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 100f)));
                         attacker.hp -= amountOfDamage;
@@ -1243,19 +1171,19 @@ public class GameManager : MonoBehaviour
                             //Got item/weapon/gold by enemy
                             if (UnityEngine.Random.Range(0f, 1f) < 0.5)
                             {
-                                playerGold += attacker.gold;
+                                m_PlayerGold += attacker.gold;
                                 getItem = "<color=yellow>" + attacker.gold + "</color>Gold";
                                 //Debug.Log("Got " + attacker.gold + " gold!");
                             }
                             else
                             {
-                                if (playerWeapons.ContainsKey(attacker.equipWeapon))
+                                if (m_PlayerWeapons.ContainsKey(attacker.equipWeapon))
                                 {
-                                    playerWeapons[attacker.equipWeapon]++;
+                                    m_PlayerWeapons[attacker.equipWeapon]++;
                                 }
                                 else
                                 {
-                                    playerWeapons.Add(attacker.equipWeapon, 1);
+                                    m_PlayerWeapons.Add(attacker.equipWeapon, 1);
                                 }
                                 getItem = gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name;
                                 //Debug.Log("Got " + gameElement.weapons.Where(x => x.id == attacker.equipWeapon).FirstOrDefault().name + "!");
@@ -1368,28 +1296,28 @@ public class GameManager : MonoBehaviour
 
     public void GetChest(int gold, int itemId, int weaponId)
     {
-        playerGold += gold;
+        m_PlayerGold += gold;
         if (itemId >= 0)
         {
-            if (playerItems.ContainsKey(itemId))
+            if (m_PlayerItems.ContainsKey(itemId))
             {
-                playerItems[itemId]++;
+                m_PlayerItems[itemId]++;
             }
             else
             {
-                playerItems.Add(itemId, 1);
+                m_PlayerItems.Add(itemId, 1);
             }
         }
 
         if (weaponId >= 0)
         {
-            if (playerWeapons.ContainsKey(weaponId))
+            if (m_PlayerWeapons.ContainsKey(weaponId))
             {
-                playerWeapons[weaponId]++;
+                m_PlayerWeapons[weaponId]++;
             }
             else
             {
-                playerWeapons.Add(weaponId, 1);
+                m_PlayerWeapons.Add(weaponId, 1);
             }
         }
 
@@ -1397,132 +1325,99 @@ public class GameManager : MonoBehaviour
     }
 
     #region Item
-    public void SetItem()
+
+    public Player GetSelectedPlayer()
     {
-        itemGold.text = string.Format("所持金 <color=yellow>{0}</color> Gold", playerGold);
-
-        buttonUseItem.enabled = false;
-        buttonSellItem.enabled = false;
-
-        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id==itemSelectedId).FirstOrDefault() : null;
-        if (selectItem != null)
+        if (playerIndex >= 0)
         {
-            itemNotice.text = string.Format("<color=yellow>{0}</color>\r\n{1}", selectItem.name, selectItem.notice);
-            if (playerIndex >= 0)
+            return userPlayers[playerIndex];
+        }
+        return null;
+    }
+    public Item GetItem(int id)
+    {
+        return gameElement.m_Items[id];
+    }
+    public Weapon GetWeapon(int id)
+    {
+        return gameElement.m_Weapons[id];
+    }
+    public CharacterType GetRace(int id)
+    {
+        return gameElement.m_Races[id];
+    }
+    public string[] GetEquipableRace(int id, out bool isEquipable)
+    {
+        isEquipable = false;
+        List<string> raceNames = new List<string>();
+        for (int i = 0; i < gameElement.races.Count; i++)
+        {
+            if (gameElement.races[i].equipWeapon.Equals(id))
             {
-                switch (selectItem.itemType)
+                raceNames.Add(gameElement.races[i].name);
+                if (userPlayers[playerIndex].race.Equals(gameElement.races[i].id))
                 {
-                    case ItemType.cure:
-                        if (userPlayers[playerIndex].hp > 0 && userPlayers[playerIndex].hp < userPlayers[playerIndex].maxHP)
-                        {
-                            buttonUseItem.enabled = true;
-                        }
-                        break;
-                    case ItemType.resurge:
-                        if (userPlayers[playerIndex].hp <= 0)
-                        {
-                            buttonUseItem.enabled = true;
-                        }
-                        break;
-                    case ItemType.special:
-                        if (userPlayers[playerIndex].hp > 0)
-                        {
-                            if (selectItem.useCharType == -1 || (selectItem.useCharType == userPlayers[playerIndex].race && userPlayers[playerIndex].level >= 10))
-                            {
-                                buttonUseItem.enabled = true;
-                            }
-                        }
-                        break;
+                    isEquipable = true;
                 }
             }
-            if (selectItem.price > 0)
-            {
-                buttonSellItem.enabled = true;
-            }
+        }
+
+        return raceNames.ToArray();
+    }
+
+    private void IncreaseItem(int id)
+    {
+        if (m_PlayerItems.ContainsKey(id))
+        {
+            m_PlayerItems[id]++;
         }
         else
         {
-            itemNotice.text = "";
+            m_PlayerItems.Add(id, 1);
         }
-
-        ClearItemList();
-        foreach (var item in playerItems)
+    }
+    private bool DecreaseItem(int id)
+    {
+        if (m_PlayerItems.ContainsKey(id) && m_PlayerItems[id] > 0)
         {
-            if (item.Value > 0)
+            int newCount = m_PlayerItems[id] - 1;
+            m_PlayerItems[id] = newCount;
+            return true;
+        }
+        return false;
+    }
+    public bool SellItem(int id)
+    {
+        Item selectItem = gameElement.m_Items[id];
+        if (selectItem != null && DecreaseItem(id))
+        {
+            m_PlayerGold += selectItem.price;
+            return true;
+        }
+        return false;
+    }
+    public bool UseItem(int itemId)
+    {
+        Item selectItem = gameElement.m_Items[itemId];
+        if (selectItem != null && !selectItem.m_IsKeyItem && DecreaseItem(itemId))
+        {
+            if (selectItem.m_FullCure)
             {
-                Item setItem = gameElement.items.Where(x => x.id == item.Key).FirstOrDefault();
-                GameObject newObject = Instantiate(itemUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
-                string typeName = "";
-                newObject.GetComponent<Button>().name = item.Key.ToString();
-                if (item.Key == itemSelectedId)
-                {
-                    Color newColor = newObject.GetComponent<Image>().color;
-                    newColor.a = 0.5f;
-                    newObject.GetComponent<Image>().color = newColor;
-                }
-                switch (setItem.itemType)
-                {
-                    case ItemType.cure:
-                        typeName = "回復";
-                        break;
-                    case ItemType.resurge:
-                        typeName = "復活";
-                        break;
-                    case ItemType.special:
-                        typeName = "特殊";
-                        break;
-                }
-                newObject.GetComponent<ItemSelection>().SetItemInfo(setItem.name, typeName, item.Value);
-                newObject.transform.SetParent(itemList);
-            }
-        }
-    }
-
-    public void SellItem()
-    {
-        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
-        playerItems[itemSelectedId]--;
-        playerGold += selectItem.price;
-
-        itemSelectedId = -1;
-        SetItem();
-    }
-
-    public void UseItem()
-    {
-        Item selectItem = itemSelectedId >= 0 ? gameElement.items.Where(x => x.id == itemSelectedId).FirstOrDefault() : null;
-        playerItems[itemSelectedId]--;
-
-        switch (selectItem.name)
-        {
-            case "愛の夢":
                 for (int i = 0; i < userPlayers.Count; i++)
                 {
                     userPlayers[i].hp = userPlayers[i].maxHP;
                 }
-                TurnEnd(0);
-                break;
-            case "ドカティの鍵":
-
-                break;
-            default:
+            }
+            else
+            {
                 int hp = selectItem.hp;
                 userPlayers[playerIndex].atk += selectItem.atk;
                 userPlayers[playerIndex].def += selectItem.def;
                 userPlayers[playerIndex].dex += selectItem.dex;
                 userPlayers[playerIndex].wis += selectItem.wis;
                 userPlayers[playerIndex].maxHP += selectItem.addHp;
-                if (userPlayers[playerIndex].hp + hp > userPlayers[playerIndex].maxHP)
-                {
-                    hp = userPlayers[playerIndex].maxHP - userPlayers[playerIndex].hp;
-                }
-                userPlayers[playerIndex].hp += hp;
-
-                playerGold += selectItem.gold;
-                if (userPlayers[playerIndex].hp > userPlayers[playerIndex].maxHP)
-                {
-                    userPlayers[playerIndex].hp = userPlayers[playerIndex].maxHP;
-                }
+                userPlayers[playerIndex].hp = Mathf.Min(userPlayers[playerIndex].hp + hp, userPlayers[playerIndex].maxHP);
+                m_PlayerGold += selectItem.gold;
 
                 if (selectItem.useCharType > 0)
                 {
@@ -1530,254 +1425,86 @@ public class GameManager : MonoBehaviour
                     userPlayers[playerIndex].level = 1;
                     userPlayers[playerIndex].exp = 0;
                 }
-
-                itemSelectedId = -1;
-
-                itemGroup.alpha = 0;
-                itemGroup.interactable = false;
-                itemGroup.blocksRaycasts = false;
-
                 ShowUseItemInfo(userPlayers[playerIndex].playerName, hp, selectItem.atk, selectItem.def, selectItem.dex, selectItem.wis, selectItem.addHp, selectItem.gold, (selectItem.useCharType > 0 ? gameElement.races.Where(x => x.id == selectItem.newCharType).FirstOrDefault().name : ""));
-
-                break;
+            }
+            return true;
         }
+        return false;
     }
 
-    private void ClearItemList()
+    public bool EquipWeapon(int id)
     {
-        for (int i = 0; i < itemList.transform.childCount; i++)
+        Player player = GetSelectedPlayer();
+        if (player == null || player.equipWeapon.Equals(id))
         {
-            Destroy(itemList.transform.GetChild(i).gameObject);
+            return false;
         }
+        Weapon selectedWeapon = GetWeapon(id);
+        Weapon equipedWeapon = GetWeapon(player.equipWeapon);
+
+        player.equipWeapon = selectedWeapon.id;
+        DecreaseWeapon(selectedWeapon.id);
+        IncreaseWeapon(equipedWeapon.id);
+
+        ShowEquipWeaponInfo(selectedWeapon.name, selectedWeapon.name);
+        return true;
     }
-
-    public void SetWeapon()
+    public bool SellWeapon(int id)
     {
-        buttonEquipWeapon.enabled = false;
-        buttonSellWeapon.enabled = false;
-
-        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
-        if (selectWeapon != null)
+        Weapon selectedWeapon = GetWeapon(id);
+        if (selectedWeapon != null && DecreaseWeapon(id))
         {
-            List<string> equipableRace = gameElement.races.Where(x => x.equipWeapon.Contains(weaponSelectedId)).Select(y => y.name).ToList();
-            weaponNotice.text = string.Format("<color=yellow>{0}</color>\r\n{1}\r\n使えるクラスは、<color=yellow>{2}</color>です。", selectWeapon.name, selectWeapon.notice, (string.Join("</color><color=white>、</color><color=yellow>", equipableRace.ToArray())));
-            if (playerIndex >= 0)
-            {
-                if (gameElement.races.Where(x => x.id == userPlayers[playerIndex].race && x.equipWeapon.Contains(weaponSelectedId)).Count() > 0)
-                {
-                    buttonEquipWeapon.enabled = true;
-                }
-            }
-            if (selectWeapon.price > 0)
-            {
-                buttonSellWeapon.enabled = true;
-            }
+            m_PlayerGold += selectedWeapon.price;
+            return true;
+        }
+        return false;
+    }
+    private void IncreaseWeapon(int id)
+    {
+        if (m_PlayerWeapons.ContainsKey(id))
+        {
+            m_PlayerWeapons[id]++;
         }
         else
         {
-            weaponNotice.text = "";
+            m_PlayerWeapons.Add(id, 1);
         }
-
-        ClearWeaponList();
-        foreach (var weapon in playerWeapons)
+    }
+    private bool DecreaseWeapon(int id)
+    {
+        if (m_PlayerWeapons.ContainsKey(id) && m_PlayerWeapons[id] > 0)
         {
-            if (weapon.Value > 0)
+            int newCount = m_PlayerWeapons[id] - 1;
+            m_PlayerWeapons[id] = newCount;
+            return true;
+        }
+        return false;
+    }
+
+    public bool BuyItem(int id, bool isWeapon)
+    {
+        if (isWeapon)
+        {
+            Weapon selectWeapon = GetWeapon(id);
+            if (selectWeapon != null)
             {
-                Weapon selWeapon = gameElement.weapons.Where(x => x.id == weapon.Key).FirstOrDefault();
-                GameObject newObject = Instantiate(weaponUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()));
-                newObject.GetComponent<Button>().name = weapon.Key.ToString();
-                if (weapon.Key == weaponSelectedId)
-                {
-                    Color newColor = newObject.GetComponent<Image>().color;
-                    newColor.a = 0.5f;
-                    newObject.GetComponent<Image>().color = newColor;
-                }
-                List<string> weaponRangeText = new List<string>();
-                if (selWeapon.directAtk > 0)
-                {
-                    weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "直接"));
-                }
-                if (selWeapon.indirectAtk > 0)
-                {
-                    weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "間接"));
-                }
-
-                newObject.GetComponent<ItemSelection>().SetItemInfo(selWeapon.name, string.Join("<color=white>/</color>", weaponRangeText.ToArray()), weapon.Value);
-                newObject.transform.SetParent(weaponList);
+                IncreaseWeapon(selectWeapon.id);
+                m_PlayerGold -= selectWeapon.price;
+                return true;
             }
-        }
-    }
 
-    public void SellWeapon()
-    {
-        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
-        playerWeapons[weaponSelectedId]--;
-        playerGold += selectWeapon.price;
-
-        itemSelectedId = -1;
-        SetWeapon();
-    }
-
-    public void EquipWeapon()
-    {
-        Weapon selectWeapon = weaponSelectedId >= 0 ? gameElement.weapons.Where(x => x.id == weaponSelectedId).FirstOrDefault() : null;
-        playerWeapons[weaponSelectedId]--;
-        if (userPlayers[playerIndex].equipWeapon == weaponSelectedId)
-        {
-            return;
-        }
-
-        string originWeaponName = gameElement.weapons.Where(x => x.id == userPlayers[playerIndex].equipWeapon).FirstOrDefault().name;
-        if (playerWeapons.ContainsKey(userPlayers[playerIndex].equipWeapon))
-        {
-            playerWeapons[userPlayers[playerIndex].equipWeapon]++;
         }
         else
         {
-            playerWeapons.Add(userPlayers[playerIndex].equipWeapon, 1);
-        }
-        userPlayers[playerIndex].equipWeapon = selectWeapon.id;
-        weaponSelectedId = -1;
-
-        weaponGroup.alpha = 0;
-        weaponGroup.interactable = false;
-        weaponGroup.blocksRaycasts = false;
-
-        ShowEquipWeaponInfo(originWeaponName, selectWeapon.name);
-    }
-
-    private void ClearWeaponList()
-    {
-        for (int i = 0; i < weaponList.transform.childCount; i++)
-        {
-            Destroy(weaponList.transform.GetChild(i).gameObject);
-        }
-    }
-
-    public void SetShop()
-    {
-        shopGold.text = string.Format("所持金 <color=yellow>{0}</color> Gold", playerGold);
-        buttonBuyItem.enabled = false;
-
-        int price = 999999999;
-
-        if (shopSelectedId != "")
-        {
-            string[] id = shopSelectedId.Split(':');
-            if (id[0] == "Weapon")
+            Item selectItem = GetItem(id);
+            if (selectItem != null)
             {
-                Weapon selectWeapon = gameElement.weapons.Where(x => x.id.ToString() == id[1]).FirstOrDefault();
-                price = selectWeapon.price;
-                shopNotice.text = selectWeapon.notice;
-            }
-            else
-            {
-                Item selectItem = gameElement.items.Where(x => x.id.ToString() == id[1]).FirstOrDefault();
-                price = selectItem.price;
-                shopNotice.text = selectItem.notice;
+                IncreaseItem(selectItem.id);
+                m_PlayerGold -= selectItem.price;
+                return true;
             }
         }
-
-        if (price <= playerGold)
-        {
-            buttonBuyItem.enabled = true;
-        }
-
-        ClearShopList();
-
-        for (int i = 0; i < shopItemList.Count; i++)
-        {
-            Item selItem = gameElement.items.Where(x => x.id == shopItemList[i]).FirstOrDefault();
-            GameObject newObject = Instantiate(shopUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()), shopList);
-            string itemTypeName = "";
-            switch (selItem.itemType)
-            {
-                case ItemType.cure:
-                    itemTypeName = string.Format("<color=red>{0}</color>", "回復");
-                    break;
-                case ItemType.resurge:
-                    itemTypeName = string.Format("<color=red>{0}</color>", "復活");
-                    break;
-                case ItemType.special:
-                    itemTypeName = string.Format("<color=lightblue>{0}</color>", "特殊");
-                    break;
-            }
-            newObject.GetComponent<Button>().name = string.Format("Item:{0}", shopItemList[i].ToString());
-            newObject.GetComponent<ItemSelection>().SetItemInfo(selItem.name, itemTypeName, selItem.price);
-            if (shopSelectedId == newObject.GetComponent<Button>().name)
-            {
-                Color newColor = newObject.GetComponent<Image>().color;
-                newColor.a = 0.5f;
-                newObject.GetComponent<Image>().color = newColor;
-            }
-        }
-
-        for (int i = 0; i < shopWeaponList.Count; i++)
-        {
-            Weapon selWeapon = gameElement.weapons.Where(x => x.id == shopWeaponList[i]).FirstOrDefault();
-            GameObject newObject = Instantiate(shopUIPrefab, Vector3.zero, Quaternion.Euler(new Vector3()), shopList);
-            List<string> weaponRangeText = new List<string>();
-            if (selWeapon.directAtk > 0)
-            {
-                weaponRangeText.Add(string.Format("<color=orange>{0}</color>", "直接"));
-            }
-            if (selWeapon.indirectAtk > 0)
-            {
-                weaponRangeText.Add(string.Format("<color=lime>{0}</color>", "間接"));
-            }
-
-            newObject.GetComponent<Button>().name = string.Format("Weapon:{0}", shopWeaponList[i].ToString());
-            newObject.GetComponent<ItemSelection>().SetItemInfo(selWeapon.name, string.Join("<color=white>/</color>", weaponRangeText.ToArray()), selWeapon.price);
-            if (shopSelectedId == newObject.GetComponent<Button>().name)
-            {
-                Color newColor = newObject.GetComponent<Image>().color;
-                newColor.a = 0.5f;
-                newObject.GetComponent<Image>().color = newColor;
-            }
-        }
-    }
-
-    private void ClearShopList()
-    {
-        for (int i = 0; i < shopList.transform.childCount; i++)
-        {
-            Destroy(shopList.transform.GetChild(i).gameObject);
-        }
-    }
-
-    public void BuyItem()
-    {
-        if (shopSelectedId != "")
-        {
-            string[] id = shopSelectedId.Split(':');
-            if (id[0] == "Weapon")
-            {
-                Weapon selectWeapon = gameElement.weapons.Where(x => x.id.ToString() == id[1]).FirstOrDefault();
-                playerGold -= selectWeapon.price;
-                if (playerWeapons.ContainsKey(selectWeapon.id))
-                {
-                    playerWeapons[selectWeapon.id]++;
-                }
-                else
-                {
-                    playerWeapons.Add(selectWeapon.id, 1);
-                }
-            }
-            else
-            {
-                Item selectItem = gameElement.items.Where(x => x.id.ToString() == id[1]).FirstOrDefault();
-                playerGold -= selectItem.price;
-                if (playerItems.ContainsKey(selectItem.id))
-                {
-                    playerItems[selectItem.id]++;
-                }
-                else
-                {
-                    playerItems.Add(selectItem.id, 1);
-                }
-            }
-            SetShop();
-        }
+        return false;
     }
     #endregion
 
@@ -1800,6 +1527,8 @@ public class GameManager : MonoBehaviour
         LoadMapFromXml();
     }
 
+    public TextAsset m_ObjectData;
+
     private void LoadGameElements()
     {
         if (gameElement != null)
@@ -1813,7 +1542,8 @@ public class GameManager : MonoBehaviour
         }
         try
         {
-            gameElement = ObjectSaveLoad.JsonLoad<GameElement>(gameElementfilename);
+            //gameElement = ObjectSaveLoad.JsonLoad<GameElement>(gameElementfilename);
+            gameElement = ObjectSaveLoad.JsonDataLoad<GameElement>(m_ObjectData.text);
 
             playerTypes = gameElement.characters.Where(x => !x.enemy).ToList();
             playerTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
@@ -1837,8 +1567,8 @@ public class GameManager : MonoBehaviour
         mapSizeX = container.sizeX;
         mapSizeY = container.sizeY;
 
-        shopItemList = container.shopItemList;
-        shopWeaponList = container.shopWeaponList;
+        m_ShopItemList = container.shopItemList;
+        m_ShopWeaponList = container.shopWeaponList;
 
         for (int i = 0; i < mapTransform.transform.childCount; i++)
         {
@@ -1909,6 +1639,12 @@ public class GameManager : MonoBehaviour
         DisableGroup(menu);
     }
 
+    public void ClickButtonAction(string clickButton)
+    {
+        buttonAction = (ButtonAction)Delegate.CreateDelegate(typeof(ButtonAction), this, clickButton);
+        buttonAction(playerIndex);
+        DisableGroup(menu);
+    }
 
     private void Move(int inputPlayerIndex)
     {
@@ -1978,7 +1714,7 @@ public class GameManager : MonoBehaviour
             if (p.hp > 0 && getMapTile(p.mapHexIndex).type2D == TileType2D.Villa)
             {
                 p.hp += (p.maxHP / 8);
-                if (p.hp> p.maxHP)
+                if (p.hp > p.maxHP)
                 {
                     p.hp = p.maxHP;
                 }
@@ -1994,61 +1730,22 @@ public class GameManager : MonoBehaviour
 
     private void Status(int playerIndex)
     {
-        EnableGroup(status);
+        m_GameUIManager.ShowStatusUI();
     }
 
     private void Item(int playerIndex)
     {
-        SetItem();
-        itemGroup.alpha = 1;
-        itemGroup.interactable = true;
-        itemGroup.blocksRaycasts = true;
+        m_GameUIManager.ShowItemUI();
     }
 
     private void Weapon(int playerIndex)
     {
-        SetWeapon();
-        weaponGroup.alpha = 1;
-        weaponGroup.interactable = true;
-        weaponGroup.blocksRaycasts = true;
+        m_GameUIManager.ShowWeaponUI();
     }
 
     private void Unit(int playerIndex)
     {
-        unitGroup.alpha = 1;
-        unitGroup.blocksRaycasts = true;
-        unitGroup.interactable = true;
-
-        turnText.text = string.Format("ターン{0}", turnCount);
-        for (int i = 0; i < userPlayerList.transform.childCount; i++)
-        {
-            Destroy(userPlayerList.transform.GetChild(i).gameObject);
-        }
-
-        for (int i = 0; i < enemyPlayerList.transform.childCount; i++)
-        {
-            Destroy(enemyPlayerList.transform.GetChild(i).gameObject);
-        }
-
-        for (int i = 0; i < userPlayers.Count; i++)
-        {
-            CharacterSelection item = Instantiate(characterUIPrefab, new Vector3(0, 0, 0), Quaternion.identity, userPlayerList).GetComponent<CharacterSelection>();
-            item.SetText(userPlayers[i].playerName, gameElement.races.Where(x => x.id == userPlayers[i].race).FirstOrDefault().name, userPlayers[i].level, userPlayers[i].hp, userPlayers[i].maxHP, userPlayers[i].isActable, userPlayers[i].transform.position);
-        }
-
-        for (int i = 0; i < enemyPlayers.Count; i++)
-        {
-            if (enemyPlayers[i].hp <= 0)
-            {
-                continue;
-            }
-            CharacterSelection item = Instantiate(characterUIPrefab, new Vector3(0, 0, 0), Quaternion.identity, enemyPlayerList).GetComponent<CharacterSelection>();
-            item.SetText(enemyPlayers[i].playerName, gameElement.races.Where(x => x.id == enemyPlayers[i].race).FirstOrDefault().name, enemyPlayers[i].level, enemyPlayers[i].hp, enemyPlayers[i].maxHP, enemyPlayers[i].isActable, enemyPlayers[i].transform.position);
-        }
-
-        userPanel.SetAsLastSibling();
-        userPanel.Find("Panel").gameObject.SetActive(true);
-        enemyPanel.Find("Panel").gameObject.SetActive(false);
+        m_GameUIManager.ShowUnitListUI();
     }
 
     private void Setting(int playerIndex)
@@ -2060,9 +1757,7 @@ public class GameManager : MonoBehaviour
 
     private void Shop(int playerIndex)
     {
-        shopSelectedId = "";
-        SetShop();
-        EnableGroup(shopGroup);
+        m_GameUIManager.ShowShopUI();
     }
 
     public void SetShopDialog()
@@ -2122,15 +1817,21 @@ public class GameManager : MonoBehaviour
 
     void GenetarePlayers()
     {
+        userPlayers = new List<Player>();
+        enemyPlayers = new List<Player>();
         for (int i = 0; i < userPlayerRecords.Count; i++)
         {
             UserPlayer player;
             //int x = userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1);
             //int y = userPlayerRecords[i].locY;
             Vector3 tilePos = getMapTile(new HexTile.HexCoord(userPlayerRecords[i].locX, userPlayerRecords[i].locY)).HexTilePos();
-            CharacterTemplate playerData = playerTypes.Where(t=>t.id== userPlayerRecords[i].characterId).FirstOrDefault();
+            CharacterTemplate playerData = playerTypes.Where(t => t.id == userPlayerRecords[i].characterId).FirstOrDefault();
             CharacterLevelTemplate playerLvData = playerData.levelData[0];
-            PlayerRecord record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
+            PlayerRecord record = null;
+            if (saveUserPlayerRecords != null)
+            {
+                record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
+            }
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
             player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePos.x, playerHeight, tilePos.z), Quaternion.Euler(new Vector3(0, 180, 0)), playerTransform).GetComponent<UserPlayer>();
             player.gameObject.name = string.Format(userPlayerNameFormat, i);
@@ -2193,12 +1894,15 @@ public class GameManager : MonoBehaviour
             //int x = enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1);
             //int y = enemyPlayerRecords[i].locY;
             Vector3 tilePos = getMapTile(new HexTile.HexCoord(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY)).HexTilePos();
-            CharacterTemplate playerData = enemyTypes.Where(t=>t.id== enemyPlayerRecords[i].characterId).FirstOrDefault();
+            CharacterTemplate playerData = enemyTypes.Where(t => t.id == enemyPlayerRecords[i].characterId).FirstOrDefault();
             CharacterLevelTemplate playerLvData = playerData.levelData.Where(t => t.id == enemyPlayerRecords[i].levelId).FirstOrDefault();
-            PlayerRecord record = saveEnemyPlayerRecords.Where(t => t.id == i).FirstOrDefault();
-
+            PlayerRecord record = null;
+            if (saveEnemyPlayerRecords != null)
+            {
+                record = saveEnemyPlayerRecords.Where(t => t.id == i).FirstOrDefault();
+            }
             //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePos.x, playerHeight, tilePos.z), Quaternion.Euler(new Vector3(0,180,0)), playerTransform)).GetComponent<AIPlayer>();
+            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePos.x, playerHeight, tilePos.z), Quaternion.Euler(new Vector3(0, 180, 0)), playerTransform)).GetComponent<AIPlayer>();
             player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
             //player.transform.SetParent(playerTransform);
 
