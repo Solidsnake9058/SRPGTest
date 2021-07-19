@@ -43,15 +43,15 @@ public class HexTileHighlight
             {
                 continue;
             }
-            if (current.costOfPath > movementPoints + originTile.movementCost)
+            if (current.costOfPath > movementPoints + originTile.m_MovementCost)
             {
                 continue;
             }
             closed.Add(current.lastTile);
 
-            foreach (HexTile t in current.lastTile.neighbors)
+            foreach (HexTile t in current.lastTile.m_Neighbors)
             {
-                if (t.impassible || occupied.Contains(t.gridPosition) || current.listOfTiles.Contains(t))
+                if (t.m_Impassible || occupied.Contains(t.m_GridPosition) || current.listOfTiles.Contains(t))
                 {
                     continue;
                 }

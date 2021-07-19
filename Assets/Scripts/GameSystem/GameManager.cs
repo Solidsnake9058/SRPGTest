@@ -11,24 +11,29 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance { get; private set; }
 
+    [Header("Sub system")]
+    [SerializeField]
+    private StageManager m_StageManager = default;
+    [SerializeField]
+    private StageMapManager m_StageMapManager = default;
+    [SerializeField]
+    private PlayerManager m_PlayerManager = default;
     [SerializeField]
     private GameUIManager m_GameUIManager = default;
 
     #region parament
 
-    //public GameObject tilePrefab;
-    //public GameObject userPlayerPrefab;
-    //public GameObject aiPlayerPrefab;
-    Transform mapTransform;
+    [Header("Parament")]
     Transform playerTransform;
     Transform playerUITransform;
     Transform actorPlayerTransform;
 
+    [SerializeField]
+    public float _MoveSpeed = 10f;
+
+    public float m_MoveSpeed { get { return _MoveSpeed; } }
+
     public GameObject playerUIPrefab;
-    public GameObject itemUIPrefab;
-    public GameObject weaponUIPrefab;
-    public GameObject characterUIPrefab;
-    public GameObject shopUIPrefab;
     public GameObject gameSceneUI;
 
     public CanvasGroup blockUI;
@@ -50,16 +55,16 @@ public class GameManager : MonoBehaviour
     public bool isShowTile = true;
     public bool isShowPlayerUI = true;
 
-    public List<List<Tile>> map = new List<List<Tile>>();
-    public List<List<HexTile>> mapHex = new List<List<HexTile>>();
+    public List<List<Tile>> map { get { return m_StageMapManager.m_Map; } }
+    public List<List<HexTile>> mapHex { get { return m_StageMapManager.m_MapHex; } }
 
-    private List<PlayerRecord> saveUserPlayerRecords;
-    private List<PlayerRecord> saveEnemyPlayerRecords;
+    private Dictionary<int, PlayerRecord> saveUserPlayerRecords;
+    private Dictionary<int, PlayerRecord> saveEnemyPlayerRecords;
     private List<PlayerRecord> userPlayerRecords;
     private List<PlayerRecord> enemyPlayerRecords;
     //public List<Player> players = new List<Player>();
-    public List<Player> userPlayers { get; private set; }
-    public List<Player> enemyPlayers { get; private set; }
+    public Dictionary<int, Player> userPlayers { get { return m_PlayerManager.m_DicUserPlayers; } }
+    public Dictionary<int, Player> enemyPlayers { get { return m_PlayerManager.m_DicEnemyPlayers; } }
     public List<Player> actorPlayers { get; private set; }
     public List<Scenario> stageScenatios = new List<Scenario>();
     public Scenario runningScenario;
@@ -69,8 +74,10 @@ public class GameManager : MonoBehaviour
     public List<int> removeScenaroList;
 
     public GameElement gameElement { get; private set; }
-    private List<CharacterTemplate> playerTypes;
-    private List<CharacterTemplate> enemyTypes;
+    public List<CharacterTemplate> playerTypes { get; private set; }
+    private Dictionary<int, CharacterTemplate> m_DicPlayerTypes;
+    public List<CharacterTemplate> enemyTypes { get; private set; }
+    private Dictionary<int, CharacterTemplate> m_DicEnemyTypes;
     private List<StageClearCondition> stageClearConditions = new List<StageClearCondition>();
 
     public Color moveTileColor;
@@ -110,12 +117,8 @@ public class GameManager : MonoBehaviour
     delegate void ButtonAction(int inputPlayerIndex);
     ButtonAction buttonAction;
 
-    private string userPlayerNameFormat = "UserPlayer{0}";
-    private string enemyPlayerNameFormat = "EnemyPlayer{0}";
-
     private string gameElementfilename = "ObjectJson.txt";
 
-    private bool m_IsNewGame = true;
     public Vector3 cameraPosition;
     public Vector3 cameraRotation;
 
@@ -168,8 +171,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         m_GameUIManager.Initialize(instance);
-        mapTransform = transform.Find("Map");
-        playerTransform = transform.Find("Players");
+        m_PlayerManager.Initialize(instance);
         playerUITransform = transform.Find("PlayerUIs");
         actorPlayerTransform = transform.Find("ActorPlayers");
     }
@@ -177,7 +179,26 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         //GameLoading();
+        m_StageMapManager.GameSetting();
+        m_StageManager.GameSetting();
+        m_PlayerManager.GameSetting();
+
         m_GameUIManager.GameSetting();
+
+        if (isLoadMap)
+        {
+            //m_IsNewGame = true;
+            //if (loadIndex != -1)
+            //{
+            //    //Load game save
+            //    m_IsNewGame = false;
+            //}
+            GameLoading();
+        }
+        loadIndex = -1;
+        isLoadMap = false;
+        PlayerPrefs.SetInt("loadIndex", -1);
+        PlayerPrefs.SetInt("isLoadMap", 0);
     }
 
     void Update()
@@ -257,7 +278,7 @@ public class GameManager : MonoBehaviour
                         List<int> deatList = stageClearConditions[i].enemyDeadList;
                         for (int j = 0; j < deatList.Count; j++)
                         {
-                            Player tempPlayer = enemyPlayers.Where(x => x.playerIndex == deatList[j]).FirstOrDefault();
+                            Player tempPlayer = enemyPlayers[deatList[j]] ?? null;
                             if (tempPlayer == null || tempPlayer.hp <= 0)
                             {
                                 deadCount++;
@@ -270,7 +291,7 @@ public class GameManager : MonoBehaviour
                         }
                         break;
                     case StageClearConditionType.SpecifyTile:
-                        if (userPlayers.Where(x => x.hex == stageClearConditions[i].specifyTile).Count() > 0)
+                        if (userPlayers.Values.Where(x => x.m_Hex == stageClearConditions[i].specifyTile).Count() > 0)
                         {
                             isWin = true;
                             _Update = EndMode;
@@ -296,7 +317,7 @@ public class GameManager : MonoBehaviour
 
             if (!isPlayerTurn)
             {
-                if (userPlayers.Where(x => x.hp > 0).Count() > 0 && enemyPlayers.Where(x => x.hp > 0).Count() > 0)
+                if (m_PlayerManager.CheckUserPlayerAlive() && m_PlayerManager.CheckEnemyPlayerAlive())
                 {
                     if (enemyPlayers[currentEnemyPlayerIndex].hp > 0)
                     {
@@ -323,7 +344,7 @@ public class GameManager : MonoBehaviour
                 if (runningScenario.scenarioType == ScenarioType.Openning)
                 {
                     //Hide all players
-                    HidePlayers();
+                    m_PlayerManager.HidePlayers();
                 }
 
                 switch (runningScenario.scenarioActions[runningScenario.scenarioActionStep].scenarioActionType)
@@ -339,8 +360,8 @@ public class GameManager : MonoBehaviour
                         for (int i = 0; i < runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors.Count; i++)
                         {
                             PlayerRecord temp = runningScenario.scenarioActions[runningScenario.scenarioActionStep].createActors[i];
-                            Vector3 pos = getMapTile(new HexTile.HexCoord(temp.locX, temp.locY)).HexTilePos();
-                            ActorPlayer player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<ActorPlayer>();
+                            Vector3 pos = m_StageMapManager.GetMapTile(temp.locX, temp.locY).HexTilePos();
+                            ActorPlayer player = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<ActorPlayer>();
                             player.gridPosition = new Vector2(temp.locX, temp.locY);
                             player.playerIndex = temp.id;
                             player.gameObject.name = temp.id.ToString();
@@ -351,26 +372,29 @@ public class GameManager : MonoBehaviour
                         break;
                     case ScenarioActionType.ControlActor:
                         Player tempPlayer = actorPlayers.Where(x => x.playerIndex == runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorId).FirstOrDefault();
-                        HexTile targetTile = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile);
-                        if (getMapTile(tempPlayer.mapHexIndex) != targetTile)
+                        HexTile targetTile = m_StageMapManager.GetMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile);
+                        if (m_StageMapManager.GetMapTile(tempPlayer.m_Hex) != targetTile)
                         {
-                            foreach (HexTile t in HexTilePathFinder.FindPath(getMapTile(tempPlayer.mapHexIndex), targetTile, true).listOfTiles)
+                            List<Vector3> positions = new List<Vector3>();
+                            foreach (HexTile t in HexTilePathFinder.FindPath(m_StageMapManager.GetMapTile(tempPlayer.m_Hex), targetTile, true).listOfTiles)
                             {
-                                tempPlayer.positionQueue.Add(getMapTile(t.mapHexIndex).transform.position + playerHeight * Vector3.up);
+                                positions.Add(m_StageMapManager.GetMapTile(t.m_Hex).transform.position + playerHeight * Vector3.up);
+                                //tempPlayer.positionQueue.Add(m_StageMapManager.GetMapTile(t.m_Hex).transform.position + playerHeight * Vector3.up);
                             }
+                            tempPlayer.SetPositionQueue(positions);
                             isWaitingActor = true;
                         }
-                        tempPlayer.gridPosition = targetTile.gridPosition;
+                        tempPlayer.gridPosition = targetTile.m_GridPosition;
 
                         tempPlayer.playerPivot = runningScenario.scenarioActions[runningScenario.scenarioActionStep].actorPivot;
                         tempPlayer.SetPivot(tempPlayer.playerPivot);
                         break;
                     case ScenarioActionType.SetCamera:
-                        Vector3 tilePos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].setCameraPos).HexTilePos();
+                        Vector3 tilePos = m_StageMapManager.GetMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].setCameraPos).HexTilePos();
                         ScreenController.instance.SetCameraPos(new Vector3(tilePos.x, 0, tilePos.z));
                         break;
                     case ScenarioActionType.ControlCamera:
-                        moveCaremaPos = getMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile).HexTilePos();
+                        moveCaremaPos = m_StageMapManager.GetMapTile(runningScenario.scenarioActions[runningScenario.scenarioActionStep].targetMoveTile).HexTilePos();
                         isMoveCamera = true;
                         isWaitingActor = true;
                         break;
@@ -391,10 +415,10 @@ public class GameManager : MonoBehaviour
                 EnableGroup(mapController);
                 if (runningScenario.scenarioType == ScenarioType.Openning)
                 {
-                    ShowPlayers();
+                    m_PlayerManager.ShowPlayers();
                     HideActor();
                     ClearActorPlayer();
-                    Player temp = userPlayers.Where(x => x.playerIndex == 0).FirstOrDefault();
+                    Player temp = userPlayers.Values.Where(x => x.playerIndex == 0).FirstOrDefault();
                     ScreenController.instance.SetCameraPos(new Vector3(temp.transform.position.x, 0, temp.transform.position.z));
                     ShowStageInfo(false);
                 }
@@ -429,13 +453,15 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
+    int loadIndex;
+    bool isLoadMap = false;
+
     private void OnLevelWasLoaded(int level)
     {
         gameSceneUI.SetActive(false);
         if (level == 1)
         {
-            int loadIndex;
-            bool isLoadMap = false;
+            isLoadMap = false;
             try
             {
                 loadIndex = PlayerPrefs.GetInt("loadIndex");
@@ -445,27 +471,27 @@ public class GameManager : MonoBehaviour
             {
                 loadIndex = -1;
             }
-            if (isLoadMap)
-            {
-                m_IsNewGame = true;
-                if (loadIndex != -1)
-                {
-                    //Load game save
-                    m_IsNewGame = false;
-                }
-                GameLoading();
-            }
-            loadIndex = -1;
-            isLoadMap = false;
-            PlayerPrefs.SetInt("loadIndex", -1);
-            PlayerPrefs.SetInt("isLoadMap", 0);
+            //if (isLoadMap)
+            //{
+            //    m_IsNewGame = true;
+            //    if (loadIndex != -1)
+            //    {
+            //        //Load game save
+            //        m_IsNewGame = false;
+            //    }
+            //    GameLoading();
+            //}
+            //loadIndex = -1;
+            //isLoadMap = false;
+            //PlayerPrefs.SetInt("loadIndex", -1);
+            //PlayerPrefs.SetInt("isLoadMap", 0);
             //ScreenController.instance.SetCameraPos(cameraPosition);
             //ScreenController.instance.SetCameraRot(cameraRotation);
 
             gameSceneUI.SetActive(true);
             isWaitingBattle = false;
 
-            if (userPlayers.Where(x => gameElement.races.Where(y => y.name == "ロード").FirstOrDefault().id == x.race && x.hp < 0).Count() > 0)
+            if (userPlayers != null && userPlayers.Values.Where(x => gameElement.races.Where(y => y.name == "ロード").FirstOrDefault().id == x.race && x.hp < 0).Count() > 0)
             {
                 isLose = true;
                 _Update = EndMode;
@@ -474,9 +500,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private SaveDataStore m_SaveData;
+
     private void InitialStage()
     {
-        m_TurnCount = 1;
         isPlayerTurn = true;
         isWaitingActor = false;
         isWaitingMsg = false;
@@ -490,7 +517,7 @@ public class GameManager : MonoBehaviour
         temp.a = 0;
         darkFront.color = temp;
 
-        ClearPlayer();
+        m_PlayerManager.ClearPlayer();
         ClearActorPlayer();
 
         LoadGameElements();
@@ -499,20 +526,27 @@ public class GameManager : MonoBehaviour
 
         DisableGroup(menu);
         DisableGroup(endTurnConfirm);
-        //DisableGroup(status);
         DisableGroup(gameSetting);
-        //DisableGroup(itemGroup);
-        //DisableGroup(weaponGroup);
-        //DisableGroup(unitGroup);
-        //DisableGroup(shopGroup);
         DisableGroup(dialogGroup);
         isShowStage = true;
     }
 
     private void StartGame()
     {
-        GenetareMap();
-        GenetarePlayers();
+        int stageIndex = 1;
+        if (m_StageManager.LoadStageData(stageIndex))
+        {
+            mapSizeX = m_StageManager.m_Container.sizeX;
+            mapSizeY = m_StageManager.m_Container.sizeY;
+            m_StageMapManager.CreateStageMap(m_StageManager.m_Container.sizeX, m_StageManager.m_Container.sizeY, m_StageManager.m_Container.m_TileDataMap);
+
+            userPlayerRecords = m_StageManager.GetUserPlayerRecords(m_SaveData.m_UserPlayerRecords, m_SaveData.m_StagePlayerRecords);
+            enemyPlayerRecords = m_StageManager.GetEnemyPlayerRecords(m_SaveData.m_StageEnemyRecords);
+            stageScenatios = m_StageManager.m_Container.scenarioList;
+
+            m_PlayerManager.GenetarePlayers(userPlayerRecords);
+            m_PlayerManager.GenetarePlayers(enemyPlayerRecords);
+        }
     }
 
     private void GameLoading()
@@ -522,19 +556,41 @@ public class GameManager : MonoBehaviour
 
         isWaitingBattle = false;
         InitialStage();
-        if (m_IsNewGame)
+
+        int storeIndex = -1;
+        bool isLoad = false;
+        if (isLoad)
         {
-            m_IsNewGame = false;
-            saveUserPlayerRecords = new List<PlayerRecord>();
-            saveEnemyPlayerRecords = new List<PlayerRecord>();
-            defeatedEnemyList = new List<int>();
-            m_PlayerItems = new Dictionary<int, int>();
-            m_PlayerWeapons = new Dictionary<int, int>();
-            //int herbId = gameElement.items.Where(x => x.name == "薬草").FirstOrDefault().id;
-            //m_PlayerItems.Add(herbId, 4);
+            m_SaveData = SaveManager.GetSaveDataStore(storeIndex);
+        }
+        else
+        {
+            m_SaveData = SaveManager.GetSaveDataStore();
+        }
+
+        m_TurnCount = m_SaveData.m_TurnCount;
+        saveUserPlayerRecords = m_SaveData.m_StagePlayerRecords;
+        saveEnemyPlayerRecords = m_SaveData.m_StageEnemyRecords;
+        defeatedEnemyList = m_SaveData.m_DefeatedEnemyList;
+        m_PlayerItems = m_SaveData.m_PlayerItems;
+        m_PlayerWeapons = m_SaveData.m_PlayerWeapons;
+
+        if (m_SaveData.m_IsEmpty)
+        {
+            m_SaveData.m_IsEmpty = false;
+            m_SaveData.m_Gold = 1000;
+            //Begin items
             for (int i = 0; i < m_PlayerItems.Count; i++)
             {
                 m_PlayerItems.Add(gameElement.items[i].id, gameElement.items[i].initialCount);
+            }
+            //Begin characters value
+            for (int i = 0; i < gameElement.characters.Count; i++)
+            {
+                if (!gameElement.characters[i].enemy)
+                {
+                    m_SaveData.m_UserPlayerRecords.Add(gameElement.characters[i].id, new PlayerRecord(gameElement.characters[i]));
+                }
             }
         }
         StartGame();
@@ -668,30 +724,6 @@ public class GameManager : MonoBehaviour
         isWaitingMsg = true;
     }
 
-    private void HidePlayers()
-    {
-        foreach (Player p in userPlayers.Union(enemyPlayers))
-        {
-            if (p.hp <= 0)
-            {
-                continue;
-            }
-            p.HidePlayer();
-        }
-    }
-
-    private void ShowPlayers()
-    {
-        foreach (Player p in userPlayers.Union(enemyPlayers))
-        {
-            if (p.hp <= 0)
-            {
-                continue;
-            }
-            p.ShowPlayer();
-        }
-    }
-
     private void HideActor()
     {
         foreach (Player p in actorPlayers)
@@ -706,16 +738,6 @@ public class GameManager : MonoBehaviour
         {
             p.ShowPlayer();
         }
-    }
-
-    private void ClearPlayer()
-    {
-        for (int i = 0; i < playerTransform.childCount; i++)
-        {
-            Destroy(playerTransform.GetChild(i).gameObject);
-        }
-        userPlayers = new List<Player>();
-        enemyPlayers = new List<Player>();
     }
 
     private void ClearActorPlayer()
@@ -786,8 +808,8 @@ public class GameManager : MonoBehaviour
     {
         if (isSetCamera)
         {
-            Vector2 index = enemyPlayers[currentEnemyPlayerIndex].mapHexIndex;
-            Vector3 pos = getMapTile(index).transform.position;
+            //Vector2 index = enemyPlayers[currentEnemyPlayerIndex].mapHexIndex;
+            Vector3 pos = m_StageMapManager.GetMapTile(enemyPlayers[currentEnemyPlayerIndex].m_Hex).transform.position;
             ScreenController.instance.SetCameraPos(pos);
             isSetCamera = false;
         }
@@ -803,10 +825,10 @@ public class GameManager : MonoBehaviour
             m_TurnCount++;
             isPlayerTurn = true;
             SetStopWaiting();
-            foreach (Player p in userPlayers)
+            foreach (Player p in userPlayers.Values)
             {
                 p.TurnActive();
-                if (p.hp > 0 && getMapTile(p.mapHexIndex).type2D == TileType2D.Villa)
+                if (p.hp > 0 && m_StageMapManager.GetMapTile(p.m_Hex).m_TileType2D == TileType2D.Villa)
                 {
                     p.hp += (p.maxHP / 8);
                     if (p.hp > p.maxHP)
@@ -815,12 +837,12 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
-            Vector2 index = userPlayers[0].mapHexIndex;
-            Vector3 pos = getMapTile(index).transform.position;
+            //Vector2 index = userPlayers[0].mapHexIndex;
+            Vector3 pos = m_StageMapManager.GetMapTile(userPlayers[0].m_Hex).transform.position;
             ScreenController.instance.SetCameraPos(pos);
             //isSetCamera = false;
 
-            RemoveDeadEnemy();
+            m_PlayerManager.RemoveDeadEnemy();
             ShowStageInfo();
         }
         else
@@ -831,43 +853,11 @@ public class GameManager : MonoBehaviour
         currentEnemyPlayerIndex = currentEnemyPlayerIndex % enemyPlayers.Count;
     }
 
-    private void RemoveDeadEnemy()
-    {
-        List<Player> temp = enemyPlayers.Where(x => x.hp <= 0).ToList();
-        foreach (var p in temp)
-        {
-            enemyPlayers.Remove(p);
-            Transform ui = playerUITransform.Find(p.name + "UI");
-            ScreenController.instance.RemoveUI(p.name + "UI");
-            Destroy(ui.gameObject);
-            Destroy(p.gameObject);
-        }
-
-    }
-
-    private void SetTileLineIsShow()
-    {
-        for (int i = 0; i < mapHex.Count; i++)
-        {
-            for (int j = 0; j < mapHex[i].Count; j++)
-            {
-                if (isShowTile)
-                {
-                    mapHex[i][j].SetShowUI();
-                }
-                else
-                {
-                    mapHex[i][j].SetHideUI();
-                }
-            }
-        }
-    }
-
     public void MoveCurrentPlayer(HexTile destTile)
     {
-        if (destTile.visual.transform.GetComponentInChildren<Renderer>().materials[0].color != Color.white && !destTile.impassible)
+        if (destTile.m_IsHighLight && !destTile.m_Impassible)
         {
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
             Player targetPlayer;
             //players[currentPlayerIndex].moving = false;
             if (isPlayerTurn)
@@ -879,12 +869,15 @@ public class GameManager : MonoBehaviour
             {
                 targetPlayer = enemyPlayers[currentEnemyPlayerIndex];
             }
-            foreach (HexTile t in HexTilePathFinder.FindPath(getMapTile(targetPlayer.mapHexIndex), destTile, userPlayers.Union(enemyPlayers).Where(x => x.gridPosition != targetPlayer.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
+            List<Vector3> positions = new List<Vector3>();
+            foreach (HexTile t in HexTilePathFinder.FindPath(m_StageMapManager.GetMapTile(targetPlayer.m_Hex), destTile, userPlayers.Values.Union(enemyPlayers.Values).Where(x => x.gridPosition != targetPlayer.gridPosition).Select(x => x.gridPosition).ToArray()).listOfTiles)
             {
-                targetPlayer.positionQueue.Add(getMapTile(t.mapHexIndex).transform.position + playerHeight * Vector3.up);
+                positions.Add(m_StageMapManager.GetMapTile(t.m_Hex).transform.position + playerHeight * Vector3.up);
+                //targetPlayer.positionQueue.Add(m_StageMapManager.GetMapTile(t.m_Hex).transform.position + playerHeight * Vector3.up);
                 //Debug.Log(players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].x + "," + players[currentPlayerIndex].positionQueue[players[currentPlayerIndex].positionQueue.Count - 1].z);
             }
-            targetPlayer.gridPosition = destTile.gridPosition;
+            targetPlayer.SetPositionQueue(positions);
+            targetPlayer.gridPosition = destTile.m_GridPosition;
             SetStartWaiting();
         }
         else
@@ -900,9 +893,9 @@ public class GameManager : MonoBehaviour
         bool isShowAction = false;
         if (player.GetIsCanHeal())
         {
-            isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Where(y => y.hp < y.maxHP && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+            isShowAction = player.GetHealRange().Where(x => instance.userPlayers.Values.Where(y => y.hp < y.maxHP && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
         }
-        isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+        isShowAction = isShowAction || player.GetAttackRange().Where(x => instance.enemyPlayers.Values.Where(y => y.hp > 0 && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
         if (isShowAction)
         {
             setType = MenuType.playerMoveCanAtkMenu;
@@ -921,8 +914,8 @@ public class GameManager : MonoBehaviour
     private void SetTileName(HexTile destTile, out string tileName, out int defRate)
     {
         tileName = "";
-        defRate = (int)destTile.defenseRate;
-        switch (destTile.type2D)
+        defRate = (int)destTile.m_DefenseRate;
+        switch (destTile.m_TileType2D)
         {
             case TileType2D.Road:
                 tileName = "道/橋";
@@ -944,7 +937,7 @@ public class GameManager : MonoBehaviour
 
     public void AttackWithCurrentPlayer(HexTile destTile)
     {
-        if (destTile.visual.transform.GetComponentInChildren<Renderer>().materials[0].color == Color.white && !destTile.impassible)
+        if (!destTile.m_IsHighLight && !destTile.m_Impassible)
         {
             Debug.Log("destination invalid");
             return;
@@ -993,10 +986,10 @@ public class GameManager : MonoBehaviour
             attackerHP = attacker.hp;
             playerExp = attacker.exp;
             playerClass = gameElement.races.Where(x => x.id == attacker.race).FirstOrDefault().name;
-            target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+            target = enemyPlayers.Values.Where(x => x.gridPosition == destTile.m_GridPosition).FirstOrDefault();
             if (target == null)
             {
-                target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+                target = userPlayers.Values.Where(x => x.gridPosition == destTile.m_GridPosition).FirstOrDefault();
                 isHeal = true;
             }
             targetName = target.playerName;
@@ -1021,10 +1014,10 @@ public class GameManager : MonoBehaviour
             targetName = attacker.playerName;
             targetMaxHP = attacker.maxHP;
             targetHP = attacker.hp;
-            target = userPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+            target = userPlayers.Values.Where(x => x.gridPosition == destTile.m_GridPosition).FirstOrDefault();
             if (target == null)
             {
-                target = enemyPlayers.Where(x => x.gridPosition == destTile.gridPosition).FirstOrDefault();
+                target = enemyPlayers.Values.Where(x => x.gridPosition == destTile.m_GridPosition).FirstOrDefault();
                 isHeal = true;
             }
             attackerName = target.playerName;
@@ -1053,8 +1046,8 @@ public class GameManager : MonoBehaviour
         }
         if (target != null)
         {
-            HexTile targetTile = getMapTile(attacker.mapHexIndex);
-            bool isDirectAtk = HexTile.Distance(attacker.hex, target.hex) == 1;
+            HexTile targetTile = m_StageMapManager.GetMapTile(attacker.m_Hex);
+            bool isDirectAtk = HexTile.Distance(attacker.m_Hex, target.m_Hex) == 1;
 
             int directAtk = 0;
             int indirectAtk = 0;
@@ -1073,14 +1066,14 @@ public class GameManager : MonoBehaviour
             //if (attacker.gridPosition.x >= target.gridPosition.x - 1 && attacker.gridPosition.x <= target.gridPosition.x + 1 &&
             //    attacker.gridPosition.y >= target.gridPosition.y - 1 && attacker.gridPosition.y <= target.gridPosition.y + 1)
             attacker.TurnEnd();
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
             attacking = false;
             moving = false;
 
             if (!isHeal)
             {
                 //attack
-                int amountOfDamage = Mathf.FloorToInt((attacker.atk + (isDirectAtk ? directAtk : indirectAtk) - target.def) * (1f - (destTile.defenseRate / 100f)));
+                int amountOfDamage = Mathf.FloorToInt((attacker.atk + (isDirectAtk ? directAtk : indirectAtk) - target.def) * (1f - (destTile.m_DefenseRate / 100f)));
                 target.hp -= amountOfDamage;
 
                 //Debug.Log(attacker.playerName + (isDirectAtk ? " direct attack " : " indirect attack ") + target.playerName + " for " + (amountOfDamage + (target.hp < 0 ? target.hp : 0)) + " damage!");
@@ -1144,7 +1137,7 @@ public class GameManager : MonoBehaviour
                         isCounter = true;
                         target.GetWeaponAttack(out directAtk, out indirectAtk);
 
-                        amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.defenseRate / 100f)));
+                        amountOfDamage = Mathf.FloorToInt((target.atk + (isDirectAtk ? directAtk : indirectAtk) - attacker.def) * (1f - (targetTile.m_DefenseRate / 100f)));
                         attacker.hp -= amountOfDamage;
 
                         //Debug.Log(target.playerName + " counter attack " + attacker.playerName + " for " + (amountOfDamage + (attacker.hp < 0 ? attacker.hp : 0)) + " damage!");
@@ -1273,16 +1266,17 @@ public class GameManager : MonoBehaviour
         List<HexTile> highlightTiles = new List<HexTile>();
         if (ignorePlayers)
         {
-            highlightTiles = HexTileHighlight.FindHighlight(getMapTile(new HexTile.HexCoord((int)originLocation.x, (int)originLocation.y)), distance, true);
+            highlightTiles = HexTileHighlight.FindHighlight(m_StageMapManager.GetMapTile(originLocation.x, originLocation.y), distance, true);
         }
         else
         {
-            highlightTiles = HexTileHighlight.FindHighlight(getMapTile(new HexTile.HexCoord((int)originLocation.x, (int)originLocation.y)), distance, userPlayers.Union(enemyPlayers)/*.Where(x => x.gridPosition != originLocation)*/.Select(x => x.gridPosition).ToArray());
+            highlightTiles = HexTileHighlight.FindHighlight(m_StageMapManager.GetMapTile(originLocation.x, originLocation.y), distance, userPlayers.Values.Union(enemyPlayers.Values)/*.Where(x => x.gridPosition != originLocation)*/.Select(x => x.gridPosition).ToArray());
         }
 
         foreach (HexTile t in highlightTiles)
         {
-            t.visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+            //t.m_Visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+            t.SetHightLight(true, false);
         }
     }
 
@@ -1290,7 +1284,8 @@ public class GameManager : MonoBehaviour
     {
         foreach (HexTile t in highlightTiles)
         {
-            t.visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+            //t.m_Visual.transform.GetComponentInChildren<Renderer>().materials[0].color = highlightColor;
+            t.SetHightLight(true, false);
         }
     }
 
@@ -1508,26 +1503,25 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
+    //TODO remove
     public void RemoveHighlightTiles()
     {
-        for (int i = 0; i < mapSizeY; i++)
-        {
-            for (int j = 0; j < mapSizeX - (i % 2); j++)
-            {
-                if (!mapHex[i][j].impassible)
-                {
-                    mapHex[i][j].visual.transform.GetComponentInChildren<Renderer>().materials[0].color = Color.white;
-                }
-            }
-        }
-    }
-
-    void GenetareMap()
-    {
-        LoadMapFromXml();
+        m_StageMapManager.RemoveHighlightTiles();
     }
 
     public TextAsset m_ObjectData;
+
+    public CharacterTemplate GetPlayerType(int id, bool isEnemy)
+    {
+        if (isEnemy)
+        {
+            return m_DicEnemyTypes[id];
+        }
+        else
+        {
+            return m_DicPlayerTypes[id];
+        }
+    }
 
     private void LoadGameElements()
     {
@@ -1549,86 +1543,25 @@ public class GameManager : MonoBehaviour
             playerTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
             enemyTypes = gameElement.characters.Where(x => x.enemy).ToList();
             enemyTypes.Sort((x, y) => { return x.id.CompareTo(y.id); });
+
+            m_DicPlayerTypes = new Dictionary<int, CharacterTemplate>();
+            m_DicEnemyTypes = new Dictionary<int, CharacterTemplate>();
+            for (int i = 0; i < gameElement.characters.Count; i++)
+            {
+                if (gameElement.characters[i].enemy)
+                {
+                    m_DicEnemyTypes.Add(gameElement.characters[i].id, gameElement.characters[i]);
+                }
+                else
+                {
+                    m_DicPlayerTypes.Add(gameElement.characters[i].id, gameElement.characters[i]);
+                }
+            }
         }
         catch (Exception ex)
         {
             Debug.LogError(ex.Message);
         }
-    }
-
-    private void LoadMapFromXml()
-    {
-        Vector3 connerPointA = Vector3.zero;
-        Vector3 connerPointB = Vector3.zero;
-        Vector3 connerPointC = Vector3.zero;
-        Vector3 connerPointD = Vector3.zero;
-
-        MapXmlContainer container = ObjectSaveLoad.JsonLoad<MapXmlContainer>(Application.dataPath + "/Resources/test.txt");
-        mapSizeX = container.sizeX;
-        mapSizeY = container.sizeY;
-
-        m_ShopItemList = container.shopItemList;
-        m_ShopWeaponList = container.shopWeaponList;
-
-        for (int i = 0; i < mapTransform.transform.childCount; i++)
-        {
-            Destroy(mapTransform.transform.GetChild(i).gameObject);
-        }
-
-        Vector3 pos = Vector3.zero;
-        map = new List<List<Tile>>();
-        mapHex = new List<List<HexTile>>();
-
-        userPlayerRecords = container.userPlayerRecords;
-        enemyPlayerRecords = container.enemyPlayerRecords;
-        stageScenatios = container.scenarioList;
-        //Hexagons
-        for (int i = 0; i < mapSizeY; i++)
-        {
-            int offset = i >> 1;
-            List<HexTile> row = new List<HexTile>();
-            for (int j = -offset; j < mapSizeX - offset; j++)
-            {
-                if (i % 2 == 1 && j == mapSizeX - offset - 1)
-                {
-                    continue;
-                }
-                HexTile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_hex_tile_prefab, new Vector3(), Quaternion.Euler(new Vector3()))).GetComponent<HexTile>();
-                TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
-                tile.TileInitializer(mapTransform, (TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, 0, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId, temp.isShop);
-                row.Add(tile);
-                if (i == 0)
-                {
-                    if (j == 0)
-                    {
-                        connerPointA = tile.HexTilePos();
-                    }
-                    else if (j == mapSizeX - offset - 1)
-                    {
-                        connerPointB = tile.HexTilePos();
-                    }
-                }
-            }
-            mapHex.Add(row);
-        }
-        connerPointD = new Vector3(0, 0, -mapSizeY + 1);
-        connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
-
-        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
-
-        //for (int i = 0; i < mapSizeX; i++)
-        //{
-        //    List<Tile> row = new List<Tile>();
-        //    for (int j = 0; j < mapSizeY; j++)
-        //    {
-        //        Tile tile = ((GameObject)Instantiate(PrefabHolder.instance.base_tile_prefab, new Vector3(i - Mathf.Floor(mapSizeX / 2), 0, -j + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<Tile>();
-        //        tile.gridPosition = new Vector2(i, j);
-        //        tile.transform.parent = mapTransform;
-        //        tile.setType((TileType)container.tiles.Where(x => x.locX == i && x.locY == j).FirstOrDefault().id);
-        //        row.Add(tile);
-        //    }
-        //    map.Add(row);
-        //}
     }
 
     #region Button Action
@@ -1650,7 +1583,7 @@ public class GameManager : MonoBehaviour
     {
         if (!moving)
         {
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
             moving = true;
             attacking = false;
             HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, moveTileColor, (int)userPlayers[inputPlayerIndex].movementPerActionPoint, false);
@@ -1659,7 +1592,7 @@ public class GameManager : MonoBehaviour
         {
             moving = false;
             attacking = false;
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
         }
     }
 
@@ -1667,14 +1600,14 @@ public class GameManager : MonoBehaviour
     {
         if (!attacking)
         {
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
             attacking = true;
             HighlightTileAt(userPlayers[inputPlayerIndex].gridPosition, attackTileColor, userPlayers[inputPlayerIndex].GetAttackRange());
         }
         else
         {
             attacking = false;
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
         }
     }
 
@@ -1683,7 +1616,7 @@ public class GameManager : MonoBehaviour
         if (moving)
         {
             userPlayers[inputPlayerIndex].gridPosition = userPlayers[inputPlayerIndex].originalGridPosition;
-            Vector3 oriPos = getMapTile(userPlayers[inputPlayerIndex].mapHexIndex).transform.position;
+            Vector3 oriPos = m_StageMapManager.GetMapTile(userPlayers[inputPlayerIndex].m_Hex).transform.position;
             userPlayers[inputPlayerIndex].transform.position = new Vector3(oriPos.x, playerHeight, oriPos.z);
             moving = false;
             Move(inputPlayerIndex);
@@ -1696,7 +1629,7 @@ public class GameManager : MonoBehaviour
         userPlayers[playerIndex].TurnEnd();
         moving = false;
         attacking = false;
-        RemoveHighlightTiles();
+        m_StageMapManager.RemoveHighlightTiles();
     }
 
     private void ShowEndTurn(int playerIndex)
@@ -1708,10 +1641,10 @@ public class GameManager : MonoBehaviour
     {
         isPlayerTurn = false;
         currentEnemyPlayerIndex = 0;
-        foreach (Player p in enemyPlayers)
+        foreach (Player p in enemyPlayers.Values)
         {
             p.TurnActive();
-            if (p.hp > 0 && getMapTile(p.mapHexIndex).type2D == TileType2D.Villa)
+            if (p.hp > 0 && m_StageMapManager.GetMapTile(p.m_Hex).m_TileType2D == TileType2D.Villa)
             {
                 p.hp += (p.maxHP / 8);
                 if (p.hp > p.maxHP)
@@ -1720,7 +1653,7 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        RemoveDeadEnemy();
+        m_PlayerManager.RemoveDeadEnemy();
         SetStartWaiting();
         DisableGroup(endTurnConfirm);
 
@@ -1771,7 +1704,7 @@ public class GameManager : MonoBehaviour
         isShowTile = isShowTileLine.isOn;
         isShowPlayerUI = isShowPlayHP.isOn;
 
-        SetTileLineIsShow();
+        m_StageMapManager.SetTileLineIsShow(isShowTile);
         ScreenController.instance.SetPlayerUIIsShow(isShowPlayerUI);
 
         DisableGroup(gameSetting);
@@ -1789,7 +1722,7 @@ public class GameManager : MonoBehaviour
         }
         else if (attacking && moving)
         {
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
             attacking = false;
             ShowConfirmMenu();
         }
@@ -1798,7 +1731,7 @@ public class GameManager : MonoBehaviour
             moving = false;
             attacking = false;
             playerIndex = -1;
-            RemoveHighlightTiles();
+            m_StageMapManager.RemoveHighlightTiles();
         }
     }
 
@@ -1815,159 +1748,16 @@ public class GameManager : MonoBehaviour
         EnableGroup(endTurnConfirm);
     }
 
-    void GenetarePlayers()
-    {
-        userPlayers = new List<Player>();
-        enemyPlayers = new List<Player>();
-        for (int i = 0; i < userPlayerRecords.Count; i++)
-        {
-            UserPlayer player;
-            //int x = userPlayerRecords[i].locX + (userPlayerRecords[i].locY >> 1);
-            //int y = userPlayerRecords[i].locY;
-            Vector3 tilePos = getMapTile(new HexTile.HexCoord(userPlayerRecords[i].locX, userPlayerRecords[i].locY)).HexTilePos();
-            CharacterTemplate playerData = playerTypes.Where(t => t.id == userPlayerRecords[i].characterId).FirstOrDefault();
-            CharacterLevelTemplate playerLvData = playerData.levelData[0];
-            PlayerRecord record = null;
-            if (saveUserPlayerRecords != null)
-            {
-                record = saveUserPlayerRecords.Where(t => t.characterId == userPlayerRecords[i].characterId).FirstOrDefault();
-            }
-            //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = Instantiate(PlayerPrefabHolder.instance.userPlayer_prefab, new Vector3(tilePos.x, playerHeight, tilePos.z), Quaternion.Euler(new Vector3(0, 180, 0)), playerTransform).GetComponent<UserPlayer>();
-            player.gameObject.name = string.Format(userPlayerNameFormat, i);
-            //player.transform.SetParent(playerTransform);
-
-            player.gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
-
-            player.playerName = playerData.name;
-            player.race = playerData.race;
-            player.movementPerActionPoint = playerData.move;
-            player.SetPlayerModel();
-            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePos.x, 1, tilePos.z), playerUIPrefab.transform.rotation, playerUITransform)).GetComponent<PlayerUI>();
-            playerUI.player = player;
-            playerUI.gameObject.name = string.Format(userPlayerNameFormat + "UI", i);
-            //playerUI.transform.SetParent(playerUITransform);
-
-            if (userPlayerRecords[i].isNewPlayer || record == null)
-            {
-                player.level = (int)playerLvData.level;
-                player.exp = (int)playerLvData.exp;
-                player.hp = player.maxHP = (int)playerLvData.hp;
-                player.atk = (int)playerLvData.atk;
-                player.def = (int)playerLvData.def;
-                player.wis = (int)playerLvData.wis;
-                player.dex = (int)playerLvData.dex;
-                player.mdef = (int)playerLvData.mdef;
-                player.equipWeapon = playerLvData.equipWeapon;
-            }
-            else
-            {
-                tilePos = getMapTile(new HexTile.HexCoord(record.locX, record.locY)).HexTilePos();
-                player.transform.position = new Vector3(tilePos.x, playerHeight, tilePos.z);
-                player.gridPosition = new Vector2(record.locX, record.locY);
-                player.isActable = record.isActable;
-                player.level = (int)record.level;
-                player.exp = (int)record.exp;
-                player.maxHP = (int)record.hp;
-                player.hp = (int)record.currentHp;
-                player.atk = (int)record.atk;
-                player.def = (int)record.def;
-                player.wis = (int)record.wis;
-                player.dex = (int)record.dex;
-                player.mdef = (int)record.mdef;
-                player.equipWeapon = record.equipWeapon;
-            }
-
-            player.playerIndex = i;
-
-            userPlayers.Add(player);
-        }
-
-        for (int i = 0; i < enemyPlayerRecords.Count; i++)
-        {
-            if (defeatedEnemyList.Contains(i))
-            {
-                continue;
-            }
-
-            AIPlayer player;
-            //int x = enemyPlayerRecords[i].locX + (enemyPlayerRecords[i].locY >> 1);
-            //int y = enemyPlayerRecords[i].locY;
-            Vector3 tilePos = getMapTile(new HexTile.HexCoord(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY)).HexTilePos();
-            CharacterTemplate playerData = enemyTypes.Where(t => t.id == enemyPlayerRecords[i].characterId).FirstOrDefault();
-            CharacterLevelTemplate playerLvData = playerData.levelData.Where(t => t.id == enemyPlayerRecords[i].levelId).FirstOrDefault();
-            PlayerRecord record = null;
-            if (saveEnemyPlayerRecords != null)
-            {
-                record = saveEnemyPlayerRecords.Where(t => t.id == i).FirstOrDefault();
-            }
-            //player = ((GameObject)Instantiate(userPlayerPrefab, new Vector3(0 - Mathf.Floor(mapSizeX / 2), 1.5f, -0 + Mathf.Floor(mapSizeY / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
-            player = ((GameObject)Instantiate(PlayerPrefabHolder.instance.enemyPlayer_prefab, new Vector3(tilePos.x, playerHeight, tilePos.z), Quaternion.Euler(new Vector3(0, 180, 0)), playerTransform)).GetComponent<AIPlayer>();
-            player.gameObject.name = string.Format(enemyPlayerNameFormat, i);
-            //player.transform.SetParent(playerTransform);
-
-            player.gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
-
-            player.playerName = playerData.name;
-            player.race = playerData.race;
-            player.movementPerActionPoint = playerData.move;
-
-            player.level = (int)playerLvData.level;
-            player.exp = (int)playerLvData.exp;
-            player.hp = player.maxHP = (int)playerLvData.hp;
-            player.gold = (int)playerLvData.gold;
-            player.equipWeapon = playerLvData.equipWeapon;
-            player.enemyAIType = enemyPlayerRecords[i].aiType;
-            player.searchRange = enemyPlayerRecords[i].searchRange;
-            PlayerUI playerUI = (Instantiate(playerUIPrefab, new Vector3(tilePos.x, 1, tilePos.z), playerUIPrefab.transform.rotation, playerUITransform)).GetComponent<PlayerUI>();
-            playerUI.player = player;
-            playerUI.gameObject.name = string.Format(enemyPlayerNameFormat + "UI", i);
-            //playerUI.transform.SetParent(playerUITransform);
-
-            if (record == null)
-            {
-                player.atk = (int)playerLvData.atk;
-                player.def = (int)playerLvData.def;
-                player.wis = (int)playerLvData.wis;
-                player.dex = (int)playerLvData.dex;
-                player.mdef = (int)playerLvData.mdef;
-            }
-            else
-            {
-                tilePos = getMapTile(new HexTile.HexCoord(record.locX, record.locY)).HexTilePos();
-                player.transform.position = new Vector3(tilePos.x, playerHeight, tilePos.z);
-                player.gridPosition = new Vector2(record.locX, record.locY);
-                player.isActable = record.isActable;
-                player.hp = (int)record.currentHp;
-                player.atk = (int)record.atk;
-                player.def = (int)record.def;
-                player.wis = (int)record.wis;
-                player.dex = (int)record.dex;
-                player.mdef = (int)record.mdef;
-            }
-            player.playerIndex = i;
-            player.SetPlayerModel();
-
-            enemyPlayers.Add(player);
-        }
-
-        ScreenController.instance.SetPlayerUIs();
-    }
-
     #region Map
-
-    private HexTile getMapTile(HexTile.HexCoord hex)
+    public HexTile GetMapTile(int x, int y)
     {
-        return mapHex[hex.r][hex.q + (hex.r >> 1)];
+        HexTile.HexCoord hex = new HexTile.HexCoord(x, y);
+        return m_StageMapManager.GetMapTile(hex);
     }
 
-    private HexTile getMapTile(Vector2 hex, bool isIndex = true)
+    public HexTile GetMapTile(HexTile.HexCoord hex)
     {
-        if (isIndex)
-        {
-            return mapHex[(int)hex.y][(int)hex.x];
-        }
-        return mapHex[(int)hex.y][(int)hex.x + (((int)hex.y) >> 1)];
+        return m_StageMapManager.GetMapTile(hex);
     }
 
     #endregion

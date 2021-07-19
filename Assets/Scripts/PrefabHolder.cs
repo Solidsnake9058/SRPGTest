@@ -7,7 +7,7 @@ public class PrefabHolder : MonoBehaviour
     public static PrefabHolder instance { get; private set; }
 
     public GameObject base_tile_prefab;
-    public GameObject base_hex_tile_prefab;
+    public HexTile m_HexTileBasePrefab;
 
     public GameObject tile_Normal_prefab;
     public GameObject tile_Difficult_prefab;

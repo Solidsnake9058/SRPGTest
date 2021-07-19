@@ -59,6 +59,52 @@ public class PlayerRecord
     {
     }
 
+    public PlayerRecord Clone()
+    {
+        PlayerRecord playerRecord = new PlayerRecord();
+        playerRecord.id = this.id;
+        playerRecord.isEnemy = this.isEnemy;
+        playerRecord.isNewPlayer = this.isNewPlayer;
+        playerRecord.locX = this.locX;
+        playerRecord.locY = this.locY;
+        playerRecord.characterId = this.characterId;
+        playerRecord.levelId = this.levelId;
+        playerRecord.level = this.level;
+        playerRecord.exp = this.exp;
+        playerRecord.hp = this.hp;
+        playerRecord.currentHp = this.currentHp;
+        playerRecord.atk = this.atk;
+        playerRecord.def = this.def;
+        playerRecord.wis = this.wis;
+        playerRecord.dex = this.dex;
+        playerRecord.mdef = this.mdef;
+        playerRecord.equipWeapon = this.equipWeapon;
+        playerRecord.scenarioActorPivotType = this.scenarioActorPivotType;
+        playerRecord.isActable = this.isActable;
+        playerRecord.aiType = this.aiType;
+        playerRecord.searchRange = this.searchRange;
+        return playerRecord;
+    }
+
+    public void SetPlayerLocate(PlayerRecord playerRecord)
+    {
+        locX = playerRecord.locX;
+        locY = playerRecord.locY;
+    }
+
+    public void SetPlayerHp(PlayerRecord playerRecord)
+    {
+        if (playerRecord != null)
+        {
+            hp = playerRecord.hp;
+            currentHp = playerRecord.currentHp;
+        }
+        else
+        {
+            currentHp = hp;
+        }
+    }
+
     public PlayerRecord(int id, bool isEnemy, bool isNewPlayer, int locX, int locY, int characterId, int levelId, EnemyAIType aiType, int searchRange)
     {
         this.id = id;
@@ -80,6 +126,27 @@ public class PlayerRecord
         this.characterId = characterId;
         this.scenarioActorPivotType = scenarioActorPivotType;
         levelId = 0;
+    }
+
+    public PlayerRecord(CharacterTemplate characterTemplate)
+    {
+        id = characterTemplate.id;
+        isEnemy = false;
+        isNewPlayer = true;
+        locX = 0;
+        locY = 0;
+        characterId = characterTemplate.id;
+        levelId = 0;
+        level = characterTemplate.levelData[0].level;
+        exp = characterTemplate.levelData[0].exp;
+        hp = characterTemplate.levelData[0].hp;
+        currentHp = characterTemplate.levelData[0].hp;
+        atk = characterTemplate.levelData[0].atk;
+        def = characterTemplate.levelData[0].def;
+        wis = characterTemplate.levelData[0].wis;
+        dex = characterTemplate.levelData[0].dex;
+        mdef = characterTemplate.levelData[0].mdef;
+        equipWeapon = characterTemplate.levelData[0].equipWeapon;
     }
 
     public PlayerRecord(int id, bool isEnemy, bool isNewPlayer, int locX, int locY, int characterId, int levelId, uint level, uint exp, uint hp, uint atk, uint def, uint wis, uint dex, uint mdef, int equipWeapon, EnemyAIType aiType, int searchRange)

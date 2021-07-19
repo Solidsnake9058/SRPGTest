@@ -14,7 +14,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public Transform visual;
     public Animator animator;
-    public float moveSpeed = 10f;
+    public float moveSpeed { get { return GameManager.instance.m_MoveSpeed; } }
     public int playerIndex;
 
     public float movementPerActionPoint = 5;
@@ -49,26 +49,23 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public int damageBase = 5;
     public float damageRollSides = 6;
     public ScenarioActorPivotType playerPivot = ScenarioActorPivotType.Right;
+    public bool m_IsEnemy { get; private set; }
 
     //movement animation
-    public List<Vector3> positionQueue = new List<Vector3>();
+    public Queue<Vector3> positionQueue = new Queue<Vector3>();
     //
-    public Vector2 mapHexIndex
-    {
-        get {
-            return new Vector2(gridPosition.x + (((int)gridPosition.y) >> 1), gridPosition.y);
-        }
-    }
 
     public HexTile.HexCoord hex
     {
         get
         {
-            return new HexTile.HexCoord((int)gridPosition.x , (int)gridPosition.y);
+            return new HexTile.HexCoord((int)gridPosition.x, (int)gridPosition.y);
         }
     }
 
-    public int mapSizeX
+    public HexTile.HexCoord m_Hex { get; private set; }
+
+    public int m_MapSizeX
     {
         get
         {
@@ -76,7 +73,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public int mapSizeY
+    public int m_MapSizeY
     {
         get
         {
@@ -92,6 +89,41 @@ public class Player : MonoBehaviour, IPointerClickHandler
     // Use this for initialization
     void Start()
     {
+    }
+
+    public void SetPlayerValue(PlayerRecord playerRecord, CharacterTemplate playerData, Vector3 tilePos)
+    {
+        transform.position = new Vector3(tilePos.x, 0, tilePos.z);
+        gridPosition = new Vector2(playerRecord.locX, playerRecord.locY);
+        m_Hex = new HexTile.HexCoord(playerRecord.locX, playerRecord.locY);
+
+        playerName = playerData.name;
+        race = playerData.race;
+        movementPerActionPoint = playerData.move;
+        isActable = playerRecord.isActable;
+        level = (int)playerRecord.level;
+        exp = (int)playerRecord.exp;
+        maxHP = (int)playerRecord.hp;
+        hp = (int)playerRecord.currentHp;
+        atk = (int)playerRecord.atk;
+        def = (int)playerRecord.def;
+        wis = (int)playerRecord.wis;
+        dex = (int)playerRecord.dex;
+        mdef = (int)playerRecord.mdef;
+        equipWeapon = playerRecord.equipWeapon;
+
+        if (playerRecord.isEnemy)
+        {
+            CharacterLevelTemplate playerLvData = playerData.GetCharacterLevelData((int)playerRecord.level);
+            level = (int)playerLvData.level;
+            exp = (int)playerLvData.exp;
+            hp = maxHP = (int)playerLvData.hp;
+            gold = (int)playerLvData.gold;
+            equipWeapon = playerLvData.equipWeapon;
+            enemyAIType = playerRecord.aiType;
+            searchRange = playerRecord.searchRange;
+            m_IsEnemy = true;
+        }
     }
 
     // Update is called once per frame
@@ -121,6 +153,43 @@ public class Player : MonoBehaviour, IPointerClickHandler
         //    attacking = false;
         //    GameManager.instance.NextTurn();
         //}
+
+        if ((m_MoveTimeCur< m_MoveTime&& m_NextPosition.HasValue) || SetNextPosition())
+        {
+            m_MoveTimeCur += Time.deltaTime;
+            transform.position = Vector3.Lerp(m_PositionCur, m_NextPosition.Value, m_MoveTimeCur / m_MoveTime);
+            return;
+        }
+    }
+
+    protected float m_MoveTime = 1;
+    protected float m_MoveTimeCur = 0;
+    protected Vector3 m_PositionCur;
+    protected Vector3? m_NextPosition = null;
+    protected bool SetNextPosition()
+    {
+        if (positionQueue.Count > 0)
+        {
+            m_PositionCur = m_NextPosition.Value;
+            m_NextPosition = positionQueue.Dequeue();
+            transform.LookAt(m_NextPosition.Value);
+            float dis = Vector3.Distance(m_NextPosition.Value, transform.position);
+            m_MoveTime = dis / moveSpeed;
+            m_MoveTimeCur = 0;
+            animator.SetBool("walk", true);
+            return true;
+        }
+        m_NextPosition = null;
+        animator.SetBool("walk", false);
+        return false;
+    }
+
+    public void SetPositionQueue(List<Vector3> positions)
+    {
+        for (int i = 0; i < positions.Count; i++)
+        {
+            positionQueue.Enqueue(positions[i]);
+        }
     }
 
     public virtual void SetOriginalPos()
@@ -213,11 +282,11 @@ public class Player : MonoBehaviour, IPointerClickHandler
         List<HexTile> range = new List<HexTile>();
         if (GetIsCanAttack(true))
         {
-            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 1, mapSizeX, mapSizeY));
+            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 1, m_MapSizeX, m_MapSizeY));
         }
         if (GetIsCanAttack(false))
         {
-            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 2, mapSizeX, mapSizeY));
+            range.AddRange(HexTile.GetCubeRingTile(gridPosition, 2, m_MapSizeX, m_MapSizeY));
         }
         return range;
     }
@@ -227,11 +296,11 @@ public class Player : MonoBehaviour, IPointerClickHandler
         List<HexTile> range = new List<HexTile>();
         if (GetIsCanAttack(true))
         {
-            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 1, mapSizeX, mapSizeY));
+            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 1, m_MapSizeX, m_MapSizeY));
         }
         if (GetIsCanAttack(false))
         {
-            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 2, mapSizeX, mapSizeY));
+            range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 2, m_MapSizeX, m_MapSizeY));
         }
         return range;
     }
@@ -239,7 +308,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     public virtual List<HexTile> GetHealRange()
     {
-        return HexTile.GetCubeSpiralTile(gridPosition, 1, GameManager.instance.gameElement.races.Where(x => x.id == this.race).FirstOrDefault().healRange, mapSizeX, mapSizeY);
+        return HexTile.GetCubeSpiralTile(gridPosition, 1, GameManager.instance.gameElement.races.Where(x => x.id == this.race).FirstOrDefault().healRange, m_MapSizeX, m_MapSizeY);
     }
 
     public virtual void OnPointerClick(PointerEventData eventData)

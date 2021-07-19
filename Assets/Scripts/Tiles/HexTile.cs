@@ -10,84 +10,97 @@ using System.Linq;
 public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 {
 
-    public HexCoord hex = new HexCoord();
+    public HexCoord m_Hex { get; private set; }
 
-    GameObject Prefab;
-    public GameObject visual;
+    GameObject m_Prefab;
+    [SerializeField]
+    private Renderer m_Visual;
     public Transform tileLine;
+    public bool m_IsHighLight { get; private set; }
 
-    public TileType type = TileType.Normal;
-    public TileType2D type2D = TileType2D.Plain;
+    public TileType m_TileType { get; private set; }
+    public TileType2D m_TileType2D { get; private set; }
 
-    public Vector2 gridPosition = Vector2.zero;
+    public Vector2 m_GridPosition { get; private set; }
 
-    public float movementCost = 1f;
-    public bool impassible = false;
-    public int spriteIdex = 0;
-    public int spritChestIndex = 0;
+    public float m_MovementCost { get; private set; }
+    public bool m_Impassible { get; private set; }
+    private int m_SpriteIndex;
+    private int m_SpritChestIndex;
 
-    public List<HexTile> neighbors = new List<HexTile>();
+    public List<HexTile> m_Neighbors = new List<HexTile>();
 
-    public int mapSizeX;
-    public int mapSizeY;
+    private int m_MapSizeX;
+    private int m_MapSizeY;
 
-    public float defenseRate = 0;
+    public float m_DefenseRate { get; private set; }
 
-    public Image menuImage;
+    private Image menuImage;
 
-    [Header("Chest Setting")]
-    public bool isHaveChest = false;
-    public bool isChestOpened = false;
-    public bool isShop = false;
-    public int gold = 0;
-    public int itemId = -1;
-    public int weaponId = -1;
-
-    public HexTile(int q, int r)
-    {
-        hex = new HexCoord(q, r);
-    }
+    //[Header("Chest Setting")]
+    private bool m_IsHaveChest = false;
+    private bool m_IsChestOpened = false;
+    private bool m_IsShop;
+    private int m_Gold;
+    private int m_ItemId;
+    private int m_WeaponId;
 
     public Vector3 HexTilePos()
     {
-        return new Vector3((float)((hex.q - hex.Z) / 2.0f), 0, -hex.r);
+        return m_Hex.PositionSqr();
     }
 
     public static Vector3 HexTilePos(float x, float y)
     {
-        return new Vector3((((2 * x) - y) / 2.0f), 0, -y);
+        return new Vector3(((2 * x) - y) / 2.0f, 0, -y);
     }
-    public static Vector2[] cube_directions = { new Vector2(1, 0), new Vector2(1, -1), new Vector2(0, -1), new Vector2(-1, 0), new Vector2(-1, 1), new Vector2(0, 1) };
 
+    public readonly static Vector2[] m_CubeDirections = { new Vector2(1, 0), new Vector2(1, -1), new Vector2(0, -1), new Vector2(-1, 0), new Vector2(-1, 1), new Vector2(0, 1) };
 
-    public Vector2 mapHexIndex
+    public TileXml CreateTileXml()
+    {
+        return new TileXml()
+        {
+            id = (int)m_TileType2D,
+            spritIndex = m_SpriteIndex,
+            locX = m_Hex.m_Q,
+            locY = m_Hex.m_R,
+            gold = m_Gold,
+            itemId = m_ItemId,
+            weaponId = m_WeaponId,
+            spritChestIndex = m_SpritChestIndex,
+            isShop = m_IsShop
+        };
+    }
+
+    public Vector2 m_MapHexIndex
     {
         get
         {
-            return new Vector2(gridPosition.x + (((int)gridPosition.y) >> 1), gridPosition.y);
+            return new Vector2(m_GridPosition.x + (((int)m_GridPosition.y) >> 1), m_GridPosition.y);
         }
     }
 
     private void GenerateNeighbors()
     {
-        neighbors = new List<HexTile>();
+        m_Neighbors = new List<HexTile>();
 
         //[+1,0][-1,0][0,+1][0,-1][+1,-1][-1,+1]
         for (int i = 0; i < 6; i++)
         {
-            Vector2 n = MapHexIndex(CubeNeighbor(new Vector2(hex.q, hex.r), i));
+            Vector2 n = MapHexIndex(CubeNeighbor(new Vector2(m_Hex.m_Q, m_Hex.m_R), i));
 
-            if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
+            if (n.x < 0 || n.x > m_MapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > m_MapSizeY - 1)
             {
                 continue;
             }
             if (SceneManager.GetActiveScene().name == "GameScene")
             {
-                neighbors.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+                m_Neighbors.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
             }
             else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
             {
-                neighbors.Add(MapCreatorManager.instance.mapHex[(int)n.y][(int)n.x]);
+                m_Neighbors.Add(MapCreatorManager.instance.mapHex[(int)n.y][(int)n.x]);
             }
 
         }
@@ -121,9 +134,16 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
     }
 
+    public void SetHightLight(bool isHighLight, bool isAtk)
+    {
+        m_IsHighLight = isHighLight;
+        m_Visual.material.color = m_IsHighLight ? (isAtk ? GameManager.instance.attackTileColor : GameManager.instance.moveTileColor) : Color.white;
+    }
+
+
     public static Vector2 CubeDirection(int direction)
     {
-        return cube_directions[direction];
+        return m_CubeDirections[direction];
     }
 
     public static Vector2 CubeNeighbor(Vector2 cube, int direction)
@@ -172,7 +192,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return results;
     }
 
-    public static List<HexTile> GetCubeRingTile(Vector2 center, int radius,int mapSizeX,int mapSizeY)
+    public static List<HexTile> GetCubeRingTile(Vector2 center, int radius, int mapSizeX, int mapSizeY)
     {
         List<HexTile> cubeRingTile = new List<HexTile>();
         List<Vector2> cubeRing = CubeRing(center, radius);
@@ -193,36 +213,36 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return cubeRingTile;
     }
 
-	public static List<HexTile> GetCubeSpiralTile(Vector2 center, int min, int max, int mapSizeX, int mapSizeY)
-	{
-		List<HexTile> cubeRingTile = new List<HexTile>();
+    public static List<HexTile> GetCubeSpiralTile(Vector2 center, int min, int max, int mapSizeX, int mapSizeY)
+    {
+        List<HexTile> cubeRingTile = new List<HexTile>();
         List<Vector2> cubeRing = CubeSpiral(center, min, max);
 
-		for (int i = 0; i < cubeRing.Count; i++)
-		{
-			Vector2 n = MapHexIndex(cubeRing[i]);
+        for (int i = 0; i < cubeRing.Count; i++)
+        {
+            Vector2 n = MapHexIndex(cubeRing[i]);
 
-			if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
-			{
-				continue;
-			}
-			if (SceneManager.GetActiveScene().name == "GameScene")
-			{
-				cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
-			}
-		}
-		return cubeRingTile;
-	}
+            if (n.x < 0 || n.x > mapSizeX - 1 - (n.y % 2) || n.y < 0 || n.y > mapSizeY - 1)
+            {
+                continue;
+            }
+            if (SceneManager.GetActiveScene().name == "GameScene")
+            {
+                cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+            }
+        }
+        return cubeRingTile;
+    }
 
 
-	public static HexCoord Subtract(HexCoord a, HexCoord b)
+    public static HexCoord Subtract(HexCoord a, HexCoord b)
     {
-        return new HexCoord(a.q - b.q, a.r - b.r);
+        return new HexCoord(a.m_Q - b.m_Q, a.m_R - b.m_R);
     }
 
     public static int Length(HexCoord hex)
     {
-        return (int)((Math.Abs(hex.q) + Math.Abs(hex.r) + Math.Abs(hex.Z)) / 2);
+        return (int)((Math.Abs(hex.m_Q) + Math.Abs(hex.m_R) + Math.Abs(hex.m_Z)) / 2);
     }
 
     public static int Distance(HexCoord a, HexCoord b)
@@ -235,44 +255,68 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return new Vector2(pos.x + (((int)pos.y) >> 1), pos.y);
     }
 
-    public void TileInitializer(Transform mapTransform, TileType tileType, TileType2D tileType2D, int spriteIndex, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY, int gold, int itemId, int weaponId, bool isShop)
+    public void TileInitializer(TileType tileType, TileType2D tileType2D, int spriteIndex, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY, int gold, int itemId, int weaponId, bool isShop)
     {
-        transform.parent = mapTransform;
         //SetType(tileType);
         SetType2D(tileType2D, spriteIndex);
-        this.spritChestIndex = spritChestIndex;
-        hex.q = q;
-        hex.r = r;
-        this.mapSizeX = mapSizeX;
-        this.mapSizeY = mapSizeY;
-        this.gold = gold;
-        this.itemId = itemId;
-        this.weaponId = weaponId;
-        this.isShop = isShop;
+        m_SpritChestIndex = spritChestIndex;
+        m_Hex = new HexCoord(q, r);
+        m_MapSizeX = mapSizeX;
+        m_MapSizeY = mapSizeY;
+        m_Gold = gold;
+        m_ItemId = itemId;
+        m_WeaponId = weaponId;
+        m_IsShop = isShop;
         if (gold > 0 || itemId > 0 || weaponId > 0)
         {
-            isHaveChest = true;
+            m_IsHaveChest = true;
+            m_IsChestOpened = false;
         }
-        gameObject.transform.localPosition = HexTilePos();
+        transform.localPosition = HexTilePos();
+    }
+
+    public void TileInitialize(TileXml tileData, int spritChestIndex, int q, int r, int mapSizeX, int mapSizeY)
+    {
+        //SetType(tileType);
+        SetType2D((TileType2D)tileData.id, tileData.spritIndex);
+        m_SpritChestIndex = spritChestIndex;
+        m_Hex = new HexCoord(q, r);
+        m_MapSizeX = mapSizeX;
+        m_MapSizeY = mapSizeY;
+        m_Gold = tileData.gold;
+        m_ItemId = tileData.itemId;
+        m_WeaponId = tileData.weaponId;
+        m_IsShop = tileData.isShop;
+        if (m_Gold > 0 || m_ItemId > 0 || m_WeaponId > 0)
+        {
+            m_IsHaveChest = true;
+            m_IsChestOpened = false;
+        }
+        transform.localPosition = HexTilePos();
     }
 
     private void Start()
     {
         GenerateNeighbors();
-        gridPosition = new Vector2(hex.q, hex.r);
-        transform.name = "Tile [" + hex.q + "," + hex.r + "," + hex.Z + "]";
+        m_GridPosition = new Vector2(m_Hex.m_Q, m_Hex.m_R);
+        transform.name = "Tile [" + m_Hex.m_Q + "," + m_Hex.m_R + "," + m_Hex.m_Z + "]";
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
             menuImage = GameObject.Find("MapMenu").GetComponent<Image>();
         }
     }
 
-    public void OpenChest()
+    public bool OpenChest()
     {
-        GameObject container = transform.Find("Visuals").gameObject;
-        SetType2D(type2D, spritChestIndex + container.GetComponentInChildren<SpriteMetarial>().GetSpritesCount());
-        GameManager.instance.GetChest(gold, itemId, weaponId);
-        isChestOpened = true;
+        if (m_IsHaveChest && !m_IsChestOpened)
+        {
+            GameObject container = transform.Find("Visuals").gameObject;
+            SetType2D(m_TileType2D, m_SpritChestIndex + container.GetComponentInChildren<SpriteMetarial>().GetSpritesCount());
+            GameManager.instance.GetChest(m_Gold, m_ItemId, m_WeaponId);
+            m_IsChestOpened = true;
+            return true;
+        }
+        return false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -321,23 +365,23 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                         MenuType setType = MenuType.tileMenu;
                         Player player = null;
                         GameManager.instance.SetPlayerIndex(-1);
-                        if (GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
+                        if (GameManager.instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
                         {
-                            player = GameManager.instance.enemyPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
+                            player = GameManager.instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
                             setType = MenuType.playerDeadMenu;
                         }
                         else
                         {
-                            if (GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).Count() > 0)
+                            if (GameManager.instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
                             {
-                                player = GameManager.instance.userPlayers.Where(x => x.gridPosition == gridPosition).FirstOrDefault();
+                                player = GameManager.instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
                                 bool isShowAction = false;
                                 if (player.GetIsCanHeal())
                                 {
-                                    isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Where(y => y.hp < y.maxHP && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
+                                    isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Values.Where(y => y.hp < y.maxHP && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
                                 }
-                                isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Where(y => y.hp > 0 && y.gridPosition == x.gridPosition).Count() > 0).Count() > 0;
-                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? (isShop ? MenuType.playerShopMenu : MenuType.playerMenu) : (isShop ? MenuType.playerMoveShopMenu : MenuType.playerMoveMenu)) : (isShop ? MenuType.playerStandShopMenu : MenuType.playerStandMenu)) : MenuType.playerDeadMenu;
+                                isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Values.Where(y => y.hp > 0 && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
+                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? (m_IsShop ? MenuType.playerShopMenu : MenuType.playerMenu) : (m_IsShop ? MenuType.playerMoveShopMenu : MenuType.playerMoveMenu)) : (m_IsShop ? MenuType.playerStandShopMenu : MenuType.playerStandMenu)) : MenuType.playerDeadMenu;
                                 GameManager.instance.SetPlayerIndex(player.playerIndex);
                             }
                         }
@@ -359,7 +403,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                 }
                 else
                 {
-                    if (!GameManager.instance.moving&& !GameManager.instance.attacking)
+                    if (!GameManager.instance.moving && !GameManager.instance.attacking)
                     {
                         GameManager.instance.DisableGroup(GameManager.instance.menu);
                         GameManager.instance.RemoveHighlightTiles();
@@ -377,8 +421,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             {
                 if (MapCreatorManager.instance.isGetPos)
                 {
-                    MapCreatorManager.instance.conditionGetPosX.text = hex.q.ToString();
-                    MapCreatorManager.instance.conditionGetPosY.text = hex.r.ToString();
+                    MapCreatorManager.instance.conditionGetPosX.text = m_Hex.m_Q.ToString();
+                    MapCreatorManager.instance.conditionGetPosY.text = m_Hex.m_R.ToString();
                     MapCreatorManager.instance.pointer.position = transform.position;
                 }
                 else
@@ -390,42 +434,42 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                             SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
                             if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
                             {
-                                isHaveChest = true;
-                                gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
-                                itemId = MapCreatorManager.instance.chestItem;
-                                weaponId = MapCreatorManager.instance.chestWeapon;
+                                m_IsHaveChest = true;
+                                m_Gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                                m_ItemId = MapCreatorManager.instance.chestItem;
+                                m_WeaponId = MapCreatorManager.instance.chestWeapon;
                             }
                             else if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Villa && MapCreatorManager.instance.isShop.isOn)
                             {
-                                isShop = true;
+                                m_IsShop = true;
                             }
                             else
                             {
-                                isHaveChest = false;
-                                isShop = false;
-                                gold = 0;
-                                itemId = -1;
-                                weaponId = -1;
+                                m_IsHaveChest = false;
+                                m_IsShop = false;
+                                m_Gold = 0;
+                                m_ItemId = -1;
+                                m_WeaponId = -1;
                             }
                             break;
                         case MapSettingType.Player:
                             if (eventData.button == PointerEventData.InputButton.Left)
                             {
-                                MapCreatorManager.instance.SetPlayer(gridPosition, transform.position);
+                                MapCreatorManager.instance.SetPlayer(m_GridPosition, transform.position);
                             }
                             else if (eventData.button == PointerEventData.InputButton.Right)
                             {
-                                MapCreatorManager.instance.SetPlayer(gridPosition, transform.position, true);
+                                MapCreatorManager.instance.SetPlayer(m_GridPosition, transform.position, true);
                             }
                             break;
                         case MapSettingType.Enemy:
                             if (eventData.button == PointerEventData.InputButton.Left)
                             {
-                                MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position);
+                                MapCreatorManager.instance.SetEnemyPlayer(m_GridPosition, transform.position);
                             }
                             else if (eventData.button == PointerEventData.InputButton.Right)
                             {
-                                MapCreatorManager.instance.SetEnemyPlayer(gridPosition, transform.position, true);
+                                MapCreatorManager.instance.SetEnemyPlayer(m_GridPosition, transform.position, true);
                             }
                             break;
                     }
@@ -436,8 +480,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
                 if (MapCreatorManager.instance.isGetPos)
                 {
-                    MapCreatorManager.instance.getPosX.text = hex.q.ToString();
-                    MapCreatorManager.instance.getPosY.text = hex.r.ToString();
+                    MapCreatorManager.instance.getPosX.text = m_Hex.m_Q.ToString();
+                    MapCreatorManager.instance.getPosY.text = m_Hex.m_R.ToString();
                     MapCreatorManager.instance.pointer.position = transform.position;
                 }
             }
@@ -457,9 +501,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                         SetType2D(MapCreatorManager.instance.pallerSelection2D, MapCreatorManager.instance.spriteIndex);
                         if (MapCreatorManager.instance.pallerSelection2D == TileType2D.Plain && MapCreatorManager.instance.isHaveChest.isOn)
                         {
-                            gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
-                            itemId = MapCreatorManager.instance.chestItem;
-                            weaponId = MapCreatorManager.instance.chestWeapon;
+                            m_Gold = Convert.ToInt32(MapCreatorManager.instance.chestGoldInput.text);
+                            m_ItemId = MapCreatorManager.instance.chestItem;
+                            m_WeaponId = MapCreatorManager.instance.chestWeapon;
                         }
                         break;
                     case MapSettingType.Player:
@@ -474,10 +518,10 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
     private void OnMouseEnter()
     {
-		//if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
-		//{
-		//	setType(MapCreatorManager.instance.pallerSelection);
-		//}
+        //if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
+        //{
+        //	setType(MapCreatorManager.instance.pallerSelection);
+        //}
     }
 
     private void OnMouseExit()
@@ -486,78 +530,78 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
     }
 
-  //  private void OnMouseDown()
-  //  {
-		//if (SceneManager.GetActiveScene().name == "GameScene")
-		//{
-		//	if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
-		//	{
-  //              GameManager.instance.moveCurrentPlayer(this);
-  //          }
-		//	else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
-		//	{
-  //              GameManager.instance.attackWithCurrentPlayer(this);
-  //          }
-		//	else
-		//	{
-		//		//impassible = impassible ? false : true;
-		//		//if (impassible)
-		//		//{
-		//		//	transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
-		//		//}
-		//		//else
-		//		//{
-		//		//	transform.GetComponentInChildren<Renderer>().material.color = Color.white;
-		//		//}
-		//	}
-		//}
-		//else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
-		//{
-  //          //setType(MapCreatorManager.instance.pallerSelection);
+    //  private void OnMouseDown()
+    //  {
+    //if (SceneManager.GetActiveScene().name == "GameScene")
+    //{
+    //	if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
+    //	{
+    //              GameManager.instance.moveCurrentPlayer(this);
+    //          }
+    //	else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
+    //	{
+    //              GameManager.instance.attackWithCurrentPlayer(this);
+    //          }
+    //	else
+    //	{
+    //		//impassible = impassible ? false : true;
+    //		//if (impassible)
+    //		//{
+    //		//	transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
+    //		//}
+    //		//else
+    //		//{
+    //		//	transform.GetComponentInChildren<Renderer>().material.color = Color.white;
+    //		//}
+    //	}
+    //}
+    //else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
+    //{
+    //          //setType(MapCreatorManager.instance.pallerSelection);
 
-  //          if (menu.alpha==0)
-  //          {
-  //              menu.alpha = 1;
-  //              menu.interactable = true;
-  //              menu.blocksRaycasts = true;
-  //              Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
-  //              Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
-  //              menuImage.rectTransform.position = mainCamera.WorldToScreenPoint(transform.position);
-  //          }
-  //          else
-  //          {
-  //              menu.alpha = 0;
-  //              menu.interactable = false;
-  //              menu.blocksRaycasts = false;
-  //          }
-  //      }
-  //  }
+    //          if (menu.alpha==0)
+    //          {
+    //              menu.alpha = 1;
+    //              menu.interactable = true;
+    //              menu.blocksRaycasts = true;
+    //              Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
+    //              Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
+    //              menuImage.rectTransform.position = mainCamera.WorldToScreenPoint(transform.position);
+    //          }
+    //          else
+    //          {
+    //              menu.alpha = 0;
+    //              menu.interactable = false;
+    //              menu.blocksRaycasts = false;
+    //          }
+    //      }
+    //  }
 
     public void SetType(TileType t)
     {
-        type = t;
+        m_TileType = t;
         //definition of TileType properties
         switch (t)
         {
             case TileType.Normal:
-                movementCost = 1;
-                impassible = false;
-                Prefab = PrefabHolder.instance.tile_Normal_prefab;
+                m_MovementCost = 1;
+                m_Impassible = false;
+                m_Prefab = PrefabHolder.instance.tile_Normal_prefab;
                 break;
             case TileType.Difficult:
-                movementCost = 2;
-                impassible = false;
-                Prefab = PrefabHolder.instance.tile_Difficult_prefab;
+                m_MovementCost = 2;
+                m_Impassible = false;
+                m_Prefab = PrefabHolder.instance.tile_Difficult_prefab;
                 break;
             case TileType.VeryDifficult:
-                movementCost = 4;
-                impassible = false;
-                Prefab = PrefabHolder.instance.tile_VeryDifficult_prefab;
+                m_MovementCost = 4;
+                m_Impassible = false;
+                m_Prefab = PrefabHolder.instance.tile_VeryDifficult_prefab;
                 break;
             case TileType.Impassible:
-                movementCost = 9999;
-                impassible = true;
-                Prefab = PrefabHolder.instance.tile_Impassible_prefab;
+                m_MovementCost = 9999;
+                m_Impassible = true;
+                m_Prefab = PrefabHolder.instance.tile_Impassible_prefab;
                 break;
         }
 
@@ -566,40 +610,40 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
     public void SetType2D(TileType2D t, int index)
     {
-        type2D = t;
-        spriteIdex = index;
-        impassible = false;
+        m_TileType2D = t;
+        m_SpriteIndex = index;
+        m_Impassible = false;
         switch (t)
         {
             case TileType2D.Impassible:
-                movementCost = 9999;
-                impassible = true;
-                Prefab = TilePrefabHolder.instance.tile_Impassible_prefab;
+                m_MovementCost = 9999;
+                m_Impassible = true;
+                m_Prefab = TilePrefabHolder.instance.tile_Impassible_prefab;
                 break;
             case TileType2D.Road:
-                movementCost = 1;
-                defenseRate = 0;
-                Prefab = TilePrefabHolder.instance.tile_Road_prefab;
+                m_MovementCost = 1;
+                m_DefenseRate = 0;
+                m_Prefab = TilePrefabHolder.instance.tile_Road_prefab;
                 break;
             case TileType2D.Plain:
-                movementCost = 1.5f;
-                defenseRate = 10;
-                Prefab = TilePrefabHolder.instance.tile_Plain_prefab;
+                m_MovementCost = 1.5f;
+                m_DefenseRate = 10;
+                m_Prefab = TilePrefabHolder.instance.tile_Plain_prefab;
                 break;
             case TileType2D.Wasteland:
-                movementCost = 3;
-                defenseRate = 30;
-                Prefab = TilePrefabHolder.instance.tile_Wasteland_prefab;
+                m_MovementCost = 3;
+                m_DefenseRate = 30;
+                m_Prefab = TilePrefabHolder.instance.tile_Wasteland_prefab;
                 break;
             case TileType2D.Villa:
-                movementCost = 1;
-                defenseRate = 50;
-                Prefab = TilePrefabHolder.instance.tile_Villa_prefab;
+                m_MovementCost = 1;
+                m_DefenseRate = 50;
+                m_Prefab = TilePrefabHolder.instance.tile_Villa_prefab;
                 break;
             case TileType2D.Forest:
-                movementCost = 2;
-                defenseRate = 40;
-                Prefab = TilePrefabHolder.instance.tile_Forest_prefab;
+                m_MovementCost = 2;
+                m_DefenseRate = 40;
+                m_Prefab = TilePrefabHolder.instance.tile_Forest_prefab;
                 break;
         }
         GenerateVisuals();
@@ -613,9 +657,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             Destroy(container.transform.GetChild(i).gameObject);
         }
-        GameObject newVisual = (GameObject)Instantiate(Prefab, transform.position, Prefab.transform.rotation);
+        GameObject newVisual = (GameObject)Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation);
         newVisual.transform.parent = container.transform;
-        newVisual.GetComponent<SpriteMetarial>().SetSprite(spriteIdex);
+        newVisual.GetComponent<SpriteMetarial>().SetSprite(m_SpriteIndex);
     }
 
     public void SetShowUI()
@@ -637,12 +681,12 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// Position on the q axis.
         /// </summary>
         [SerializeField]
-        public int q;
+        public int m_Q;
         /// <summary>
         /// Position on the r axis.
         /// </summary>
         [SerializeField]
-        public int r;
+        public int m_R;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Settworks.Hexagons.HexCoord"/> struct.
@@ -651,8 +695,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// <param name="r">Position on the r axis.</param>
         public HexCoord(int q, int r)
         {
-            this.q = q;
-            this.r = r;
+            this.m_Q = q;
+            this.m_R = r;
         }
 
         /// <summary>
@@ -662,9 +706,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// The q,r coordinate system is derived from an x,y,z cubic system with the constraint that x + y + z = 0.
         /// Where x = q and y = r, this property derives z as <c>-q-r</c>.
         /// </remarks>
-        public int Z
+        public int m_Z
         {
-            get { return -q - r; }
+            get { return -m_Q - m_R; }
         }
 
         /// <summary>
@@ -674,9 +718,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// Offset coordinates are a common alternative for hexagons, allowing pseudo-square grid operations.
         /// Where y = r, this property represents the x coordinate as <c>q + r/2</c>.
         /// </remarks>
-        public int O
+        public int m_Offset
         {
-            get { return q + (r >> 1); }
+            get { return m_Q + (m_R >> 1); }
         }
 
         /// <summary>
@@ -684,16 +728,16 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </summary>
         public Vector2 Position()
         {
-            return q * Q_XY + r * R_XY;
+            return m_Q * Q_XY + m_R * R_XY;
         }
 
         /// <summary>
-        /// Unity position of this hex for cube tiles.
+        /// Unity position of this hex for cube tiles. Form left top.
         /// </summary>
         /// <returns></returns>
         public Vector3 PositionSqr()
         {
-            return new Vector3(((float)(q - Z) / 2.0f), 0, -r);
+            return new Vector3((m_Q - m_Z) / 2.0f, 0, -m_R);
         }
 
         /// <summary>
@@ -704,11 +748,11 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </remarks>
         public int AxialLength()
         {
-            if (q == 0 && r == 0) return 0;
-            if (q > 0 && r >= 0) return q + r;
-            if (q <= 0 && r > 0) return (-q < r) ? r : -q;
-            if (q < 0) return -q - r;
-            return (-r > q) ? -r : q;
+            if (m_Q == 0 && m_R == 0) return 0;
+            if (m_Q > 0 && m_R >= 0) return m_Q + m_R;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q < m_R) ? m_R : -m_Q;
+            if (m_Q < 0) return -m_Q - m_R;
+            return (-m_R > m_Q) ? -m_R : m_Q;
         }
 
         /// <summary>
@@ -719,11 +763,11 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </remarks>
         public int AxialSkew()
         {
-            if (q == 0 && r == 0) return 0;
-            if (q > 0 && r >= 0) return (q < r) ? q : r;
-            if (q <= 0 && r > 0) return (-q < r) ? Math.Min(-q, q + r) : Math.Min(r, -q - r);
-            if (q < 0) return (q > r) ? -q : -r;
-            return (-r > q) ? Math.Min(q, -q - r) : Math.Min(-r, q + r);
+            if (m_Q == 0 && m_R == 0) return 0;
+            if (m_Q > 0 && m_R >= 0) return (m_Q < m_R) ? m_Q : m_R;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q < m_R) ? Math.Min(-m_Q, m_Q + m_R) : Math.Min(m_R, -m_Q - m_R);
+            if (m_Q < 0) return (m_Q > m_R) ? -m_Q : -m_R;
+            return (-m_R > m_Q) ? Math.Min(m_Q, -m_Q - m_R) : Math.Min(-m_R, m_Q + m_R);
         }
 
         /// <summary>
@@ -740,11 +784,11 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </summary>
         public int PolarIndex()
         {
-            if (q == 0 && r == 0) return 0;
-            if (q > 0 && r >= 0) return r;
-            if (q <= 0 && r > 0) return (-q < r) ? r - q : -3 * q - r;
-            if (q < 0) return -4 * (q + r) + q;
-            return (-r > q) ? -4 * r + q : 6 * q + r;
+            if (m_Q == 0 && m_R == 0) return 0;
+            if (m_Q > 0 && m_R >= 0) return m_R;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q < m_R) ? m_R - m_Q : -3 * m_Q - m_R;
+            if (m_Q < 0) return -4 * (m_Q + m_R) + m_Q;
+            return (-m_R > m_Q) ? -4 * m_R + m_Q : 6 * m_Q + m_R;
         }
 
         /// <summary>
@@ -761,30 +805,30 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
         public HexCoord PolarNeighbor(bool CCW = false)
         {
-            if (q > 0)
+            if (m_Q > 0)
             {
-                if (r < 0)
+                if (m_R < 0)
                 {
-                    if (q > -r) return this + neighbors[CCW ? 1 : 4];
-                    if (q < -r) return this + neighbors[CCW ? 0 : 3];
+                    if (m_Q > -m_R) return this + neighbors[CCW ? 1 : 4];
+                    if (m_Q < -m_R) return this + neighbors[CCW ? 0 : 3];
                     return this + neighbors[CCW ? 1 : 3];
                 }
-                if (r > 0) return this + neighbors[CCW ? 2 : 5];
+                if (m_R > 0) return this + neighbors[CCW ? 2 : 5];
                 return this + neighbors[CCW ? 2 : 4];
             }
-            if (q < 0)
+            if (m_Q < 0)
             {
-                if (r > 0)
+                if (m_R > 0)
                 {
-                    if (r > -q) return this + neighbors[CCW ? 3 : 0];
-                    if (r < -q) return this + neighbors[CCW ? 4 : 1];
+                    if (m_R > -m_Q) return this + neighbors[CCW ? 3 : 0];
+                    if (m_R < -m_Q) return this + neighbors[CCW ? 4 : 1];
                     return this + neighbors[CCW ? 4 : 0];
                 }
-                if (r < 0) return this + neighbors[CCW ? 5 : 2];
+                if (m_R < 0) return this + neighbors[CCW ? 5 : 2];
                 return this + neighbors[CCW ? 5 : 1];
             }
-            if (r > 0) return this + neighbors[CCW ? 3 : 5];
-            if (r < 0) return this + neighbors[CCW ? 0 : 2];
+            if (m_R > 0) return this + neighbors[CCW ? 3 : 5];
+            if (m_R < 0) return this + neighbors[CCW ? 0 : 2];
             return this;
         }
 
@@ -874,27 +918,27 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// <param name="neighbor">If set to <c>true</c>, gets the other corner shared by the same ring-neighbor as normal return.</param>
         public int PolarBoundingCornerIndex(bool CCW = false)
         {
-            if (q == 0 && r == 0) return 0;
-            if (q > 0 && r >= 0) return CCW ?
-                (q > r) ? 1 : 2 :
-                (q < r) ? 5 : 4;
-            if (q <= 0 && r > 0) return (-q < r) ?
+            if (m_Q == 0 && m_R == 0) return 0;
+            if (m_Q > 0 && m_R >= 0) return CCW ?
+                (m_Q > m_R) ? 1 : 2 :
+                (m_Q < m_R) ? 5 : 4;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q < m_R) ?
                 CCW ?
-                    (r > -2 * q) ? 2 : 3 :
-                    (r < -2 * q) ? 0 : 5 :
+                    (m_R > -2 * m_Q) ? 2 : 3 :
+                    (m_R < -2 * m_Q) ? 0 : 5 :
                 CCW ?
-                    (q > -2 * r) ? 3 : 4 :
-                    (q < -2 * r) ? 1 : 0;
-            if (q < 0) return CCW ?
-                (q < r) ? 4 : 5 :
-                (q > r) ? 2 : 1;
-            return (-r > q) ?
+                    (m_Q > -2 * m_R) ? 3 : 4 :
+                    (m_Q < -2 * m_R) ? 1 : 0;
+            if (m_Q < 0) return CCW ?
+                (m_Q < m_R) ? 4 : 5 :
+                (m_Q > m_R) ? 2 : 1;
+            return (-m_R > m_Q) ?
                 CCW ?
-                    (r < -2 * q) ? 5 : 0 :
-                    (r > -2 * q) ? 3 : 2 :
+                    (m_R < -2 * m_Q) ? 5 : 0 :
+                    (m_R > -2 * m_Q) ? 3 : 2 :
                 CCW ?
-                    (q < -2 * r) ? 0 : 1 :
-                    (q > -2 * r) ? 4 : 3;
+                    (m_Q < -2 * m_R) ? 0 : 1 :
+                    (m_Q > -2 * m_R) ? 4 : 3;
         }
 
         /// <summary>
@@ -905,17 +949,17 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </remarks>
         public int HalfSextant()
         {
-            if (q > 0 && r >= 0 || q == 0 && r == 0)
-                return (q > r) ? 0 : 1;
-            if (q <= 0 && r > 0)
-                return (-q < r) ?
-                    (r > -2 * q) ? 2 : 3 :
-                    (q > -2 * r) ? 4 : 5;
-            if (q < 0)
-                return (q < r) ? 6 : 7;
-            return (-r > q) ?
-                (r < -2 * q) ? 8 : 9 :
-                (q < -2 * r) ? 10 : 11;
+            if (m_Q > 0 && m_R >= 0 || m_Q == 0 && m_R == 0)
+                return (m_Q > m_R) ? 0 : 1;
+            if (m_Q <= 0 && m_R > 0)
+                return (-m_Q < m_R) ?
+                    (m_R > -2 * m_Q) ? 2 : 3 :
+                    (m_Q > -2 * m_R) ? 4 : 5;
+            if (m_Q < 0)
+                return (m_Q < m_R) ? 6 : 7;
+            return (-m_R > m_Q) ?
+                (m_R < -2 * m_Q) ? 8 : 9 :
+                (m_Q < -2 * m_R) ? 10 : 11;
         }
 
         /// <summary>
@@ -923,10 +967,10 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </summary>
         public int CornerSextant()
         {
-            if (q > 0 && r >= 0 || q == 0 && r == 0) return 0;
-            if (q <= 0 && r > 0) return (-q < r) ? 1 : 2;
-            if (q < 0) return 3;
-            return (-r > q) ? 4 : 5;
+            if (m_Q > 0 && m_R >= 0 || m_Q == 0 && m_R == 0) return 0;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q < m_R) ? 1 : 2;
+            if (m_Q < 0) return 3;
+            return (-m_R > m_Q) ? 4 : 5;
         }
 
         /// <summary>
@@ -934,15 +978,15 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </summary>
         public int NeighborSextant()
         {
-            if (q == 0 && r == 0) return 0;
-            if (q > 0 && r >= 0) return (q <= r) ? 1 : 0;
-            if (q <= 0 && r > 0) return (-q <= r) ?
-                (r <= -2 * q) ? 2 : 1 :
-                (q <= -2 * r) ? 3 : 2;
-            if (q < 0) return (q >= r) ? 4 : 3;
-            return (-r > q) ?
-                (r >= -2 * q) ? 5 : 4 :
-                (q >= -2 * r) ? 0 : 5;
+            if (m_Q == 0 && m_R == 0) return 0;
+            if (m_Q > 0 && m_R >= 0) return (m_Q <= m_R) ? 1 : 0;
+            if (m_Q <= 0 && m_R > 0) return (-m_Q <= m_R) ?
+                (m_R <= -2 * m_Q) ? 2 : 1 :
+                (m_Q <= -2 * m_R) ? 3 : 2;
+            if (m_Q < 0) return (m_Q >= m_R) ? 4 : 3;
+            return (-m_R > m_Q) ?
+                (m_R >= -2 * m_Q) ? 5 : 4 :
+                (m_Q >= -2 * m_R) ? 0 : 5;
         }
 
         /// <summary>
@@ -957,11 +1001,11 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             if (this == origin) return this;
             sextants = NormalizeRotationIndex(sextants, 6);
             if (sextants == 0) return this;
-            if (sextants == 1) return new HexCoord(-r, -Z);
-            if (sextants == 2) return new HexCoord(Z, q);
-            if (sextants == 3) return new HexCoord(-q, -r);
-            if (sextants == 4) return new HexCoord(r, Z);
-            return new HexCoord(-Z, -q);
+            if (sextants == 1) return new HexCoord(-m_R, -m_Z);
+            if (sextants == 2) return new HexCoord(m_Z, m_Q);
+            if (sextants == 3) return new HexCoord(-m_Q, -m_R);
+            if (sextants == 4) return new HexCoord(m_R, m_Z);
+            return new HexCoord(-m_Z, -m_Q);
         }
 
         /// <summary>
@@ -976,9 +1020,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             if (this == origin) return this;
             axis = NormalizeRotationIndex(axis, 3);
-            if (axis == 0) return new HexCoord(r, q);
-            if (axis == 1) return new HexCoord(Z, r);
-            return new HexCoord(q, Z);
+            if (axis == 0) return new HexCoord(m_R, m_Q);
+            if (axis == 1) return new HexCoord(m_Z, m_R);
+            return new HexCoord(m_Q, m_Z);
         }
 
         /// <summary>
@@ -987,8 +1031,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// <returns>This <see cref="Settworks.Hexagons.HexCoord"/> after scaling.</returns>
         public HexCoord Scale(float factor)
         {
-            q = (int)(q * factor);
-            r = (int)(r * factor);
+            m_Q = (int)(m_Q * factor);
+            m_R = (int)(m_R * factor);
             return this;
         }
         /// <summary>
@@ -997,8 +1041,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// <returns>This <see cref="Settworks.Hexagons.HexCoord"/> after scaling.</returns>
         public HexCoord Scale(int factor)
         {
-            q *= factor;
-            r *= factor;
+            m_Q *= factor;
+            m_R *= factor;
             return this;
         }
         /// <summary>
@@ -1006,7 +1050,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </summary>
         /// <returns><see cref="UnityEngine.Vector2"/> representing the scaled vector.</returns>
         public Vector2 ScaleToVector(float factor)
-        { return new Vector2(q * factor, r * factor); }
+        { return new Vector2(m_Q * factor, m_R * factor); }
 
         /// <summary>
         /// Determines whether this hex is within a specified rectangle.
@@ -1014,18 +1058,18 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// <returns><c>true</c> if this instance is within the specified rectangle; otherwise, <c>false</c>.</returns>
         public bool IsWithinRectangle(HexCoord cornerA, HexCoord cornerB)
         {
-            if (r > cornerA.r && r > cornerB.r || r < cornerA.r && r < cornerB.r)
+            if (m_R > cornerA.m_R && m_R > cornerB.m_R || m_R < cornerA.m_R && m_R < cornerB.m_R)
                 return false;
-            bool reverse = cornerA.O > cornerB.O;   // Travel right to left.
-            bool offset = cornerA.r % 2 != 0;   // Starts on an odd row, bump alternate rows left.
-            bool trim = Math.Abs(cornerA.r - cornerB.r) % 2 == 0;   // Even height, trim alternate rows.
-            bool odd = (r - cornerA.r) % 2 != 0; // This is an alternate row.
-            int width = Math.Abs(cornerA.O - cornerB.O);
+            bool reverse = cornerA.m_Offset > cornerB.m_Offset;   // Travel right to left.
+            bool offset = cornerA.m_R % 2 != 0;   // Starts on an odd row, bump alternate rows left.
+            bool trim = Math.Abs(cornerA.m_R - cornerB.m_R) % 2 == 0;   // Even height, trim alternate rows.
+            bool odd = (m_R - cornerA.m_R) % 2 != 0; // This is an alternate row.
+            int width = Math.Abs(cornerA.m_Offset - cornerB.m_Offset);
             bool hasWidth = width != 0;
             if (reverse && (odd && (trim || !offset) || !(trim || offset || odd))
                 || !reverse && (trim && odd || offset && !trim && hasWidth))
                 width -= 1;
-            int x = (O - cornerA.O) * (reverse ? -1 : 1);
+            int x = (m_Offset - cornerA.m_Offset) * (reverse ? -1 : 1);
             if (reverse && odd && !offset
                 || !reverse && offset && odd && hasWidth)
                 x -= 1;
@@ -1078,7 +1122,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </remarks>
         public override string ToString()
         {
-            return "(" + q + "," + r + ")";
+            return "(" + m_Q + "," + m_R + ")";
         }
 
         /*
@@ -1271,6 +1315,23 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
 
         /// <summary>
+        /// <see cref="Settworks.Hexagons.HexCoord"/> from offset coordinates.
+        /// </summary>
+        /// <remarks>
+        /// Offset coordinates are a common alternative for hexagons, allowing pseudo-square grid operations.
+        /// This conversion assumes an offset of x = q + r/2.
+        /// </remarks>
+        public static HexCoord WithoutOffset(int x, int y)
+        {
+            return new HexCoord(x + (y >> 1), y);
+        }
+
+        public static HexCoord WithoutOffset(HexCoord hex)
+        {
+            return new HexCoord(hex.m_Q + hex.m_Offset, hex.m_R);
+        }
+
+        /// <summary>
         /// <see cref="Settworks.Hexagons.HexCoord"/> containing a floating-point q,r vector.
         /// </summary>
         /// <remarks>
@@ -1343,22 +1404,22 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
         // Cast to Vector2 in QR space. Explicit to avoid QR/XY mix-ups.
         public static explicit operator Vector2(HexCoord h)
-        { return new Vector2(h.q, h.r); }
+        { return new Vector2(h.m_Q, h.m_R); }
         // +, -, ==, !=
         public static HexCoord operator +(HexCoord a, HexCoord b)
-        { return new HexCoord(a.q + b.q, a.r + b.r); }
+        { return new HexCoord(a.m_Q + b.m_Q, a.m_R + b.m_R); }
         public static HexCoord operator -(HexCoord a, HexCoord b)
-        { return new HexCoord(a.q - b.q, a.r - b.r); }
+        { return new HexCoord(a.m_Q - b.m_Q, a.m_R - b.m_R); }
         public static bool operator ==(HexCoord a, HexCoord b)
-        { return a.q == b.q && a.r == b.r; }
+        { return a.m_Q == b.m_Q && a.m_R == b.m_R; }
         public static bool operator !=(HexCoord a, HexCoord b)
-        { return a.q != b.q || a.r != b.r; }
+        { return a.m_Q != b.m_Q || a.m_R != b.m_R; }
         // Mandatory overrides: Equals(), GetHashCode()
         public override bool Equals(object o)
         { return (o is HexCoord) && this == (HexCoord)o; }
         public override int GetHashCode()
         {
-            return q & (int)0xFFFF | r << 16;
+            return m_Q & (int)0xFFFF | m_R << 16;
         }
 
         /*

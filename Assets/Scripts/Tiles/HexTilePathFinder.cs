@@ -59,11 +59,11 @@ public class HexTilePathFinder : MonoBehaviour
 
             closed.Add(current.lastTile);
 
-            foreach (HexTile t in current.lastTile.neighbors)
+            foreach (HexTile t in current.lastTile.m_Neighbors)
             {
                 HexTilePath newTilePath = new HexTilePath(current);
-                List<Player> playerTiles = GameManager.instance.userPlayers.Union(GameManager.instance.enemyPlayers).Where(x => x.gridPosition == t.gridPosition).ToList();
-                if (t.impassible || occupied.Contains(t.gridPosition) || current.listOfTiles.Contains(t) || (!ignorePlayers && playerTiles.Count > 0))
+                List<Player> playerTiles = GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values).Where(x => x.gridPosition == t.m_GridPosition).ToList();
+                if (t.m_Impassible || occupied.Contains(t.m_GridPosition) || current.listOfTiles.Contains(t) || (!ignorePlayers && playerTiles.Count > 0))
                 {
                     continue;
                 }

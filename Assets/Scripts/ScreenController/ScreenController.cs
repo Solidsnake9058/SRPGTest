@@ -146,6 +146,19 @@ public class ScreenController : MonoBehaviour
         playerUIs.Remove(playerUIs.Where(x => x.name == uiName).FirstOrDefault());
     }
 
+    public void RemoveUI(bool isEnemy, int index)
+    {
+        for (int i = 0; i < playerUIs.Count; i++)
+        {
+            if (playerUIs[i].CheckID(isEnemy, index))
+            {
+                Destroy(playerUIs[i].gameObject);
+                playerUIs.RemoveAt(i);
+                return;
+            }
+        }
+    }
+
     public void SetPlayerUIRotation()
     {
         for (int i = 0; i < playerUIs.Count; i++)

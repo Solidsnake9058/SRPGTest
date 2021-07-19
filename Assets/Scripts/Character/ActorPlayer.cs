@@ -25,23 +25,25 @@ public class ActorPlayer : Player
     {
         //highlight
 
-        if (positionQueue.Count > 0)
-        {
-            transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
-            transform.LookAt(positionQueue[0]);
-            animator.SetBool("walk", true);
-            if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
-            {
-                transform.position = positionQueue[0];
-                positionQueue.RemoveAt(0);
-                if (positionQueue.Count == 0)
-                {
-                    GameManager.instance.StopWaitActor();
-                    SetPivot(playerPivot);
-                    animator.SetBool("walk", false);
-                }
-            }
-        }
+        //if (positionQueue.Count > 0)
+        //{
+        //    transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
+        //    transform.LookAt(positionQueue[0]);
+        //    animator.SetBool("walk", true);
+        //    if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+        //    {
+        //        transform.position = positionQueue[0];
+        //        positionQueue.RemoveAt(0);
+        //        if (positionQueue.Count == 0)
+        //        {
+        //            GameManager.instance.StopWaitActor();
+        //            SetPivot(playerPivot);
+        //            animator.SetBool("walk", false);
+        //        }
+        //    }
+        //}
         base.TurnUpdate();
+        GameManager.instance.StopWaitActor();
+        SetPivot(playerPivot);
     }
 }

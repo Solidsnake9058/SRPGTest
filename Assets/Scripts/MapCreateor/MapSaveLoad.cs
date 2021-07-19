@@ -38,7 +38,7 @@ public class TileXml
 }
 
 [XmlRoot("MapCollection")]
-public class MapXmlContainer
+public class MapContainer
 {
     [XmlAttribute("sizeX")]
     public int sizeX;
@@ -73,11 +73,24 @@ public class MapXmlContainer
     [XmlArrayItem("stageClearConditionList")]
     public List<StageClearCondition> stageClearConditionList = new List<StageClearCondition>();
 
+    public Dictionary<int, Dictionary<int, TileXml>> m_TileDataMap = new Dictionary<int, Dictionary<int, TileXml>>();
+
+    public void InitTileDataMap()
+    {
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            if (!m_TileDataMap.ContainsKey(tiles[i].locX))
+            {
+                m_TileDataMap.Add(tiles[i].locX, new Dictionary<int, TileXml>());
+            }
+            m_TileDataMap[tiles[i].locX].Add(tiles[i].locY, tiles[i]);
+        }
+    }
 }
 
 public static class MapSaveLoad
 {
-    public static MapXmlContainer CreateMapContainer(List<List<Tile>> map)
+    public static MapContainer CreateMapContainer(List<List<Tile>> map)
     {
         List<TileXml> tiles = new List<TileXml>();
 
@@ -89,7 +102,7 @@ public static class MapSaveLoad
             }
         }
 
-        return new MapXmlContainer()
+        return new MapContainer()
         {
             sizeX = map.Count,
             sizeY = map[0].Count,
@@ -97,7 +110,7 @@ public static class MapSaveLoad
         };
     }
 
-    public static MapXmlContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenario> scenarioList, List<StageClearCondition> stageClearConditionList)
+    public static MapContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenario> scenarioList, List<StageClearCondition> stageClearConditionList)
     {
         List<TileXml> tiles = new List<TileXml>();
 
@@ -105,11 +118,11 @@ public static class MapSaveLoad
         {
             for (int j = 0; j < map[i].Count; j++)
             {
-                tiles.Add(MapSaveLoad.CreateTileXml(map[i][j]));
+                tiles.Add(map[i][j].CreateTileXml());
             }
         }
 
-        return new MapXmlContainer()
+        return new MapContainer()
         {
             sizeX = map[0].Count,
             sizeY = map.Count,
@@ -133,37 +146,37 @@ public static class MapSaveLoad
         };
     }
 
-    public static TileXml CreateTileXml(HexTile tile)
-	{
-        return new TileXml()
-        {
-            id = (int)tile.type2D,
-            spritIndex = tile.spriteIdex,
-            locX = (int)tile.hex.q,
-            locY = (int)tile.hex.r,
-            gold = tile.gold,
-            itemId = tile.itemId,
-            weaponId = tile.weaponId,
-            spritChestIndex = tile.spritChestIndex,
-            isShop = tile.isShop
-        };
-	}
+    //public static TileXml CreateTileXml(HexTile tile)
+    //{
+    //    return new TileXml()
+    //    {
+    //        id = (int)tile.m_TileType2D,
+    //        spritIndex = tile.m_SpriteIndex,
+    //        locX = tile.m_Hex.m_Q,
+    //        locY = tile.m_Hex.m_R,
+    //        gold = tile.m_Gold,
+    //        itemId = tile.m_ItemId,
+    //        weaponId = tile.m_WeaponId,
+    //        spritChestIndex = tile.m_SpritChestIndex,
+    //        isShop = tile.m_IsShop
+    //    };
+    //}
 
-    public static void Save(MapXmlContainer mapContainer, string filename)
+    public static void Save(MapContainer mapContainer, string filename)
     {
-        var serializer = new XmlSerializer(typeof(MapXmlContainer));
+        var serializer = new XmlSerializer(typeof(MapContainer));
         using (var stream = new FileStream(filename, FileMode.Create))
         {
             serializer.Serialize(stream, mapContainer);
         }
     }
 
-    public static MapXmlContainer Load(string filename)
+    public static MapContainer Load(string filename)
     {
-        var serializer = new XmlSerializer(typeof(MapXmlContainer));
+        var serializer = new XmlSerializer(typeof(MapContainer));
         using (var stream = new FileStream(filename, FileMode.Open))
         {
-            return serializer.Deserialize(stream) as MapXmlContainer;
+            return serializer.Deserialize(stream) as MapContainer;
         }
     }
 }

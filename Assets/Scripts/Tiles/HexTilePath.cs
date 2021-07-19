@@ -22,7 +22,7 @@ public class HexTilePath
 
     public void addTile(HexTile t,bool isAttack = false)
     {
-        costOfPath += isAttack ? 1 : t.movementCost;
+        costOfPath += isAttack ? 1 : t.m_MovementCost;
         listOfTiles.Add(t);
         lastTile = t;
     }

@@ -53,7 +53,7 @@ public class UnitListUI : IGameUISystem
         SetShowPanel(true);
     }
 
-    private void SetCharacterList(List<Player> players, RectTransform content, List<CharacterSelection> playerList, bool isSkipDead)
+    private void SetCharacterList(Dictionary<int, Player> players, RectTransform content, List<CharacterSelection> playerList, bool isSkipDead)
     {
         ClearCharacterList(playerList);
         for (int i = 0; i < players.Count; i++)

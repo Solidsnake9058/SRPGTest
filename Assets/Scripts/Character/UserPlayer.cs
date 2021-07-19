@@ -40,8 +40,8 @@ public class UserPlayer : Player
 
     public override void TurnEnd()
     {
-        HexTile tile = GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x];
-        if (tile.isHaveChest && !tile.isChestOpened)
+        HexTile tile = GameManager.instance.GetMapTile(m_Hex);
+        //if (tile.m_IsHaveChest && !tile.m_IsChestOpened)
         {
             tile.OpenChest();
         }
@@ -52,27 +52,31 @@ public class UserPlayer : Player
     {
         //highlight
 
-        if (positionQueue.Count > 0)
-        {
-            transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
-            transform.LookAt(positionQueue[0]);
-            animator.SetBool("walk", true);
-            if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
-            {
-                transform.position = positionQueue[0];
-                positionQueue.RemoveAt(0);
-                if (positionQueue.Count == 0)
-                {
-                    //actionPoint--;
-                    animator.SetBool("walk", false);
-                    //transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
-                    GameManager.instance.ShowConfirmMenu();
-                }
-            }
-        }
+        //if (positionQueue.Count > 0)
+        //{
+        //    transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
+        //    transform.LookAt(positionQueue[0]);
+        //    animator.SetBool("walk", true);
+        //    if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+        //    {
+        //        transform.position = positionQueue[0];
+        //        positionQueue.RemoveAt(0);
+        //        if (positionQueue.Count == 0)
+        //        {
+        //            //actionPoint--;
+        //            animator.SetBool("walk", false);
+        //            //transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+        //            GameManager.instance.ShowConfirmMenu();
+        //        }
+        //    }
+        //}
 
         base.TurnUpdate();
+        GameManager.instance.ShowConfirmMenu();
+
     }
+
+
 
     public override PlayerRecord LevelUp()
     {

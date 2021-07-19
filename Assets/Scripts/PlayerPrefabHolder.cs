@@ -6,8 +6,8 @@ public class PlayerPrefabHolder : MonoBehaviour {
 
     public static PlayerPrefabHolder instance { get; private set; }
 
-    public GameObject userPlayer_prefab;
-    public GameObject enemyPlayer_prefab;
+    public Player m_UserPlayerPrefab;
+    public Player m_EnemyPlayerPrefab;
 
     public GameObject playerModelPrefab01;
 

@@ -17,6 +17,18 @@ public class CharacterTemplate
     [JsonProperty]
     public List<CharacterLevelTemplate> levelData { get; private set; }
 
+    public CharacterLevelTemplate GetCharacterLevelData(int level)
+    {
+        for (int i = 0; i < levelData.Count; i++)
+        {
+            if (levelData[i].Equals(level))
+            {
+                return levelData[i];
+            }
+        }
+        return levelData[0];
+    }
+
     public CharacterTemplate() { }
 
     public CharacterTemplate(int id, string name, int race, float move, bool enemy, List<CharacterLevelTemplate> levelData)

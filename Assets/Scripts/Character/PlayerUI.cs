@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerUI : MonoBehaviour {
+public class PlayerUI : MonoBehaviour
+{
 
     public Player player;
     public Image playerHP;
@@ -11,6 +12,8 @@ public class PlayerUI : MonoBehaviour {
     public Text playerEnable;
     private float uiHeight = 1f;
     public float standradUIHeight = 1f;
+    private bool m_IsEnemy;
+    private int m_PlayerIndex;
 
     private void Awake()
     {
@@ -20,11 +23,6 @@ public class PlayerUI : MonoBehaviour {
         playerHPText = ui.Find("HPText").GetComponent<Text>();
         playerEnable = ui.Find("IsEnable").GetComponent<Text>();
         uiHeight = standradUIHeight;
-    }
-
-    // Use this for initialization
-    void Start()
-    {
     }
 
     // Update is called once per frame
@@ -50,4 +48,14 @@ public class PlayerUI : MonoBehaviour {
         uiHeight = -100f;
     }
 
+    public void SetPlayerIndex(bool isEnemy, int index)
+    {
+        m_IsEnemy = isEnemy;
+        m_PlayerIndex = index;
+    }
+
+    public bool CheckID(bool isEnemy, int index)
+    {
+        return !(m_IsEnemy & isEnemy) && m_PlayerIndex.Equals(index);
+    }
 }
