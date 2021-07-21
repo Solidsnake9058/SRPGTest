@@ -25,7 +25,7 @@ public class HexTileHighlight
         List<HexTilePath> open = new List<HexTilePath>();
 
         HexTilePath originPath = new HexTilePath();
-        originPath.addTile(originTile, isAttack);
+        originPath.AddTile(originTile, isAttack);
 
         open.Add(originPath);
 
@@ -56,7 +56,7 @@ public class HexTileHighlight
                     continue;
                 }
                 HexTilePath newTilePath = new HexTilePath(current);
-                newTilePath.addTile(t, isAttack);
+                newTilePath.AddTile(t, isAttack);
                 open.Add(newTilePath);
             }
         }

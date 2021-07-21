@@ -195,13 +195,26 @@ public class PlayerRecord
         this.isActable = isActable;
     }
 
-    public PlayerRecord(uint hp, uint atk, uint def, uint wis, uint dex, uint mdef)
+    public PlayerRecord(int hp, int currentHp, int atk, int def, int wis, int dex, int mdef)
     {
-        this.hp = hp;
-        this.atk = atk;
-        this.def = def;
-        this.wis = wis;
-        this.dex = dex;
-        this.mdef = mdef;
+        this.hp = (uint)hp;
+        this.currentHp = (uint)currentHp;
+        this.atk = (uint)atk;
+        this.def = (uint)def;
+        this.wis = (uint)wis;
+        this.dex = (uint)dex;
+        this.mdef = (uint)mdef;
+    }
+
+    public PlayerRecord(int level, int hp, int currentHp, int atk, int def, int wis, int dex, int mdef)
+    {
+        this.level = (uint)level;
+        this.hp = (uint)hp;
+        this.currentHp = (uint)currentHp;
+        this.atk = (uint)atk;
+        this.def = (uint)def;
+        this.wis = (uint)wis;
+        this.dex = (uint)dex;
+        this.mdef = (uint)mdef;
     }
 }

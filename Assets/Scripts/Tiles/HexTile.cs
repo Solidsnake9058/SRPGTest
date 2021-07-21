@@ -50,11 +50,6 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         return m_Hex.PositionSqr();
     }
 
-    public static Vector3 HexTilePos(float x, float y)
-    {
-        return new Vector3(((2 * x) - y) / 2.0f, 0, -y);
-    }
-
     public readonly static Vector2[] m_CubeDirections = { new Vector2(1, 0), new Vector2(1, -1), new Vector2(0, -1), new Vector2(-1, 0), new Vector2(-1, 1), new Vector2(0, 1) };
 
     public TileXml CreateTileXml()
@@ -84,6 +79,14 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     private void GenerateNeighbors()
     {
         m_Neighbors = new List<HexTile>();
+        for (int i = 0; i < 6; i++)
+        {
+            HexTile tile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex.HexNeighbor(i));
+            if (tile != null)
+            {
+                m_Neighbors.Add(tile);
+            }
+        }
 
         //[+1,0][-1,0][0,+1][0,-1][+1,-1][-1,+1]
         for (int i = 0; i < 6; i++)
@@ -96,7 +99,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             }
             if (SceneManager.GetActiveScene().name == "GameScene")
             {
-                m_Neighbors.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+                //m_Neighbors.Add(GameMidiator.m_Instance.m_StageMapManager.m_MapHex[(int)n.y][(int)n.x]);
             }
             else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
             {
@@ -137,7 +140,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public void SetHightLight(bool isHighLight, bool isAtk)
     {
         m_IsHighLight = isHighLight;
-        m_Visual.material.color = m_IsHighLight ? (isAtk ? GameManager.instance.attackTileColor : GameManager.instance.moveTileColor) : Color.white;
+        m_Visual.material.color = m_IsHighLight ? (isAtk ? GameManager.m_Instance.attackTileColor : GameManager.m_Instance.moveTileColor) : Color.white;
     }
 
 
@@ -207,7 +210,22 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             }
             if (SceneManager.GetActiveScene().name == "GameScene")
             {
-                cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+                cubeRingTile.Add(GameMidiator.m_Instance.m_StageMapManager.m_MapHex[(int)n.y][(int)n.x]);
+            }
+        }
+        return cubeRingTile;
+    }
+
+    public static List<HexTile> GetCubeRingTile(HexCoord center, int radius)
+    {
+        List<HexTile> cubeRingTile = new List<HexTile>();
+        List<HexCoord> cubeRing = HexCoord.CubeRing(center, radius);
+        for (int i = 0; i < cubeRing.Count; i++)
+        {
+            HexTile tile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(cubeRing[i]);
+            if (tile != null)
+            {
+                cubeRingTile.Add(tile);
             }
         }
         return cubeRingTile;
@@ -228,7 +246,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             }
             if (SceneManager.GetActiveScene().name == "GameScene")
             {
-                cubeRingTile.Add(GameManager.instance.mapHex[(int)n.y][(int)n.x]);
+                cubeRingTile.Add(GameMidiator.m_Instance.m_StageMapManager.m_MapHex[(int)n.y][(int)n.x]);
             }
         }
         return cubeRingTile;
@@ -312,7 +330,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             GameObject container = transform.Find("Visuals").gameObject;
             SetType2D(m_TileType2D, m_SpritChestIndex + container.GetComponentInChildren<SpriteMetarial>().GetSpritesCount());
-            GameManager.instance.GetChest(m_Gold, m_ItemId, m_WeaponId);
+            GameManager.m_Instance.GetChest(m_Gold, m_ItemId, m_WeaponId);
             m_IsChestOpened = true;
             return true;
         }
@@ -350,47 +368,47 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             //}
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                if (GameManager.instance.menu.alpha == 0 && GameManager.instance.endTurnConfirm.alpha == 0)
+                if (GameManager.m_Instance.menu.alpha == 0 && GameManager.m_Instance.endTurnConfirm.alpha == 0)
                 {
-                    if (GameManager.instance.moving && !GameManager.instance.attacking)
+                    if (GameManager.m_Instance.moving && !GameManager.m_Instance.attacking)
                     {
-                        GameManager.instance.MoveCurrentPlayer(this);
+                        GameManager.m_Instance.MoveCurrentPlayer(this);
                     }
-                    else if (GameManager.instance.attacking)
+                    else if (GameManager.m_Instance.attacking)
                     {
-                        GameManager.instance.AttackWithCurrentPlayer(this);
+                        GameManager.m_Instance.AttackWithCurrentPlayer(this);
                     }
                     else
                     {
                         MenuType setType = MenuType.tileMenu;
                         Player player = null;
-                        GameManager.instance.SetPlayerIndex(-1);
-                        if (GameManager.instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
+                        GameManager.m_Instance.SetPlayerIndex(-1);
+                        if (GameManager.m_Instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
                         {
-                            player = GameManager.instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
+                            player = GameManager.m_Instance.enemyPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
                             setType = MenuType.playerDeadMenu;
                         }
                         else
                         {
-                            if (GameManager.instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
+                            if (GameManager.m_Instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).Count() > 0)
                             {
-                                player = GameManager.instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
+                                player = GameManager.m_Instance.userPlayers.Values.Where(x => x.gridPosition == m_GridPosition).FirstOrDefault();
                                 bool isShowAction = false;
                                 if (player.GetIsCanHeal())
                                 {
-                                    isShowAction = player.GetHealRange().Where(x => GameManager.instance.userPlayers.Values.Where(y => y.hp < y.maxHP && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
+                                    isShowAction = player.GetHealRange().Where(x => GameManager.m_Instance.userPlayers.Values.Where(y => y.m_Hp < y.m_MaxHP && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
                                 }
-                                isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.instance.enemyPlayers.Values.Where(y => y.hp > 0 && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
-                                setType = (player.hp > 0) ? (player.isActable ? (isShowAction ? (m_IsShop ? MenuType.playerShopMenu : MenuType.playerMenu) : (m_IsShop ? MenuType.playerMoveShopMenu : MenuType.playerMoveMenu)) : (m_IsShop ? MenuType.playerStandShopMenu : MenuType.playerStandMenu)) : MenuType.playerDeadMenu;
-                                GameManager.instance.SetPlayerIndex(player.playerIndex);
+                                isShowAction = isShowAction || player.GetAttackRange().Where(x => GameManager.m_Instance.enemyPlayers.Values.Where(y => y.m_Hp > 0 && y.gridPosition == x.m_GridPosition).Count() > 0).Count() > 0;
+                                setType = (player.m_Hp > 0) ? (player.m_IsActable ? (isShowAction ? (m_IsShop ? MenuType.playerShopMenu : MenuType.playerMenu) : (m_IsShop ? MenuType.playerMoveShopMenu : MenuType.playerMoveMenu)) : (m_IsShop ? MenuType.playerStandShopMenu : MenuType.playerStandMenu)) : MenuType.playerDeadMenu;
+                                GameManager.m_Instance.SetPlayerIndex(player.playerIndex);
                             }
                         }
 
                         if (player != null)
                         {
-                            GameManager.instance.SetPlayerStatusUI(player);
+                            GameManager.m_Instance.SetPlayerStatusUI(player);
                         }
-                        GameManager.instance.ShowMenu();
+                        GameManager.m_Instance.ShowMenu();
                         Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
                         //Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
                         Vector2 newSize = TileMenu.instance.SetMenu(setType);
@@ -403,16 +421,16 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
                 }
                 else
                 {
-                    if (!GameManager.instance.moving && !GameManager.instance.attacking)
+                    if (!GameManager.m_Instance.moving && !GameManager.m_Instance.attacking)
                     {
-                        GameManager.instance.DisableGroup(GameManager.instance.menu);
-                        GameManager.instance.RemoveHighlightTiles();
+                        GameManager.m_Instance.DisableGroup(GameManager.m_Instance.menu);
+                        GameMidiator.m_Instance.m_StageMapManager.RemoveHighlightTiles();
                     }
                 }
             }
             else if (eventData.button == PointerEventData.InputButton.Right)
             {
-                GameManager.instance.CancelAction();
+                GameManager.m_Instance.CancelAction();
             }
         }
         else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
@@ -516,67 +534,6 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
     }
 
-    private void OnMouseEnter()
-    {
-        //if (SceneManager.GetActiveScene().name == "MapCreatorScene" && Input.GetMouseButton(0))
-        //{
-        //	setType(MapCreatorManager.instance.pallerSelection);
-        //}
-    }
-
-    private void OnMouseExit()
-    {
-        //transform.GetComponent<Renderer>().material.color = Color.white;
-
-    }
-
-    //  private void OnMouseDown()
-    //  {
-    //if (SceneManager.GetActiveScene().name == "GameScene")
-    //{
-    //	if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].moving)
-    //	{
-    //              GameManager.instance.moveCurrentPlayer(this);
-    //          }
-    //	else if (GameManager.instance.players[GameManager.instance.currentPlayerIndex].attacking)
-    //	{
-    //              GameManager.instance.attackWithCurrentPlayer(this);
-    //          }
-    //	else
-    //	{
-    //		//impassible = impassible ? false : true;
-    //		//if (impassible)
-    //		//{
-    //		//	transform.GetComponentInChildren<Renderer>().material.color = new Color(0.5f, 0.5f, 0.0f);
-    //		//}
-    //		//else
-    //		//{
-    //		//	transform.GetComponentInChildren<Renderer>().material.color = Color.white;
-    //		//}
-    //	}
-    //}
-    //else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
-    //{
-    //          //setType(MapCreatorManager.instance.pallerSelection);
-
-    //          if (menu.alpha==0)
-    //          {
-    //              menu.alpha = 1;
-    //              menu.interactable = true;
-    //              menu.blocksRaycasts = true;
-    //              Vector3 pos = Camera.main.WorldToScreenPoint(transform.position);
-    //              Debug.Log("(" + pos.x + "," + pos.y + "," + pos.z + ")");
-    //              menuImage.rectTransform.position = mainCamera.WorldToScreenPoint(transform.position);
-    //          }
-    //          else
-    //          {
-    //              menu.alpha = 0;
-    //              menu.interactable = false;
-    //              menu.blocksRaycasts = false;
-    //          }
-    //      }
-    //  }
-
     public void SetType(TileType t)
     {
         m_TileType = t;
@@ -657,8 +614,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             Destroy(container.transform.GetChild(i).gameObject);
         }
-        GameObject newVisual = (GameObject)Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation);
-        newVisual.transform.parent = container.transform;
+        GameObject newVisual = Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation, container.transform);
         newVisual.GetComponent<SpriteMetarial>().SetSprite(m_SpriteIndex);
     }
 
@@ -732,7 +688,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
 
         /// <summary>
-        /// Unity position of this hex for cube tiles. Form left top.
+        /// Unity position of this hex for cube tiles. Form left upper.
         /// </summary>
         /// <returns></returns>
         public Vector3 PositionSqr()
@@ -809,26 +765,26 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             {
                 if (m_R < 0)
                 {
-                    if (m_Q > -m_R) return this + neighbors[CCW ? 1 : 4];
-                    if (m_Q < -m_R) return this + neighbors[CCW ? 0 : 3];
-                    return this + neighbors[CCW ? 1 : 3];
+                    if (m_Q > -m_R) return this + m_AxialDirections[CCW ? 1 : 4];
+                    if (m_Q < -m_R) return this + m_AxialDirections[CCW ? 0 : 3];
+                    return this + m_AxialDirections[CCW ? 1 : 3];
                 }
-                if (m_R > 0) return this + neighbors[CCW ? 2 : 5];
-                return this + neighbors[CCW ? 2 : 4];
+                if (m_R > 0) return this + m_AxialDirections[CCW ? 2 : 5];
+                return this + m_AxialDirections[CCW ? 2 : 4];
             }
             if (m_Q < 0)
             {
                 if (m_R > 0)
                 {
-                    if (m_R > -m_Q) return this + neighbors[CCW ? 3 : 0];
-                    if (m_R < -m_Q) return this + neighbors[CCW ? 4 : 1];
-                    return this + neighbors[CCW ? 4 : 0];
+                    if (m_R > -m_Q) return this + m_AxialDirections[CCW ? 3 : 0];
+                    if (m_R < -m_Q) return this + m_AxialDirections[CCW ? 4 : 1];
+                    return this + m_AxialDirections[CCW ? 4 : 0];
                 }
-                if (m_R < 0) return this + neighbors[CCW ? 5 : 2];
-                return this + neighbors[CCW ? 5 : 1];
+                if (m_R < 0) return this + m_AxialDirections[CCW ? 5 : 2];
+                return this + m_AxialDirections[CCW ? 5 : 1];
             }
-            if (m_R > 0) return this + neighbors[CCW ? 3 : 5];
-            if (m_R < 0) return this + neighbors[CCW ? 0 : 2];
+            if (m_R > 0) return this + m_AxialDirections[CCW ? 3 : 5];
+            if (m_R < 0) return this + m_AxialDirections[CCW ? 0 : 2];
             return this;
         }
 
@@ -1169,7 +1125,7 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         /// </remarks>
         /// <param name="index">Index of the desired neighbor vector. Cyclically constrained 0..5.</param>
         public static HexCoord NeighborVector(int index)
-        { return neighbors[NormalizeRotationIndex(index, 6)]; }
+        { return m_AxialDirections[NormalizeRotationIndex(index, 6)]; }
 
         /// <summary>
         /// Enumerate the six neighbor vectors.
@@ -1182,9 +1138,9 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             first = NormalizeRotationIndex(first, 6);
             for (int i = first; i < 6; i++)
-                yield return neighbors[i];
+                yield return m_AxialDirections[i];
             for (int i = 0; i < first; i++)
-                yield return neighbors[i];
+                yield return m_AxialDirections[i];
         }
 
         /// <summary>
@@ -1387,14 +1343,14 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             };
             Vector2 pos = results[0].Position();
             if (pos.y - 0.5f >= min.y)
-                results[0] += neighbors[4];
+                results[0] += m_AxialDirections[4];
             else if (pos.x >= min.x)
-                results[0] += neighbors[3];
+                results[0] += m_AxialDirections[3];
             pos = results[1].Position();
             if (pos.y + 0.5f <= max.y)
-                results[1] += neighbors[1];
+                results[1] += m_AxialDirections[1];
             else if (pos.x <= max.x)
-                results[1] += neighbors[0];
+                results[1] += m_AxialDirections[0];
             return results;
         }
 
@@ -1410,6 +1366,8 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         { return new HexCoord(a.m_Q + b.m_Q, a.m_R + b.m_R); }
         public static HexCoord operator -(HexCoord a, HexCoord b)
         { return new HexCoord(a.m_Q - b.m_Q, a.m_R - b.m_R); }
+        public static HexCoord operator *(HexCoord a, int b)
+        { return new HexCoord(a.m_Q * b, a.m_R * b); }
         public static bool operator ==(HexCoord a, HexCoord b)
         { return a.m_Q == b.m_Q && a.m_R == b.m_R; }
         public static bool operator !=(HexCoord a, HexCoord b)
@@ -1421,6 +1379,43 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             return m_Q & (int)0xFFFF | m_R << 16;
         }
+
+        public static HexCoord HexDirection(int direction)
+        {
+            return m_AxialDirections[direction];
+        }
+
+        public static HexCoord HexNeighbor(HexCoord hex, int direction)
+        {
+            var dir = HexDirection(direction);
+            return hex + dir;
+        }
+
+        public HexCoord HexNeighbor(int direction)
+        {
+            var dir = HexDirection(direction);
+            return this + dir;
+        }
+
+        public static List<HexCoord> CubeRing(HexCoord center, int radius)
+        {
+            List<HexCoord> results = new List<HexCoord>();
+            if (radius <= 0)
+            {
+                return null;
+            }
+            var cube = center + HexDirection(4) * radius;
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < radius; j++)
+                {
+                    results.Add(cube);
+                    cube = HexNeighbor(cube, i);
+                }
+            }
+            return results;
+        }
+
 
         /*
 		 * Constants
@@ -1437,13 +1432,13 @@ public class HexTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         public static readonly float SQRT3 = Mathf.Sqrt(3);
 
         // The directions array. These are private to prevent overwriting elements.
-        static readonly HexCoord[] neighbors = {
+        static readonly HexCoord[] m_AxialDirections = {
             new HexCoord(1, 0),
-            new HexCoord(0, 1),
-            new HexCoord(-1, 1),
-            new HexCoord(-1, 0),
+            new HexCoord(1, -1),
             new HexCoord(0, -1),
-            new HexCoord(1, -1)
+            new HexCoord(-1, 0),
+            new HexCoord(-1, 1),
+            new HexCoord(0, 1),
         };
 
         // Corner locations in XY space. Private for same reason as neighbors.

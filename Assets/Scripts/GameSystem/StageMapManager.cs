@@ -11,7 +11,7 @@ public class StageMapManager : IGameItem
     public List<List<HexTile>> m_MapHex { get; private set; }
 
 
-    public void CreateStageMap(int mapSizeX, int mapSizeY, Dictionary<int, Dictionary<int, TileXml>> tileDataMaps)
+    public void CreateStageMap(MapContainer mapContainer)
     {
         Vector3 connerPointA = Vector3.zero;
         Vector3 connerPointB = Vector3.zero;
@@ -20,19 +20,19 @@ public class StageMapManager : IGameItem
 
         m_MapHex = new List<List<HexTile>>();
         ////Hexagons
-        for (int j = 0; j < mapSizeY; j++)
+        for (int j = 0; j < mapContainer.sizeY; j++)
         {
             int offset = j >> 1;
             List<HexTile> row = new List<HexTile>();
-            for (int i = -offset; i < mapSizeX - offset; i++)
+            for (int i = -offset; i < mapContainer.sizeX - offset; i++)
             {
-                if ((j & 1) == 1 && i == mapSizeX - offset - 1)
+                if ((j & 1) == 1 && i == mapContainer.sizeX - offset - 1)
                 {
                     continue;
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, m_MapTransform);
-                TileXml tileData = tileDataMaps[i][j];
-                tile.TileInitialize(tileData, 0, i, j, mapSizeX, mapSizeY);
+                TileXml tileData = mapContainer.m_TileDataMap[i][j];
+                tile.TileInitialize(tileData, 0, i, j, mapContainer.sizeX, mapContainer.sizeY);
                 row.Add(tile);
                 if (j == 0)
                 {
@@ -40,7 +40,7 @@ public class StageMapManager : IGameItem
                     {
                         connerPointA = tile.HexTilePos();
                     }
-                    else if (i == mapSizeX - offset - 1)
+                    else if (i == mapContainer.sizeX - offset - 1)
                     {
                         connerPointB = tile.HexTilePos();
                     }
@@ -48,7 +48,7 @@ public class StageMapManager : IGameItem
             }
             m_MapHex.Add(row);
         }
-        connerPointD = new Vector3(0, 0, -mapSizeY + 1);
+        connerPointD = new Vector3(0, 0, -mapContainer.sizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
         ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
@@ -88,7 +88,11 @@ public class StageMapManager : IGameItem
 
     public HexTile GetMapTile(HexTile.HexCoord hex)
     {
-        return m_MapHex[hex.m_R][hex.m_Offset];
+        if (hex.m_R < m_MapHex.Count && hex.m_Offset < m_MapHex[hex.m_R].Count)
+        {
+            return m_MapHex[hex.m_R][hex.m_Offset];
+        }
+        return null;
     }
 
     public HexTile GetMapTile(int x, int y)
@@ -101,5 +105,30 @@ public class StageMapManager : IGameItem
     {
         HexTile.HexCoord hex = new HexTile.HexCoord((int)x, (int)y);
         return GetMapTile(hex);
+    }
+
+    public Vector3[] GetPathPosition(List<HexTile> path)
+    {
+        Vector3[] points = new Vector3[path.Count];
+        for (int i = 0; i < path.Count; i++)
+        {
+            points[i] = path[i].HexTilePos();
+        }
+        return points;
+    }
+
+    public HexTilePath FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex)
+    {
+        return HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexTile.HexCoord[0], false);
+    }
+
+    public Vector3[] FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex, bool ignorePlayer)
+    {
+        return GetPathPosition(HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexTile.HexCoord[0], ignorePlayer).listOfTiles);
+    }
+
+    public Vector3[] FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex, HexTile.HexCoord[] occupied)
+    {
+        return GetPathPosition(HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), occupied, false).listOfTiles);
     }
 }

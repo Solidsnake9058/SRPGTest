@@ -91,19 +91,19 @@ public class BattleManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        battleData = new BattleSendData("ランティア", "魔軍隊長", "", "平原", "村", false, false, true, false, 10, 50, 48, 48,16,36,36,16,"",72,16,0,"ナイト",null,null);
+        battleData = new BattleSendData("ランティア", "魔軍隊長", "", "平原", "村", false, false, true, false, 10, 50, 48, 48, 16, 36, 36, 16, "", 72, 16, 0, "ナイト", null, null);
 
-        battleData.playerData = new PlayerRecord(44, 14, 8, 7, 12, 7);
-        battleData.lvUpData = new PlayerRecord(2, 1, 0, 1, 2, 0);
+        battleData.playerData = new PlayerRecord(44, 44, 14, 8, 7, 12, 7);
+        battleData.lvUpData = new PlayerRecord(2, 0, 1, 0, 1, 2, 0);
 
-        if (GameManager.instance != null)
+        if (GameManager.m_Instance != null)
         {
-            if (GameManager.instance.battleData != null && GameManager.instance.battleData != default(BattleSendData))
+            if (GameManager.m_Instance.battleData != null && GameManager.m_Instance.battleData != default(BattleSendData))
             {
-                battleData = GameManager.instance.battleData;
+                battleData = GameManager.m_Instance.battleData;
             }
         }
-        
+
         actor1.GetComponent<BattleActorController>().SetHP(battleData.attackerHP, battleData.attackerMaxHP, battleData.damageByTarget, battleData.attacker);
         actor2.GetComponent<BattleActorController>().SetHP(battleData.targetHP, battleData.targetMaxHP, battleData.damageByAttacker, battleData.target);
 
@@ -122,7 +122,7 @@ public class BattleManager : MonoBehaviour
         isShowItem = !string.IsNullOrEmpty(battleData.getItem);
         isShowExp = battleData.getExp > 0;
         isShowLevel = isShowLevelUp = (battleData.lvUpData != null && battleData.lvUpData != default(PlayerRecord));
-        
+
     }
 
     // Update is called once per frame

@@ -40,7 +40,7 @@ public class UserPlayer : Player
 
     public override void TurnEnd()
     {
-        HexTile tile = GameManager.instance.GetMapTile(m_Hex);
+        HexTile tile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex);
         //if (tile.m_IsHaveChest && !tile.m_IsChestOpened)
         {
             tile.OpenChest();
@@ -72,16 +72,19 @@ public class UserPlayer : Player
         //}
 
         base.TurnUpdate();
-        GameManager.instance.ShowConfirmMenu();
 
     }
 
+    protected override void MoveToPointAction()
+    {
+        GameManager.m_Instance.ShowConfirmMenu();
+    }
 
 
     public override PlayerRecord LevelUp()
     {
         //hp atk def dex wis mdef
-        if (level >= 20)
+        if (m_Level >= 20)
         {
             return null;
         }
@@ -101,7 +104,7 @@ public class UserPlayer : Player
         int addWis = 0;
         int addMDef = 0;
 
-        level++;
+        m_Level++;
         int addValue = 0;
         for (int i = 0; i < upCount; i++)
         {
@@ -109,46 +112,46 @@ public class UserPlayer : Player
             switch (lvprops[i])
             {
                 case LevelProp.hp:
-                    if (maxHP + addValue > 150)
+                    if (m_MaxHP + addValue > 150)
                     {
-                        addValue = 150 - maxHP;
+                        addValue = 150 - m_MaxHP;
                     }
-                    maxHP += addHP = addValue;
+                    m_MaxHP += addHP = addValue;
                     break;
                 case LevelProp.atk:
-                    if (atk + addValue > 45)
+                    if (m_Atk + addValue > 45)
                     {
-                        addValue = 45 - atk;
+                        addValue = 45 - m_Atk;
                     }
-                    atk += addAtk = addValue;
+                    m_Atk += addAtk = addValue;
                     break;
                 case LevelProp.def:
-                    if (atk + addValue > 45)
+                    if (m_Atk + addValue > 45)
                     {
-                        addValue = 45 - def;
+                        addValue = 45 - m_Def;
                     }
-                    def += addDef = addValue;
+                    m_Def += addDef = addValue;
                     break;
                 case LevelProp.dex:
-                    if (atk + addValue > 45)
+                    if (m_Atk + addValue > 45)
                     {
-                        addValue = 45 - dex;
+                        addValue = 45 - m_Dex;
                     }
-                    dex += addDex = addValue;
+                    m_Dex += addDex = addValue;
                     break;
                 case LevelProp.wis:
-                    if (atk + addValue > 45)
+                    if (m_Atk + addValue > 45)
                     {
-                        addValue = 45 - wis;
+                        addValue = 45 - m_Wis;
                     }
-                    wis += addWis = addValue;
+                    m_Wis += addWis = addValue;
                     break;
                 case LevelProp.mdef:
-                    if (atk + addValue > 45)
+                    if (m_Atk + addValue > 45)
                     {
-                        addValue = 45 - mdef;
+                        addValue = 45 - m_MDef;
                     }
-                    mdef += addMDef = addValue;
+                    m_MDef += addMDef = addValue;
                     break;
             }
             if (addValue == 0 && upCount <= (int)LevelProp.max)
@@ -157,7 +160,7 @@ public class UserPlayer : Player
             }
         }
 
-        return new PlayerRecord((uint)addHP, (uint)addAtk, (uint)addDef, (uint)addWis, (uint)addDex, (uint)addMDef);
+        return new PlayerRecord(addHP, 0, addAtk, addDef, addWis, addDex, addMDef);
     }
 
 }

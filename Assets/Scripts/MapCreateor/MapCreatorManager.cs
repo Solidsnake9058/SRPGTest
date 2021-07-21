@@ -162,7 +162,7 @@ public class MapCreatorManager : MonoBehaviour
     private List<Player> stagePlayer;
     private List<Player> actorPlayer;
     private List<PlayerRecord> scenarioActorPlayerRecords;
-    private List<Scenario> scenarios;
+    private List<Scenarion> scenarios;
     private List<ScenarioAction> scenarioActions;
     private Dictionary<int, string> dicItem;
     private Dictionary<int, string> dicWeapon;
@@ -1107,11 +1107,11 @@ public class MapCreatorManager : MonoBehaviour
 
     public void RemoveScenarioList(string id)
     {
-        Scenario temp = scenarios.Where(x => x.scenarioId.ToString() == id).FirstOrDefault();
+        Scenarion temp = scenarios.Where(x => x.scenarionId.ToString() == id).FirstOrDefault();
 
-        for (int i = 0; i < temp.scenarioActions.Count; i++)
+        for (int i = 0; i < temp.scenarionActions.Count; i++)
         {
-            List<Player> players = (temp.scenarioActions[i].createActors != null && temp.scenarioActions[i].createActors.Count > 0) ? actorPlayer.Where(x => temp.scenarioActions[i].createActors.Where(y => y.id == x.playerIndex).Count() > 0).ToList() : null;
+            List<Player> players = (temp.scenarionActions[i].createActors != null && temp.scenarionActions[i].createActors.Count > 0) ? actorPlayer.Where(x => temp.scenarionActions[i].createActors.Where(y => y.id == x.playerIndex).Count() > 0).ToList() : null;
             if (players != null)
             {
                 for (int j = 0; j < players.Count; j++)
@@ -1134,13 +1134,13 @@ public class MapCreatorManager : MonoBehaviour
         for (int i = 0; i < scenarios.Count; i++)
         {
             CreaterActorSelector temp = Instantiate(creatorScenarioSelectorPrefab, new Vector3(), Quaternion.identity, scenarioItemList).GetComponent<CreaterActorSelector>();
-            temp.SetActionName(scenarios[i].scenarioId, scenarios[i].scenarioType);
+            temp.SetActionName(scenarios[i].scenarionId, scenarios[i].scenarionType);
         }
     }
 
     public void AddScenario()
     {
-        int scenarioId = selectedScenarioId == -1 ? scenarios.Count > 0 ? scenarios.OrderBy(x => -x.scenarioId).FirstOrDefault().scenarioId + 1 : 0 : selectedScenarioId;
+        int scenarioId = selectedScenarioId == -1 ? scenarios.Count > 0 ? scenarios.OrderBy(x => -x.scenarionId).FirstOrDefault().scenarionId + 1 : 0 : selectedScenarioId;
         ScenarioType scenarioTypeValue = (ScenarioType)Enum.Parse(typeof(ScenarioType), scenarioType.options[scenarioType.value].text);
         ScenarioConditionType scenarioConditionTypeValue = (ScenarioConditionType)Enum.Parse(typeof(ScenarioConditionType), scenarioConditionType.options[scenarioConditionType.value].text);
         string userPlayerId = userPlayer.options[userPlayer.value].text.Split(',')[0];
@@ -1148,16 +1148,16 @@ public class MapCreatorManager : MonoBehaviour
 
         if (selectedScenarioId == -1 && (scenarioTypeValue == ScenarioType.Openning || scenarioTypeValue == ScenarioType.StageClear))
         {
-            if (scenarios.Count > 0 && scenarios.Where(x => x.scenarioType == scenarioTypeValue).Count() > 0)
+            if (scenarios.Count > 0 && scenarios.Where(x => x.scenarionType == scenarioTypeValue).Count() > 0)
             {
                 Debug.Log("Allow only Opening/StageClear scenario");
                 return;
             }
         }
-        Scenario scenario = new Scenario(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, isOnceEvent.isOn, scenarioActions);
+        Scenarion scenario = new Scenarion(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, isOnceEvent.isOn, scenarioActions);
         if (scenarioConditionTypeValue == ScenarioConditionType.BeforeBattle || scenarioConditionTypeValue == ScenarioConditionType.AfterBattle)
         {
-            scenario = new Scenario(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, Convert.ToInt32(userPlayerId), Convert.ToInt32(enemyPlayerId), isOnceEvent.isOn, scenarioActions);
+            scenario = new Scenarion(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, Convert.ToInt32(userPlayerId), Convert.ToInt32(enemyPlayerId), isOnceEvent.isOn, scenarioActions);
         }
 
         if (selectedScenarioId == -1)
@@ -1167,8 +1167,8 @@ public class MapCreatorManager : MonoBehaviour
         else
         {
             //update
-            scenario.scenarioId = selectedScenarioId;
-            List<Scenario> tempScenarios = scenarios.Where(x => x.scenarioId != selectedScenarioId).ToList();
+            scenario.scenarionId = selectedScenarioId;
+            List<Scenarion> tempScenarios = scenarios.Where(x => x.scenarionId != selectedScenarioId).ToList();
             tempScenarios.Add(scenario);
             scenarios.Clear();
             scenarios.AddRange(tempScenarios);
@@ -1180,7 +1180,7 @@ public class MapCreatorManager : MonoBehaviour
 
     public void LoadScenario(string id)
     {
-        Scenario scenario = scenarios.Where(x => x.scenarioId.ToString() == id).FirstOrDefault();
+        Scenarion scenario = scenarios.Where(x => x.scenarionId.ToString() == id).FirstOrDefault();
         if (scenario == null)
         {
             return;
@@ -1188,30 +1188,31 @@ public class MapCreatorManager : MonoBehaviour
         ResetScenario();
         selectedScenarioId = Convert.ToInt32(id);
         scenarioType.interactable = false;
-        scenarioType.value = scenarioType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioType), scenario.scenarioType));
+        scenarioType.value = scenarioType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioType), scenario.scenarionType));
         scenarioType.RefreshShownValue();
 
         scenarioConditionType.interactable = false;
-        scenarioConditionType.value = scenarioConditionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioConditionType), scenario.scenarioConditionType));
+        scenarioConditionType.value = scenarioConditionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioConditionType), scenario.scenarionConditionType));
         scenarioConditionType.RefreshShownValue();
 
         if (selectedScenarioId != -1)
         {
-            Scenario temp = scenarios.Where(x => x.scenarioId == selectedScenarioId).FirstOrDefault();
+            Scenarion temp = scenarios.Where(x => x.scenarionId == selectedScenarioId).FirstOrDefault();
             if (temp != null)
             {
-                for (int i = 0; i < temp.scenarioActions.Count; i++)
+                for (int i = 0; i < temp.scenarionActions.Count; i++)
                 {
-                    if (temp.scenarioActions[i].scenarioActionType == ScenarioActionType.CreateActor)
+                    if (temp.scenarionActions[i].scenarioActionType == ScenarioActionType.CreateActor)
                     {
-                        for (int j = 0; j < temp.scenarioActions[i].createActors.Count; j++)
+                        for (int j = 0; j < temp.scenarionActions[i].createActors.Count; j++)
                         {
-                            Vector3 pos = mapHex[Convert.ToInt32(temp.scenarioActions[i].createActors[j].locY)][Convert.ToInt32(temp.scenarioActions[i].createActors[j].locX) + (Convert.ToInt32(temp.scenarioActions[i].createActors[j].locY) >> 1)].HexTilePos();
+                            Vector3 pos = mapHex[Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY)][Convert.ToInt32(temp.scenarionActions[i].createActors[j].locX) + (Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY) >> 1)].HexTilePos();
                             Player player = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<Player>();
-                            player.gridPosition = new Vector2(Convert.ToInt32(temp.scenarioActions[i].createActors[j].locX), Convert.ToInt32(temp.scenarioActions[i].createActors[j].locY));
-                            player.playerIndex = temp.scenarioActions[i].createActors[j].id;
-                            player.gameObject.name = temp.scenarioActions[i].createActors[j].id.ToString();
-                            player.SetPivot(temp.scenarioActions[i].createActors[j].scenarioActorPivotType);
+                            player.gridPosition = new Vector2(Convert.ToInt32(temp.scenarionActions[i].createActors[j].locX), Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY));
+                            player.playerIndex = temp.scenarionActions[i].createActors[j].id;
+                            player.gameObject.name = temp.scenarionActions[i].createActors[j].id.ToString();
+                            player.SetPivot(temp.scenarionActions[i].createActors[j].scenarioActorPivotType);
+                            player.SetPivot();
                             player.SetPlayerModel();
                             actorPlayer.Add(player);
                         }
@@ -1220,7 +1221,7 @@ public class MapCreatorManager : MonoBehaviour
             }
         }
 
-        scenarioActions = scenario.scenarioActions;
+        scenarioActions = scenario.scenarionActions;
         ReloadActionList();
         SetActorPos();
     }
@@ -1462,6 +1463,7 @@ public class MapCreatorManager : MonoBehaviour
             player.playerIndex = actorId;
             player.gameObject.name = actorId.ToString();
             player.SetPivot(tempPivot);
+            player.SetPivot();
             player.SetPlayerModel();
             actorPlayer.Add(player);
         }
@@ -1525,6 +1527,7 @@ public class MapCreatorManager : MonoBehaviour
                     player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].createActors[j].locX), Convert.ToInt32(scenarioActions[i].createActors[j].locY));
                     player.transform.position = pos;
                     player.SetPivot(scenarioActions[i].createActors[j].scenarioActorPivotType);
+                    player.SetPivot();
                 }
             }
             else if (scenarioActions[i].scenarioActionType == ScenarioActionType.ControlActor)
@@ -1535,6 +1538,7 @@ public class MapCreatorManager : MonoBehaviour
                 player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].targetMoveTile.m_Q), Convert.ToInt32(scenarioActions[i].targetMoveTile.m_R));
                 player.transform.position = pos;
                 player.SetPivot(scenarioActions[i].actorPivot);
+                player.SetPivot();
             }
         }
     }
@@ -1583,7 +1587,7 @@ public class MapCreatorManager : MonoBehaviour
         shopItemList = new List<int>();
         shopWeaponList = new List<int>();
 
-        scenarios = new List<Scenario>();
+        scenarios = new List<Scenarion>();
         actorPlayer = new List<Player>();
 
         stageClearCondition = new List<StageClearCondition>();
@@ -1695,7 +1699,7 @@ public class MapCreatorManager : MonoBehaviour
         shopWeaponList = container.shopWeaponList;
         SetShopList();
 
-        scenarios = container.scenarioList;
+        scenarios = container.scenarionList;
         actorPlayer = new List<Player>();
 
         stageClearCondition = container.stageClearConditionList;

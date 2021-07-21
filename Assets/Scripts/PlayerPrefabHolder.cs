@@ -9,6 +9,8 @@ public class PlayerPrefabHolder : MonoBehaviour {
     public Player m_UserPlayerPrefab;
     public Player m_EnemyPlayerPrefab;
 
+    public ActorPlayer m_ActorPlayerPrefab;
+
     public GameObject playerModelPrefab01;
 
     private void Awake()

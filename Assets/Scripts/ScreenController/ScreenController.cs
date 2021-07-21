@@ -228,7 +228,7 @@ public class ScreenController : MonoBehaviour
 
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
-            GameManager.instance.cameraPosition = newPoint;
+            GameManager.m_Instance.cameraPosition = newPoint;
         }
     }
 

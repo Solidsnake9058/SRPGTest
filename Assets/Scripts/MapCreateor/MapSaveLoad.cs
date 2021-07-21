@@ -67,7 +67,7 @@ public class MapContainer
 
     [XmlArray("scenarioList")]
     [XmlArrayItem("scenarioList")]
-    public List<Scenario> scenarioList = new List<Scenario>();
+    public List<Scenarion> scenarionList = new List<Scenarion>();
 
     [XmlArray("stageClearConditionList")]
     [XmlArrayItem("stageClearConditionList")]
@@ -98,7 +98,7 @@ public static class MapSaveLoad
         {
             for (int j = 0; j < map[i].Count; j++)
             {
-                tiles.Add(MapSaveLoad.CreateTileXml(map[i][j]));
+                tiles.Add(CreateTileXml(map[i][j]));
             }
         }
 
@@ -110,7 +110,7 @@ public static class MapSaveLoad
         };
     }
 
-    public static MapContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenario> scenarioList, List<StageClearCondition> stageClearConditionList)
+    public static MapContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenarion> scenarioList, List<StageClearCondition> stageClearConditionList)
     {
         List<TileXml> tiles = new List<TileXml>();
 
@@ -131,7 +131,7 @@ public static class MapSaveLoad
             enemyPlayerRecords = enemyPlayerRecords,
             shopItemList = shopItemList,
             shopWeaponList = shopWeaponList,
-            scenarioList = scenarioList,
+            scenarionList = scenarioList,
             stageClearConditionList = stageClearConditionList
         };
     }

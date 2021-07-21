@@ -59,12 +59,12 @@ public class UnitListUI : IGameUISystem
         for (int i = 0; i < players.Count; i++)
         {
             Player player = players[i];
-            if (isSkipDead && player.hp <= 0)
+            if (isSkipDead && player.m_Hp <= 0)
             {
                 continue;
             }
             CharacterSelection item = Instantiate(m_CharacterSelectionPrefab, content, false);
-            item.SetText(player.playerName, m_GameManager.GetRace(player.race).name, player.level, player.hp, player.maxHP, player.isActable, player.transform.position);
+            item.SetText(player.m_PlayerName, m_GameManager.GetRace(player.m_Race).name, player.m_Level, player.m_Hp, player.m_MaxHP, player.m_IsActable, player.transform.position);
             item.SetClickEvent(HideUI);
             playerList.Add(item);
         }

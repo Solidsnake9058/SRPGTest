@@ -28,13 +28,13 @@ public class PlayerUI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!GameManager.instance.GetIsWaitingBattle())
+        if (!GameManager.m_Instance.GetIsWaitingBattle())
         {
             transform.position = player.transform.position + new Vector3(0, uiHeight, 0);
-            playerHP.fillAmount = player.hp / (float)player.maxHP;
-            playerHPText.text = string.Format("{0}/{1}", player.hp, player.maxHP);
-            playerEnable.enabled = !player.isActable;
-            playerEnable.text = player.hp > 0 ? "<color=lightblue>E</color>" : "<color=red>D</color>";
+            playerHP.fillAmount = player.m_Hp / (float)player.m_MaxHP;
+            playerHPText.text = string.Format("{0}/{1}", player.m_Hp, player.m_MaxHP);
+            playerEnable.enabled = !player.m_IsActable;
+            playerEnable.text = player.m_Hp > 0 ? "<color=lightblue>E</color>" : "<color=red>D</color>";
         }
     }
 

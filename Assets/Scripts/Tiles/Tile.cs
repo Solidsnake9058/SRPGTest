@@ -35,27 +35,27 @@ public class Tile : MonoBehaviour
         if (gridPosition.y > 0)
         {
             Vector2 n = new Vector2(gridPosition.x, gridPosition.y - 1);
-            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameMidiator.m_Instance.m_StageMapManager.m_Map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
         //down
-        if (gridPosition.y < GameManager.instance.mapSizeY - 1)
+        if (gridPosition.y < GameManager.m_Instance.mapSizeY - 1)
         {
             Vector2 n = new Vector2(gridPosition.x, gridPosition.y + 1);
-            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameMidiator.m_Instance.m_StageMapManager.m_Map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //left
         if (gridPosition.x > 0)
         {
             Vector2 n = new Vector2(gridPosition.x - 1, gridPosition.y);
-            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameMidiator.m_Instance.m_StageMapManager.m_Map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
         //right
-        if (gridPosition.x < GameManager.instance.mapSizeX - 1)
+        if (gridPosition.x < GameManager.m_Instance.mapSizeX - 1)
         {
             Vector2 n = new Vector2(gridPosition.x + 1, gridPosition.y);
-            neighbors.Add(GameManager.instance.map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
+            neighbors.Add(GameMidiator.m_Instance.m_StageMapManager.m_Map[(int)Mathf.Round(n.x)][(int)Mathf.Round(n.y)]);
         }
 
     }

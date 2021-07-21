@@ -6,14 +6,20 @@ using UnityEngine.EventSystems;
 
 public class AIPlayer : Player
 {
-
-    // Use this for initialization
-    void Start()
+    public override void SetPlayerValue(PlayerRecord playerRecord, CharacterTemplate playerData)
     {
-        //SetPlayerModel();
+        base.SetPlayerValue(playerRecord, playerData);
+        CharacterLevelTemplate playerLvData = playerData.GetCharacterLevelData((int)playerRecord.level);
+        m_Level = (int)playerLvData.level;
+        m_Exp = (int)playerLvData.exp;
+        m_Hp = m_MaxHP = (int)playerLvData.hp;
+        m_Gold = (int)playerLvData.gold;
+        m_EquipWeapon = playerLvData.equipWeapon;
+        m_EnemyAIType = playerRecord.aiType;
+        m_SearchRange = playerRecord.searchRange;
+        _IsEnemy = true;
     }
 
-    // Update is called once per frame
     public override void Update()
     {
         //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
@@ -24,7 +30,7 @@ public class AIPlayer : Player
         //{
         //    transform.GetComponent<Renderer>().material.color = Color.white;
         //}
-        if (hp <= 0)
+        if (m_Hp <= 0)
         {
             HidePlayer();
         }
@@ -55,18 +61,18 @@ public class AIPlayer : Player
         base.TurnUpdate();
 
         {
-            GameManager.instance.isSetCamera = true;
+            GameManager.m_Instance.isSetCamera = true;
 
             bool isGoToMove = false;
 
             //priority queue
-            List<HexTile> attackTilesDirect = HexTile.GetCubeRingTile(gridPosition, 1, m_MapSizeX, m_MapSizeY);
-            List<HexTile> attackTilesIndirect = HexTile.GetCubeRingTile(gridPosition, 2, m_MapSizeX, m_MapSizeY);
+            List<HexTile> attackTilesDirect = HexTile.GetCubeRingTile(m_Hex, 1);
+            List<HexTile> attackTilesIndirect = HexTile.GetCubeRingTile(m_Hex, 2);
 
-            List<HexTile> moveRange = HexTileHighlight.FindHighlight(GameManager.instance.GetMapTile(m_Hex), movementPerActionPoint, false);
-            moveRange = moveRange.Where(x => (GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values)).Where(y => y.gridPosition == x.m_GridPosition).Count() == 0).ToList();
-            List<HexTile> moveRangeBySearchRange = HexTileHighlight.FindHighlight(GameManager.instance.GetMapTile(m_Hex), searchRange, false);
-            moveRangeBySearchRange = moveRangeBySearchRange.Where(x => (GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values)).Where(y => y.gridPosition == x.m_GridPosition).Count() == 0).ToList();
+            List<HexTile> moveRange = HexTileHighlight.FindHighlight(GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex), m_MovementPerActionPoint, false);
+            moveRange = moveRange.Where(x => (GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values)).Where(y => y.gridPosition == x.m_GridPosition).Count() == 0).ToList();
+            List<HexTile> moveRangeBySearchRange = HexTileHighlight.FindHighlight(GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex), m_SearchRange, false);
+            moveRangeBySearchRange = moveRangeBySearchRange.Where(x => (GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values)).Where(y => y.gridPosition == x.m_GridPosition).Count() == 0).ToList();
 
             List<HexTile> attackTilesInRange = new List<HexTile>();// HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], attackRange, true);
             //List<HexTile> moveToAttackTilesInRange = HexTileHighlight.FindHighlight(GameManager.instance.mapHex[(int)mapHexIndex.y][(int)mapHexIndex.x], (int)(movementPerActionPoint + attackRange), true);
@@ -95,7 +101,7 @@ public class AIPlayer : Player
             //Get player who cannot be counter in range
             if (directAtk > 0)
             {
-                List<Player> temp = attackTilesDirect.Select(x => GameManager.instance.userPlayers.Values.Where(y => y.hp > 0 && y.gridPosition == x.m_GridPosition).FirstOrDefault()).ToList();
+                List<Player> temp = attackTilesDirect.Select(x => GameManager.m_Instance.userPlayers.Values.Where(y => y.m_Hp > 0 && y.gridPosition == x.m_GridPosition).FirstOrDefault()).ToList();
                 temp.RemoveAll(x => x == null);
                 if (temp.Count > 0)
                 {
@@ -107,7 +113,7 @@ public class AIPlayer : Player
 
             if (indirectAtk > 0)
             {
-                List<Player> temp = attackTilesIndirect.Select(x => GameManager.instance.userPlayers.Values.Where(y => y.hp > 0 && y.gridPosition == x.m_GridPosition).FirstOrDefault()).ToList();
+                List<Player> temp = attackTilesIndirect.Select(x => GameManager.m_Instance.userPlayers.Values.Where(y => y.m_Hp > 0 && y.gridPosition == x.m_GridPosition).FirstOrDefault()).ToList();
                 temp.RemoveAll(x => x == null);
                 if (temp.Count > 0)
                 {
@@ -120,14 +126,14 @@ public class AIPlayer : Player
             Player opponent = null;
             if (opppnetsNotCanBeCount.Count > 0)
             {
-                opponent = opppnetsNotCanBeCount.OrderBy(x => x.hp).FirstOrDefault();
+                opponent = opppnetsNotCanBeCount.OrderBy(x => x.m_Hp).FirstOrDefault();
             }
 
             if (opponent != null && opponent != default(Player))
             {
-                GameManager.instance.HighlightTileAt(gridPosition, GameManager.instance.attackTileColor, attackTilesInRange);
-                GameManager.instance.AttackWithCurrentPlayer(GameManager.instance.GetMapTile(opponent.m_Hex));
-                isAttackable = false;
+                GameManager.m_Instance.HighlightTileAt(gridPosition, GameManager.m_Instance.attackTileColor, attackTilesInRange);
+                GameManager.m_Instance.AttackWithCurrentPlayer(GameMidiator.m_Instance.m_StageMapManager.GetMapTile(opponent.m_Hex));
+                m_IsAttackable = false;
             }
             else
             {
@@ -137,49 +143,49 @@ public class AIPlayer : Player
                 //Get all of players that cannot be counter
                 if (directAtk > 0)
                 {
-                    List<Player> tempAll = GameManager.instance.userPlayers.Values.Where(x => x.hp > 0).ToList();
+                    List<Player> tempAll = GameManager.m_Instance.userPlayers.Values.Where(x => x.m_Hp > 0).ToList();
                     List<Player> temp = tempAll.Where(x => !x.GetIsCanAttack(true)).ToList();
                     opppnetsNotCanBeCount.AddRange(temp);
 
                     foreach (var p in temp)
                     {
-                        opppnetsNotCanBeCountDirect.AddRange(HexTile.GetCubeRingTile(p.gridPosition, 1, m_MapSizeX, m_MapSizeY).Except(opppnetsNotCanBeCountDirect));
+                        opppnetsNotCanBeCountDirect.AddRange(HexTile.GetCubeRingTile(p.m_Hex, 1).Except(opppnetsNotCanBeCountDirect));
                     }
-                    opppnetsNotCanBeCountDirect.RemoveAll(x => GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values.Where(z => z.hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
+                    opppnetsNotCanBeCountDirect.RemoveAll(x => GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values.Where(z => z.m_Hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
 
                     foreach (var p in tempAll)
                     {
-                        opppnetsCanBeAttackDirect.AddRange(HexTile.GetCubeRingTile(p.gridPosition, 1, m_MapSizeX, m_MapSizeY).Except(opppnetsCanBeAttackDirect));
+                        opppnetsCanBeAttackDirect.AddRange(HexTile.GetCubeRingTile(p.m_Hex, 1).Except(opppnetsCanBeAttackDirect));
                     }
-                    opppnetsCanBeAttackDirect.RemoveAll(x => GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values.Where(z => z.hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
+                    opppnetsCanBeAttackDirect.RemoveAll(x => GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values.Where(z => z.m_Hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
 
                 }
                 if (indirectAtk > 0)
                 {
-                    List<Player> tempAll = GameManager.instance.userPlayers.Values.Where(x => x.hp > 0).ToList();
+                    List<Player> tempAll = GameManager.m_Instance.userPlayers.Values.Where(x => x.m_Hp > 0).ToList();
                     List<Player> temp = tempAll.Where(x => !x.GetIsCanAttack(true)).ToList();
                     opppnetsNotCanBeCount.AddRange(temp);
 
                     foreach (var p in temp)
                     {
-                        opppnetsNotCanBeCountIndirect.AddRange(HexTile.GetCubeRingTile(p.gridPosition, 2, m_MapSizeX, m_MapSizeY).Except(opppnetsNotCanBeCountIndirect));
+                        opppnetsNotCanBeCountIndirect.AddRange(HexTile.GetCubeRingTile(p.m_Hex, 2).Except(opppnetsNotCanBeCountIndirect));
                     }
-                    opppnetsNotCanBeCountIndirect.RemoveAll(x => GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values.Where(z => z.hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
+                    opppnetsNotCanBeCountIndirect.RemoveAll(x => GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values.Where(z => z.m_Hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
 
                     foreach (var p in tempAll)
                     {
-                        opppnetsCanBeAttackIndirect.AddRange(HexTile.GetCubeRingTile(p.gridPosition, 2, m_MapSizeX, m_MapSizeY).Except(opppnetsCanBeAttackIndirect));
+                        opppnetsCanBeAttackIndirect.AddRange(HexTile.GetCubeRingTile(p.m_Hex, 2).Except(opppnetsCanBeAttackIndirect));
                     }
-                    opppnetsCanBeAttackIndirect.RemoveAll(x => GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values.Where(z => z.hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
+                    opppnetsCanBeAttackIndirect.RemoveAll(x => GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values.Where(z => z.m_Hp > 0)).Where(y => y.gridPosition == x.m_GridPosition).Count() > 0);
                 }
 
                 //Get move target that in move range
                 List<HexTile> moveTarget = new List<HexTile>();
-                if (enemyAIType == EnemyAIType.Attacker)
+                if (m_EnemyAIType == EnemyAIType.Attacker)
                 {
                     moveTarget = opppnetsNotCanBeCountDirect.Union(opppnetsNotCanBeCountIndirect).Intersect(moveRange).ToList();
                 }
-                else if (enemyAIType == EnemyAIType.Defanser)
+                else if (m_EnemyAIType == EnemyAIType.Defanser)
                 {
                     moveTarget = opppnetsNotCanBeCountDirect.Union(opppnetsNotCanBeCountIndirect).Intersect(moveRangeBySearchRange).ToList();
                 }
@@ -187,56 +193,56 @@ public class AIPlayer : Player
                 List<HexTilePath> opponentPathsCanBeCounter = new List<HexTilePath>();
                 for (int i = 0; i < moveTarget.Count; i++)
                 {
-                    opponentPathsCanBeCounter.Add(HexTilePathFinder.FindPath(GameManager.instance.GetMapTile(m_Hex), GameManager.instance.GetMapTile(moveTarget[i].m_Hex)));
+                    opponentPathsCanBeCounter.Add(GameMidiator.m_Instance.m_StageMapManager.FindPath(m_Hex, moveTarget[i].m_Hex));
                 }
 
                 //Move to target
                 if (opponentPathsCanBeCounter.Count > 0)
                 {
                     opponentPathsCanBeCounter = opponentPathsCanBeCounter.OrderBy(x => x.listOfTiles.Count).ToList();
-                    GameManager.instance.HighlightTileAt(gridPosition, GameManager.instance.moveTileColor, (int)movementPerActionPoint, false);
-                    GameManager.instance.MoveCurrentPlayer(opponentPathsCanBeCounter[0].listOfTiles[Mathf.Min(opponentPathsCanBeCounter[0].listOfTiles.Count - 1, (int)movementPerActionPoint)]);
-                    isMovable = false;
+                    GameManager.m_Instance.HighlightTileAt(gridPosition, GameManager.m_Instance.moveTileColor, (int)m_MovementPerActionPoint, false);
+                    GameManager.m_Instance.MoveCurrentPlayer(opponentPathsCanBeCounter[0].listOfTiles[Mathf.Min(opponentPathsCanBeCounter[0].listOfTiles.Count - 1, (int)m_MovementPerActionPoint)]);
+                    m_IsMovable = false;
                 }
                 //Attack player in range
                 else if (opppnets.Count > 0)
                 {
-                    opponent = opppnets.OrderBy(x => -x.hp).FirstOrDefault();
+                    opponent = opppnets.OrderBy(x => -x.m_Hp).FirstOrDefault();
                     if (opponent != null && opponent != default(Player))
                     {
-                        GameManager.instance.HighlightTileAt(gridPosition, GameManager.instance.attackTileColor, attackTilesInRange);
-                        GameManager.instance.AttackWithCurrentPlayer(GameManager.instance.GetMapTile(opponent. m_Hex));
-                        isAttackable = false;
+                        GameManager.m_Instance.HighlightTileAt(gridPosition, GameManager.m_Instance.attackTileColor, attackTilesInRange);
+                        GameManager.m_Instance.AttackWithCurrentPlayer(GameMidiator.m_Instance.m_StageMapManager.GetMapTile(opponent.m_Hex));
+                        m_IsAttackable = false;
                     }
                 }
             }
-            
+
             //if no player can be attack and cannot be counter player who not in move range
             //change action to moving?
-            isGoToMove = isAttackable ? (enemyAIType == EnemyAIType.Stander ? false : isMovable) : isAttackable;
+            isGoToMove = m_IsAttackable ? (m_EnemyAIType == EnemyAIType.Stander ? false : m_IsMovable) : m_IsAttackable;
 
             if (isGoToMove)
             {
                 List<HexTile> opponentTiles = new List<HexTile>();
-                if (enemyAIType == EnemyAIType.Attacker)
+                if (m_EnemyAIType == EnemyAIType.Attacker)
                 {
                     opponentTiles.AddRange((opppnetsCanBeAttackDirect.Union(opppnetsCanBeAttackIndirect)).Intersect(moveRange));
                 }
-                else if (enemyAIType == EnemyAIType.Defanser)
+                else if (m_EnemyAIType == EnemyAIType.Defanser)
                 {
                     opponentTiles.AddRange((opppnetsCanBeAttackDirect.Union(opppnetsCanBeAttackIndirect)).Intersect(moveRangeBySearchRange));
                 }
 
                 List<HexTilePath> opponentPaths = new List<HexTilePath>();
-                List<Player> temp = GameManager.instance.userPlayers.Values.Where(x => x.hp > 0).ToList();
+                List<Player> temp = GameManager.m_Instance.userPlayers.Values.Where(x => x.m_Hp > 0).ToList();
                 List<HexTile> opponentLeastHPTiles = new List<HexTile>();
 
                 //sort all target by distance and hp
-                temp.OrderBy(x => HexTile.Distance(x.m_Hex, m_Hex)).ThenBy(x => x.hp);
+                temp.OrderBy(x => HexTile.Distance(x.m_Hex, m_Hex)).ThenBy(x => x.m_Hp);
                 for (int i = 0; i < temp.Count; i++)
                 {
                     //get target in attack range after move
-                    opponentLeastHPTiles = GetAttackRangeWhitTarget(temp[i].gridPosition).Intersect(opponentTiles).ToList();
+                    opponentLeastHPTiles = GetAttackRangeWhitTarget(temp[i].m_Hex).Intersect(opponentTiles).ToList();
                     if (opponentLeastHPTiles != null && opponentLeastHPTiles.Count > 0)
                     {
                         break;
@@ -245,32 +251,32 @@ public class AIPlayer : Player
 
                 for (int i = 0; i < opponentLeastHPTiles.Count; i++)
                 {
-                    opponentPaths.Add(HexTilePathFinder.FindPath(GameManager.instance.GetMapTile(m_Hex), GameManager.instance.GetMapTile(opponentLeastHPTiles[i]. m_Hex)));
+                    opponentPaths.Add(GameMidiator.m_Instance.m_StageMapManager.FindPath(m_Hex, opponentLeastHPTiles[i].m_Hex));
                 }
 
                 if (opponentPaths.Count > 0)
                 {
                     //get highest defense rate tile and least step path
                     opponentPaths = opponentPaths.OrderBy(x => -x.lastTile.m_DefenseRate).ThenBy(x => x.listOfTiles.Count).ToList();
-                    GameManager.instance.HighlightTileAt(gridPosition, GameManager.instance.moveTileColor, movementPerActionPoint, false);
-                    GameManager.instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, (int)movementPerActionPoint)]);
+                    GameManager.m_Instance.HighlightTileAt(gridPosition, GameManager.m_Instance.moveTileColor, m_MovementPerActionPoint, false);
+                    GameManager.m_Instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, (int)m_MovementPerActionPoint)]);
                 }
-                else if(enemyAIType == EnemyAIType.Attacker)
+                else if (m_EnemyAIType == EnemyAIType.Attacker)
                 {
                     opponentTiles = new List<HexTile>();
                     //opponentTiles.AddRange(opppnetsCanBeAttackDirect.Union(opppnetsCanBeAttackIndirect));
 
                     int minDistance = 9999;
-                    for (int i = 0; i < GameManager.instance.userPlayers.Count; i++)
+                    for (int i = 0; i < GameManager.m_Instance.userPlayers.Count; i++)
                     {
-                        if (GameManager.instance.userPlayers[i].hp == 0)
+                        if (GameManager.m_Instance.userPlayers[i].m_Hp == 0)
                         {
                             continue;
                         }
                         for (int j = 0; j < moveRange.Count; j++)
                         {
-                            int distance = HexTile.Distance(new HexTile.HexCoord((int)moveRange[j].m_GridPosition.x, (int)moveRange[j].m_GridPosition.y), new HexTile.HexCoord((int)GameManager.instance.userPlayers[i].gridPosition.x, (int)GameManager.instance.userPlayers[i].gridPosition.y));
-                            if (distance< minDistance)
+                            int distance = HexTile.Distance(new HexTile.HexCoord((int)moveRange[j].m_GridPosition.x, (int)moveRange[j].m_GridPosition.y), new HexTile.HexCoord((int)GameManager.m_Instance.userPlayers[i].gridPosition.x, (int)GameManager.m_Instance.userPlayers[i].gridPosition.y));
+                            if (distance < minDistance)
                             {
                                 minDistance = distance;
                                 opponentTiles.Clear();
@@ -288,19 +294,19 @@ public class AIPlayer : Player
 
                     for (int i = 0; i < opponentTiles.Count; i++)
                     {
-                        opponentPaths.Add(HexTilePathFinder.FindPath(GameManager.instance.GetMapTile(m_Hex),  GameManager.instance.GetMapTile(opponentTiles[i]. m_Hex)));
+                        opponentPaths.Add(GameMidiator.m_Instance.m_StageMapManager.FindPath(m_Hex, opponentTiles[i].m_Hex));
                     }
 
                     //opponentPaths = opponentPaths.OrderBy(x => x.listOfTiles.Count).ToList();
                     opponentPaths[0].listOfTiles = opponentPaths[0].listOfTiles.Intersect(moveRange).ToList();
-                    GameManager.instance.HighlightTileAt(gridPosition, GameManager.instance.attackTileColor, moveRange);
-                    GameManager.instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, (int)movementPerActionPoint)]);
+                    GameManager.m_Instance.HighlightTileAt(gridPosition, GameManager.m_Instance.attackTileColor, moveRange);
+                    GameManager.m_Instance.MoveCurrentPlayer(opponentPaths[0].listOfTiles[Mathf.Min(opponentPaths[0].listOfTiles.Count - 1, (int)m_MovementPerActionPoint)]);
                 }
-                isMovable = false;
+                m_IsMovable = false;
             }
             else
             {
-                if (isAttackable)
+                if (m_IsAttackable)
                 {
                     TurnEnd();
                 }
@@ -428,10 +434,10 @@ public class AIPlayer : Player
 
     public override void TurnEnd()
     {
-        GameManager.instance.RemoveHighlightTiles();
-        moving = false;
-        attacking = false;
-        GameManager.instance.NextEnemyTurn();
+        GameMidiator.m_Instance.m_StageMapManager.RemoveHighlightTiles();
+        m_Moving = false;
+        m_Attacking = false;
+        GameManager.m_Instance.NextEnemyTurn();
 
         base.TurnEnd();
     }
@@ -440,15 +446,15 @@ public class AIPlayer : Player
     {
         List<HexTile> tiles = new List<HexTile>();
 
-        foreach (var player in GameManager.instance.userPlayers.Values)
+        foreach (var player in GameManager.m_Instance.userPlayers.Values)
         {
-            if (player.hp <= 0)
+            if (player.m_Hp <= 0)
             {
                 continue;
             }
-            tiles.AddRange(HexTile.GetCubeRingTile(player.gridPosition, attackRange, m_MapSizeX, m_MapSizeY));
+            tiles.AddRange(HexTile.GetCubeRingTile(player.m_Hex, attackRange));
         }
-        tiles.RemoveAll(x =>((GameManager.instance.userPlayers.Values.Union(GameManager.instance.enemyPlayers.Values)).Select(y => y.gridPosition).ToList()).Contains(x.m_GridPosition));
+        tiles.RemoveAll(x => ((GameManager.m_Instance.userPlayers.Values.Union(GameManager.m_Instance.enemyPlayers.Values)).Select(y => y.gridPosition).ToList()).Contains(x.m_GridPosition));
         return tiles;
     }
 

@@ -13221,9 +13221,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "DownRight"
     },
     {
       "id": 1,
@@ -13242,9 +13242,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "DownRight"
     },
     {
       "id": 2,
@@ -13263,9 +13263,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "DownRight"
     }
   ],
   "enemyPlayerRecords": [
@@ -13286,9 +13286,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 1,
@@ -13307,9 +13307,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 2,
@@ -13328,9 +13328,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Attacker",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 3,
@@ -13349,9 +13349,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Stander",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 4,
@@ -13370,9 +13370,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 50,
-      "scenarioActorPivotType": "Right",
       "aiType": "Defanser",
-      "searchRange": 7
+      "searchRange": 7,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 5,
@@ -13391,9 +13391,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Defanser",
-      "searchRange": 7
+      "searchRange": 7,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 6,
@@ -13412,9 +13412,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Stander",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 7,
@@ -13433,9 +13433,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Stander",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     },
     {
       "id": 8,
@@ -13454,9 +13454,9 @@
       "dex": 0,
       "mdef": 0,
       "equipWeapon": 0,
-      "scenarioActorPivotType": "Right",
       "aiType": "Stander",
-      "searchRange": 0
+      "searchRange": 0,
+      "scenarionActorPivotType": "UpLeft"
     }
   ],
   "shopItemList": [
@@ -13466,18 +13466,18 @@
   "shopWeaponList": [
     2
   ],
-  "scenarioList": [
+  "scenarionList": [
     {
-      "scenarioId": 0,
-      "scenarioType": "Openning",
-      "scenarioConditionType": "None",
       "userPlayer": -1,
       "enemyPlayer": -1,
       "isOnceEvent": true,
-      "scenarioActions": [
+      "battleAfterEvent": null,
+      "scenarionId": 0,
+      "scenarionType": "Openning",
+      "scenarionActions": [
         {
-          "scenarioActionId": 0,
-          "scenarioActionType": "SetCamera",
+          "scenarionActionId": 0,
+          "scenarionActionType": "SetCamera",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -13500,8 +13500,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 1,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 1,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 0,
@@ -13520,7 +13520,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "Right",
+              "scenarionActorPivotType": "Right",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13541,7 +13541,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "UpRight",
+              "scenarionActorPivotType": "UpRight",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13562,7 +13562,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "UpLeft",
+              "scenarionActorPivotType": "UpLeft",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13583,7 +13583,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "Left",
+              "scenarionActorPivotType": "Left",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -13609,8 +13609,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 2,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 2,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 4,
@@ -13629,7 +13629,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "UpLeft",
+              "scenarionActorPivotType": "UpLeft",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -13655,8 +13655,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 3,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 3,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 4,
           "isMoveCamera": false,
@@ -13679,8 +13679,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 4,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 4,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -13703,8 +13703,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 5,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 5,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -13727,8 +13727,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 6,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 6,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 5,
@@ -13747,7 +13747,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "UpLeft",
+              "scenarionActorPivotType": "UpLeft",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -13773,8 +13773,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 7,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 7,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 5,
           "isMoveCamera": false,
@@ -13797,8 +13797,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 8,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 8,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -13821,8 +13821,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 9,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 9,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -13845,8 +13845,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 10,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 10,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 4,
           "isMoveCamera": false,
@@ -13869,8 +13869,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 11,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 11,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 7,
@@ -13889,7 +13889,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "DownRight",
+              "scenarionActorPivotType": "DownRight",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13910,7 +13910,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "DownRight",
+              "scenarionActorPivotType": "DownRight",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13931,7 +13931,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "DownRight",
+              "scenarionActorPivotType": "DownRight",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13952,7 +13952,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "DownRight",
+              "scenarionActorPivotType": "DownRight",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -13973,7 +13973,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "DownRight",
+              "scenarionActorPivotType": "DownRight",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -13999,8 +13999,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 12,
-          "scenarioActionType": "ControlCamera",
+          "scenarionActionId": 12,
+          "scenarionActionType": "ControlCamera",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14023,8 +14023,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 13,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 13,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14047,8 +14047,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 14,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 14,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14071,8 +14071,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 15,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 15,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14095,8 +14095,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 16,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 16,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14119,8 +14119,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 17,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 17,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14143,8 +14143,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 18,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 18,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14167,8 +14167,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 19,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 19,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14191,8 +14191,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 20,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 20,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14215,8 +14215,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 21,
-          "scenarioActionType": "ControlCamera",
+          "scenarionActionId": 21,
+          "scenarionActionType": "ControlCamera",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14239,8 +14239,8 @@
           "isToDark": true
         },
         {
-          "scenarioActionId": 22,
-          "scenarioActionType": "SetCamera",
+          "scenarionActionId": 22,
+          "scenarionActionType": "SetCamera",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14263,8 +14263,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 23,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 23,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 12,
@@ -14283,7 +14283,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "Right",
+              "scenarionActorPivotType": "Right",
               "aiType": "Attacker",
               "searchRange": 0
             },
@@ -14304,7 +14304,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "Left",
+              "scenarionActorPivotType": "Left",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -14330,8 +14330,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 24,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 24,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14354,8 +14354,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 25,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 25,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14378,8 +14378,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 26,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 26,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14402,8 +14402,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 27,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 27,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14426,8 +14426,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 28,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 28,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14450,8 +14450,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 29,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 29,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14474,8 +14474,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 30,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 30,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14498,8 +14498,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 31,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 31,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14522,8 +14522,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 32,
-          "scenarioActionType": "CreateActor",
+          "scenarionActionId": 32,
+          "scenarionActionType": "CreateActor",
           "createActors": [
             {
               "id": 14,
@@ -14542,7 +14542,7 @@
               "dex": 0,
               "mdef": 0,
               "equipWeapon": 0,
-              "scenarioActorPivotType": "UpLeft",
+              "scenarionActorPivotType": "UpLeft",
               "aiType": "Attacker",
               "searchRange": 0
             }
@@ -14568,8 +14568,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 33,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 33,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 12,
           "isMoveCamera": false,
@@ -14592,8 +14592,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 34,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 34,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 13,
           "isMoveCamera": false,
@@ -14616,8 +14616,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 35,
-          "scenarioActionType": "ControlActor",
+          "scenarionActionId": 35,
+          "scenarionActionType": "ControlActor",
           "createActors": null,
           "actorId": 14,
           "isMoveCamera": false,
@@ -14640,8 +14640,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 36,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 36,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14664,8 +14664,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 37,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 37,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14688,8 +14688,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 38,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 38,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14712,8 +14712,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 39,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 39,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14736,8 +14736,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 40,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 40,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14760,8 +14760,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 41,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 41,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14784,8 +14784,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 42,
-          "scenarioActionType": "SetCamera",
+          "scenarionActionId": 42,
+          "scenarionActionType": "SetCamera",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14808,20 +14808,20 @@
           "isToDark": true
         }
       ],
-      "scenarioActionStep": 0,
-      "battleAfterEvent": null
+      "scenarionActionstep": 0,
+      "scenarionConditionType": "None"
     },
     {
-      "scenarioId": 1,
-      "scenarioType": "Event",
-      "scenarioConditionType": "AfterShop",
       "userPlayer": -1,
       "enemyPlayer": -1,
       "isOnceEvent": true,
-      "scenarioActions": [
+      "battleAfterEvent": null,
+      "scenarionId": 1,
+      "scenarionType": "Event",
+      "scenarionActions": [
         {
-          "scenarioActionId": 0,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 0,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14844,20 +14844,20 @@
           "isToDark": false
         }
       ],
-      "scenarioActionStep": 0,
-      "battleAfterEvent": null
+      "scenarionActionstep": 0,
+      "scenarionConditionType": "AfterShop"
     },
     {
-      "scenarioId": 2,
-      "scenarioType": "Event",
-      "scenarioConditionType": "BeforeBattle",
       "userPlayer": -1,
       "enemyPlayer": 8,
       "isOnceEvent": true,
-      "scenarioActions": [
+      "battleAfterEvent": null,
+      "scenarionId": 2,
+      "scenarionType": "Event",
+      "scenarionActions": [
         {
-          "scenarioActionId": 0,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 0,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14880,20 +14880,20 @@
           "isToDark": false
         }
       ],
-      "scenarioActionStep": 0,
-      "battleAfterEvent": null
+      "scenarionActionstep": 0,
+      "scenarionConditionType": "BeforeBattle"
     },
     {
-      "scenarioId": 3,
-      "scenarioType": "Event",
-      "scenarioConditionType": "None",
       "userPlayer": -1,
       "enemyPlayer": -1,
       "isOnceEvent": true,
-      "scenarioActions": [
+      "battleAfterEvent": null,
+      "scenarionId": 3,
+      "scenarionType": "Event",
+      "scenarionActions": [
         {
-          "scenarioActionId": 0,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 0,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14916,8 +14916,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 1,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 1,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14940,8 +14940,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 2,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 2,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14964,8 +14964,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 3,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 3,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -14988,8 +14988,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 4,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 4,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15012,20 +15012,20 @@
           "isToDark": false
         }
       ],
-      "scenarioActionStep": 0,
-      "battleAfterEvent": null
+      "scenarionActionstep": 0,
+      "scenarionConditionType": "None"
     },
     {
-      "scenarioId": 4,
-      "scenarioType": "StageClear",
-      "scenarioConditionType": "None",
       "userPlayer": -1,
       "enemyPlayer": -1,
       "isOnceEvent": true,
-      "scenarioActions": [
+      "battleAfterEvent": null,
+      "scenarionId": 4,
+      "scenarionType": "StageClear",
+      "scenarionActions": [
         {
-          "scenarioActionId": 0,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 0,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15048,8 +15048,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 1,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 1,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15072,8 +15072,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 2,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 2,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15096,8 +15096,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 3,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 3,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15120,8 +15120,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 4,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 4,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15144,8 +15144,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 5,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 5,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15168,8 +15168,8 @@
           "isToDark": false
         },
         {
-          "scenarioActionId": 6,
-          "scenarioActionType": "Dialog",
+          "scenarionActionId": 6,
+          "scenarionActionType": "Dialog",
           "createActors": null,
           "actorId": 0,
           "isMoveCamera": false,
@@ -15192,8 +15192,8 @@
           "isToDark": false
         }
       ],
-      "scenarioActionStep": 0,
-      "battleAfterEvent": null
+      "scenarionActionstep": 0,
+      "scenarionConditionType": "None"
     }
   ],
   "stageClearConditionList": [

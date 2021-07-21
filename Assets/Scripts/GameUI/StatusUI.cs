@@ -58,19 +58,19 @@ public class StatusUI : IGameUISystem
             weaponRangeText.Add("<color=lime>間接</color>");
         }
 
-        m_PlayerName.text = player.playerName;
+        m_PlayerName.text = player.m_PlayerName;
         m_PlayerClass.text = race.name;
-        m_PlayerLevel.text = player.level.ToString();
-        m_PlayerHP.text = player.hp.ToString() + "/";
-        m_PlayerMaxHP.text = player.maxHP.ToString();
-        m_PlayerExp.text = player.exp.ToString();
-        m_PlayerAtk.text = player.atk.ToString();
+        m_PlayerLevel.text = player.m_Level.ToString();
+        m_PlayerHP.text = player.m_Hp.ToString() + "/";
+        m_PlayerMaxHP.text = player.m_MaxHP.ToString();
+        m_PlayerExp.text = player.m_Exp.ToString();
+        m_PlayerAtk.text = player.m_Atk.ToString();
         m_PlayerWeaponAtk.text = $"<color=white>(</color><color=orange>{"+" + directAtk.ToString()}</color><color=white>/</color><color=lime>{"+" + indirectAtk.ToString()}</color><color=white>)</color>";
         m_PlayerWeaponAtk.text = m_PlayerWeaponAtk.text.Replace("+0", "✕");
-        m_PlayerDef.text = player.def.ToString();
-        m_PlayerWis.text = player.wis.ToString();
-        m_PlayerDex.text = player.dex.ToString();
-        m_PlayerMdef.text = player.mdef.ToString();
+        m_PlayerDef.text = player.m_Def.ToString();
+        m_PlayerWis.text = player.m_Wis.ToString();
+        m_PlayerDex.text = player.m_Dex.ToString();
+        m_PlayerMdef.text = player.m_MDef.ToString();
         m_PlayerEquip.text = weapon.name;
         m_PlayerEquipRange.text = string.Join("<color=white>/</color>", weaponRangeText.ToArray());
     }

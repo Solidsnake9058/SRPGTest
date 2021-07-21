@@ -20,10 +20,19 @@ public class HexTilePath
         lastTile = tp.lastTile;
     }
 
-    public void addTile(HexTile t,bool isAttack = false)
+    public void AddTile(HexTile t,bool isAttack = false)
     {
         costOfPath += isAttack ? 1 : t.m_MovementCost;
         listOfTiles.Add(t);
         lastTile = t;
+    }
+
+    public bool EvaluationPath(HexTilePath hexTilePath)
+    {
+        if (lastTile.Equals(hexTilePath.lastTile) && costOfPath <= hexTilePath.costOfPath)
+        {
+            return true;
+        }
+        return false;
     }
 }

@@ -99,21 +99,21 @@ public class ItemUI : IGameUISystem
                 switch (selectItem.itemType)
                 {
                     case ItemType.Cure:
-                        if (player.hp > 0 && player.hp < player.maxHP)
+                        if (player.m_Hp > 0 && player.m_Hp < player.m_MaxHP)
                         {
                             m_ButtonUseItem.enabled = true;
                         }
                         break;
                     case ItemType.Resurge:
-                        if (player.hp == 0)
+                        if (player.m_Hp == 0)
                         {
                             m_ButtonUseItem.enabled = true;
                         }
                         break;
                     case ItemType.Special:
-                        if (player.hp > 0)
+                        if (player.m_Hp > 0)
                         {
-                            if (!selectItem.m_IsKeyItem && (selectItem.useCharType == -1 || (selectItem.useCharType == player.race && player.level >= 10)))
+                            if (!selectItem.m_IsKeyItem && (selectItem.useCharType == -1 || (selectItem.useCharType == player.m_Race && player.m_Level >= 10)))
                             {
                                 m_ButtonUseItem.enabled = true;
                             }

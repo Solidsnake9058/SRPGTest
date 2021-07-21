@@ -4,21 +4,14 @@ using System.Collections.Generic;
 
 public class ActorPlayer : Player
 {
-    private void Start()
+    public override void SetPlayerValue(PlayerRecord playerRecord, CharacterTemplate playerData)
     {
-        //SetPlayerModel();
+        SetPosition(playerRecord);
     }
-
-    // Update is called once per frame
     public override void Update()
     {
         TurnUpdate();
         base.Update();
-    }
-
-    public override void TurnEnd()
-    {
-        base.TurnEnd();
     }
 
     public override void TurnUpdate()
@@ -43,7 +36,12 @@ public class ActorPlayer : Player
         //    }
         //}
         base.TurnUpdate();
-        GameManager.instance.StopWaitActor();
-        SetPivot(playerPivot);
+    }
+
+    protected override void MoveToPointAction()
+    {
+        TurnEnd();
+        GameManager.m_Instance.StopWaitActor();
+        SetPivot();
     }
 }
