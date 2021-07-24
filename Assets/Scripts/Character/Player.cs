@@ -5,13 +5,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using System.Linq;
 
-public class Player : MonoBehaviour, IPointerClickHandler
+public class Player : IGameItem, IPointerClickHandler
 {
     private static readonly Vector3 m_HidePosition = new Vector3(0, -100, 0);
-
-    public Vector2 gridPosition = Vector2.zero;
-    public Vector2 originalGridPosition = Vector2.zero;
-
     public Transform visual;
     public Animator animator;
     public float moveSpeed { get { return GameManager.m_Instance.m_MoveSpeed; } }
@@ -26,6 +22,8 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public bool m_IsActable = true;
     public bool m_IsMovable = true;
     public bool m_IsAttackable = true;
+    public bool IsAlive { get { return m_Hp > 0; } }
+    public bool IsTurnEnd { get { return m_PlayerState.Equals(PlayerState.Wait) ; } }
 
     public string m_PlayerName;
 
@@ -46,9 +44,12 @@ public class Player : MonoBehaviour, IPointerClickHandler
     public EnemyAIType m_EnemyAIType = EnemyAIType.Attacker;
     public int m_SearchRange = 5;
 
-    private ScenarioActorPivotType m_PlayerPivot = ScenarioActorPivotType.Right;
+    private ScenarionActorPivotType m_PlayerPivot = ScenarionActorPivotType.Right;
     public bool m_IsEnemy { get { return _IsEnemy; } }
     protected bool _IsEnemy;
+
+    public PlayerState m_PlayerState { get { return _PlayerState; } }
+    protected PlayerState _PlayerState;
 
     public Vector3 HexTilePos()
     {
@@ -57,33 +58,17 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     private Queue<Vector3> m_PositionQueue = new Queue<Vector3>();
 
-    public HexTile.HexCoord m_Hex { get; private set; }
-    protected HexTile.HexCoord m_HexTarget;
-
-    public int m_MapSizeX
-    {
-        get
-        {
-            return GameManager.m_Instance.mapSizeX;
-        }
-    }
-
-    public int m_MapSizeY
-    {
-        get
-        {
-            return GameManager.m_Instance.mapSizeY;
-        }
-    }
+    public HexCoord m_Hex { get; private set; }
+    protected HexCoord m_HexTarget;
 
     public virtual void SetPlayerValue(PlayerRecord playerRecord, CharacterTemplate playerData)
     {
-        //transform.position = new Vector3(tilePos.x, 0, tilePos.z);
         SetPosition(playerRecord);
 
         m_PlayerName = playerData.name;
         m_Race = playerData.race;
         m_MovementPerActionPoint = playerData.move;
+        _PlayerState = playerRecord.isActable ? PlayerState.Active : PlayerState.Wait;
         m_IsActable = playerRecord.isActable;
         m_Level = (int)playerRecord.level;
         m_Exp = (int)playerRecord.exp;
@@ -99,21 +84,16 @@ public class Player : MonoBehaviour, IPointerClickHandler
 
     protected void SetPosition(PlayerRecord playerRecord)
     {
-        gridPosition = new Vector2(playerRecord.locX, playerRecord.locY);
-        m_Hex = new HexTile.HexCoord(playerRecord.locX, playerRecord.locY);
+        m_Hex = new HexCoord(playerRecord.locX, playerRecord.locY);
         transform.position = HexTilePos();
     }
 
-    // Update is called once per frame
-    public virtual void Update()
+    protected virtual void SetPlayerDead()
     {
-        if (SceneManager.GetActiveScene().name == "GameScene" && !GameManager.m_Instance.GetIsWaitingBattle() && m_Hp <= 0)
-        {
-            m_Hp = 0;
-            m_IsActable = false;
-            transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
-            transform.GetComponent<Renderer>().material.color = Color.gray;
-        }
+        m_Hp = 0;
+        m_IsActable = false;
+        transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
+        transform.GetComponent<Renderer>().material.color = Color.gray;
     }
 
     public void SetPlayerModel()
@@ -122,27 +102,23 @@ public class Player : MonoBehaviour, IPointerClickHandler
         animator = model.GetComponent<Animator>();
     }
 
-    public virtual void TurnUpdate()
+    public virtual bool TurnUpdate()
     {
-        //if (actionPoint <=0)
-        //{
-        //    actionPoint = 2;
-        //    moving = false;
-        //    attacking = false;
-        //    GameManager.instance.NextTurn();
-        //}
-
+        if (m_PlayerState.Equals( PlayerState.Wait))
+        {
+            return false;
+        }
         if ((m_MoveTimeCur < m_MoveTime && m_NextPosition.HasValue) || SetNextPosition())
         {
             m_MoveTimeCur += Time.deltaTime;
             transform.position = Vector3.Lerp(m_PositionCur, m_NextPosition.Value, m_MoveTimeCur / m_MoveTime);
-            return;
         }
+        return true;
     }
 
     protected virtual void MoveToPointAction() { }
 
-    public void SetHexTarget(HexTile.HexCoord hex)
+    public void SetHexTarget(HexCoord hex)
     {
         m_HexTarget = hex;
     }
@@ -152,6 +128,8 @@ public class Player : MonoBehaviour, IPointerClickHandler
     protected Vector3 m_PositionCur;
     protected Vector3? m_NextPosition = null;
     protected bool m_IsMoving = false;
+    private PlayerState playerState;
+
     protected bool SetNextPosition()
     {
         if (m_PositionQueue.Count > 0)
@@ -162,17 +140,17 @@ public class Player : MonoBehaviour, IPointerClickHandler
             float dis = Vector3.Distance(m_NextPosition.Value, transform.position);
             m_MoveTime = dis / moveSpeed;
             m_MoveTimeCur = 0;
-            animator.SetBool("walk", m_IsMoving);
             m_IsMoving = true;
+            animator.SetBool("walk", m_IsMoving);
             return m_IsMoving;
         }
         m_NextPosition = null;
-        animator.SetBool("walk", m_IsMoving);
         if (m_IsMoving)
         {
             m_IsMoving = false;
             MoveToPointAction();
         }
+        animator.SetBool("walk", m_IsMoving);
         return m_IsMoving;
     }
 
@@ -182,11 +160,7 @@ public class Player : MonoBehaviour, IPointerClickHandler
         {
             m_PositionQueue.Enqueue(positions[i]);
         }
-    }
-
-    public virtual void SetOriginalPos()
-    {
-
+        _PlayerState = PlayerState.Move;
     }
 
     public virtual void TurnEnd()
@@ -195,21 +169,24 @@ public class Player : MonoBehaviour, IPointerClickHandler
         m_IsMovable = true;
         m_IsAttackable = true;
         m_Hex = m_HexTarget;
+        _PlayerState = PlayerState.Wait;
     }
 
     public void CancelMove()
     {
         transform.position = HexTilePos();
         m_HexTarget = m_Hex;
+        _PlayerState = PlayerState.Active;
     }
 
     public virtual void TurnActive()
     {
-        if (m_Hp != 0)
+        if (m_Hp > 0)
         {
             m_IsActable = true;
             m_IsMovable = true;
             m_IsAttackable = true;
+            _PlayerState = PlayerState.Active;
         }
     }
 
@@ -322,21 +299,21 @@ public class Player : MonoBehaviour, IPointerClickHandler
         return range;
     }
 
-    //public virtual List<HexTile> GetAttackRangeWhitTarget(Vector2 targetGridPosition)
-    //{
-    //    List<HexTile> range = new List<HexTile>();
-    //    if (GetIsCanAttack(true))
-    //    {
-    //        range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 1, m_MapSizeX, m_MapSizeY));
-    //    }
-    //    if (GetIsCanAttack(false))
-    //    {
-    //        range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 2, m_MapSizeX, m_MapSizeY));
-    //    }
-    //    return range;
-    //}
+    public virtual List<HexCoord> GetAttackRangeHex()
+    {
+        List<HexCoord> range = new List<HexCoord>();
+        if (GetIsCanAttack(true))
+        {
+            range.AddRange(HexCoord.HexRing(m_Hex, 1));
+        }
+        if (GetIsCanAttack(false))
+        {
+            range.AddRange(HexCoord.HexRing(m_Hex, 2));
+        }
+        return range;
+    }
 
-    public virtual List<HexTile> GetAttackRangeWhitTarget(HexTile.HexCoord targetGridPosition)
+    public virtual List<HexTile> GetAttackRangeWhitTarget(HexCoord targetGridPosition)
     {
         List<HexTile> range = new List<HexTile>();
         if (GetIsCanAttack(true))
@@ -350,74 +327,52 @@ public class Player : MonoBehaviour, IPointerClickHandler
         return range;
     }
 
-
-    public virtual List<HexTile> GetHealRange()
+    public virtual List<HexCoord> GetHealRange()
     {
-        return HexTile.GetCubeSpiralTile(gridPosition, 1, GameManager.m_Instance.gameElement.races.Where(x => x.id == this.m_Race).FirstOrDefault().healRange, m_MapSizeX, m_MapSizeY);
+        int healRange = GameManager.m_Instance.gameElement.m_Races[m_Race].healRange;
+        return HexCoord.HexSpiral(m_Hex, healRange);
     }
 
     public virtual void OnPointerClick(PointerEventData eventData)
     {
-        if (SceneManager.GetActiveScene().name == "GameScene")
-        {
-            HexTile attTile = GameMidiator.m_Instance.m_StageMapManager.m_MapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
-            attTile.ClickEvent(eventData);
-        }
-        else if (SceneManager.GetActiveScene().name == "MapCreatorScene")
-        {
-            HexTile attTile = MapCreatorManager.instance.mapHex[(int)gridPosition.y][(int)gridPosition.x + (((int)gridPosition.y) >> 1)];
-            attTile.ClickEvent(eventData);
-        }
+        HexTile attTile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex);
+        attTile.ClickEvent(eventData);
     }
 
-    public void SetPivot(ScenarioActorPivotType scenarioActorPivotType)
+    public void SetPivot(ScenarionActorPivotType scenarioActorPivotType)
     {
         m_PlayerPivot = scenarioActorPivotType;
-        //switch (scenarioActorPivotType)
-        //{
-        //    case ScenarioActorPivotType.Right:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
-        //        break;
-        //    case ScenarioActorPivotType.UpRight:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 30, 0));
-        //        break;
-        //    case ScenarioActorPivotType.UpLeft:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 330, 0));
-        //        break;
-        //    case ScenarioActorPivotType.Left:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 270, 0));
-        //        break;
-        //    case ScenarioActorPivotType.DownLeft:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 210, 0));
-        //        break;
-        //    case ScenarioActorPivotType.DownRight:
-        //        transform.rotation = Quaternion.Euler(new Vector3(0, 150, 0));
-        //        break;
-        //}
     }
 
     public void SetPivot()
     {
         switch (m_PlayerPivot)
         {
-            case ScenarioActorPivotType.Right:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
+            case ScenarionActorPivotType.Right:
+                transform.rotation = Quaternion.Euler(0, 90, 0);
                 break;
-            case ScenarioActorPivotType.UpRight:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 30, 0));
+            case ScenarionActorPivotType.UpRight:
+                transform.rotation = Quaternion.Euler(0, 30, 0);
                 break;
-            case ScenarioActorPivotType.UpLeft:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 330, 0));
+            case ScenarionActorPivotType.UpLeft:
+                transform.rotation = Quaternion.Euler(0, 330, 0);
                 break;
-            case ScenarioActorPivotType.Left:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 270, 0));
+            case ScenarionActorPivotType.Left:
+                transform.rotation = Quaternion.Euler(0, 270, 0);
                 break;
-            case ScenarioActorPivotType.DownLeft:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 210, 0));
+            case ScenarionActorPivotType.DownLeft:
+                transform.rotation = Quaternion.Euler(0, 210, 0);
                 break;
-            case ScenarioActorPivotType.DownRight:
-                transform.rotation = Quaternion.Euler(new Vector3(0, 150, 0));
+            case ScenarionActorPivotType.DownRight:
+                transform.rotation = Quaternion.Euler(0, 150, 0);
                 break;
         }
     }
+}
+
+public enum PlayerState
+{
+    Active,
+    Move,
+    Wait
 }

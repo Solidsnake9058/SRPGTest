@@ -28,7 +28,7 @@ public class CharacterSelection : MonoBehaviour
     }
     public void CilckActoin()
     {
-        ScreenController.instance.SetCameraPos(m_FocusPos);
+        ScreenController.m_Instance.SetCameraPos(m_FocusPos);
         m_ClickEvent?.Invoke();
         //GameManager.instance.DisableGroup(GameManager.instance.unitGroup);
     }

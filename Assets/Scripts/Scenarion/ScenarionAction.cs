@@ -2,35 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ScenarioAction
+[System.Serializable]
+public class ScenarionAction
 {
     public int scenarioActionId;
-    public ScenarioActionType scenarioActionType;
+    public ScenarionActionType scenarionActionType;
     public List<PlayerRecord> createActors;
     public int actorId;
     public bool isMoveCamera;
-    public HexTile.HexCoord setCameraPos;
-    public HexTile.HexCoord targetMoveTile;
-    public ScenarioActorPivotType actorPivot;
+    public HexCoord setCameraPos;
+    public HexCoord targetMoveTile;
+    public ScenarionActorPivotType actorPivot;
     public string dialogName;
     public string dialogText;
     public float waitTime;
     public bool isToDark;
 
-    public ScenarioAction() { }
+    public ScenarionAction() { }
 
-    public ScenarioAction(int scenarioActionId, List<PlayerRecord> createActors,float waitTime,bool isToDark)
+    public ScenarionAction(int scenarioActionId, List<PlayerRecord> createActors,float waitTime,bool isToDark)
     {
-        scenarioActionType = ScenarioActionType.CreateActor;
+        scenarionActionType = ScenarionActionType.CreateActor;
         this.scenarioActionId = scenarioActionId;
         this.createActors = createActors;
 		this.waitTime = waitTime;
 		this.isToDark = isToDark;
     }
 
-    public ScenarioAction(int scenarioActionId, int actorId, HexTile.HexCoord targetMoveTile, ScenarioActorPivotType actorPivot, float waitTime, bool isToDark)
+    public ScenarionAction(int scenarioActionId, int actorId, HexCoord targetMoveTile, ScenarionActorPivotType actorPivot, float waitTime, bool isToDark)
     {
-        scenarioActionType = ScenarioActionType.ControlActor;
+        scenarionActionType = ScenarionActionType.ControlActor;
         this.scenarioActionId = scenarioActionId;
         this.actorId = actorId;
         this.targetMoveTile = targetMoveTile;
@@ -39,9 +40,9 @@ public class ScenarioAction
 		this.isToDark = isToDark;
 	}
 
-    public ScenarioAction(int scenarioActionId, bool isMoveCamera, HexTile.HexCoord targetMoveTile, float waitTime, bool isToDark)
+    public ScenarionAction(int scenarioActionId, bool isMoveCamera, HexCoord targetMoveTile, float waitTime, bool isToDark)
     {
-        scenarioActionType = isMoveCamera? ScenarioActionType.ControlCamera: ScenarioActionType.SetCamera;
+        scenarionActionType = isMoveCamera? ScenarionActionType.ControlCamera: ScenarionActionType.SetCamera;
         this.scenarioActionId = scenarioActionId;
         if (isMoveCamera)
         {
@@ -55,9 +56,9 @@ public class ScenarioAction
 		this.isToDark = isToDark;
 	}
 
-    public ScenarioAction(int scenarioActionId, string dialogName, string dialogText)
+    public ScenarionAction(int scenarioActionId, string dialogName, string dialogText)
     {
-        scenarioActionType = ScenarioActionType.Dialog;
+        scenarionActionType = ScenarionActionType.Dialog;
         this.scenarioActionId = scenarioActionId;
         this.dialogName = dialogName;
         this.dialogText = dialogText;

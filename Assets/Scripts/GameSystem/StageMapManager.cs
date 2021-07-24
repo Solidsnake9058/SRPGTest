@@ -7,8 +7,8 @@ public class StageMapManager : IGameItem
     [SerializeField]
     private Transform m_MapTransform;
 
-    public List<List<Tile>> m_Map { get; private set; }
     public List<List<HexTile>> m_MapHex { get; private set; }
+    private List<HexTile> m_MapHexList = new List<HexTile>();
 
 
     public void CreateStageMap(MapContainer mapContainer)
@@ -17,8 +17,13 @@ public class StageMapManager : IGameItem
         Vector3 connerPointB = Vector3.zero;
         Vector3 connerPointC = Vector3.zero;
         Vector3 connerPointD = Vector3.zero;
+        for (int i = 0; i < m_MapHexList.Count; i++)
+        {
+            Destroy(m_MapHexList[i].gameObject);
+        }
 
         m_MapHex = new List<List<HexTile>>();
+        m_MapHexList = new List<HexTile>();
         ////Hexagons
         for (int j = 0; j < mapContainer.sizeY; j++)
         {
@@ -32,8 +37,9 @@ public class StageMapManager : IGameItem
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, m_MapTransform);
                 TileXml tileData = mapContainer.m_TileDataMap[i][j];
-                tile.TileInitialize(tileData, 0, i, j, mapContainer.sizeX, mapContainer.sizeY);
+                tile.TileInitialize(tileData, 0, i, j);
                 row.Add(tile);
+                m_MapHexList.Add(tile);
                 if (j == 0)
                 {
                     if (i == 0)
@@ -48,10 +54,15 @@ public class StageMapManager : IGameItem
             }
             m_MapHex.Add(row);
         }
+
+        for (int i = 0; i < m_MapHexList.Count; i++)
+        {
+            m_MapHexList[i].GameSetting();
+        }
         connerPointD = new Vector3(0, 0, -mapContainer.sizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
     }
 
     public void RemoveHighlightTiles()
@@ -86,9 +97,9 @@ public class StageMapManager : IGameItem
         }
     }
 
-    public HexTile GetMapTile(HexTile.HexCoord hex)
+    public HexTile GetMapTile(HexCoord hex)
     {
-        if (hex.m_R < m_MapHex.Count && hex.m_Offset < m_MapHex[hex.m_R].Count)
+        if (hex.m_R >= 0 && hex.m_R < m_MapHex.Count && hex.m_Offset >= 0 && hex.m_Offset < m_MapHex[hex.m_R].Count)
         {
             return m_MapHex[hex.m_R][hex.m_Offset];
         }
@@ -97,13 +108,13 @@ public class StageMapManager : IGameItem
 
     public HexTile GetMapTile(int x, int y)
     {
-        HexTile.HexCoord hex = new HexTile.HexCoord(x, y);
+        HexCoord hex = new HexCoord(x, y);
         return GetMapTile(hex);
     }
 
     public HexTile GetMapTile(float x, float y)
     {
-        HexTile.HexCoord hex = new HexTile.HexCoord((int)x, (int)y);
+        HexCoord hex = new HexCoord((int)x, (int)y);
         return GetMapTile(hex);
     }
 
@@ -117,18 +128,66 @@ public class StageMapManager : IGameItem
         return points;
     }
 
-    public HexTilePath FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex)
+    public HexTilePath FindPath(HexCoord originHex, HexCoord desinationHex)
     {
-        return HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexTile.HexCoord[0], false);
+        return HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexCoord[0], false);
     }
 
-    public Vector3[] FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex, bool ignorePlayer)
+    public Vector3[] FindPath(HexCoord originHex, HexCoord desinationHex, bool ignorePlayer)
     {
-        return GetPathPosition(HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexTile.HexCoord[0], ignorePlayer).listOfTiles);
+        return GetPathPosition(HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), new HexCoord[0], ignorePlayer).listOfTiles);
     }
 
-    public Vector3[] FindPath(HexTile.HexCoord originHex, HexTile.HexCoord desinationHex, HexTile.HexCoord[] occupied)
+    public Vector3[] FindPath(HexCoord originHex, HexCoord desinationHex, HexCoord[] occupied)
     {
         return GetPathPosition(HexTilePathFinder.FindPath(GetMapTile(originHex), GetMapTile(desinationHex), occupied, false).listOfTiles);
+    }
+
+
+    public List<HexTile> FindHighlight(HexTile originTile, float movementPoints, HexCoord[] occupied, bool isAttack)
+    {
+        return HexTileHighlight.FindHighlight(originTile, movementPoints, occupied, isAttack);
+    }
+    public List<HexCoord> FindHighlight(HexCoord originHex, float movementPoints, bool isAttack = false)
+    {
+        List<HexCoord> hexes = new List<HexCoord>();
+        List<HexTile> tiles = FindHighlight(GetMapTile(originHex), movementPoints, new HexCoord[0], isAttack);
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            hexes.Add(tiles[i].m_Hex);
+        }
+        return hexes;
+    }
+    public List<HexCoord> FindHighlight(HexCoord originHex, float movementPoints, HexCoord[] occupied)
+    {
+        List<HexCoord> hexes = new List<HexCoord>();
+        List<HexTile> tiles = FindHighlight(GetMapTile(originHex), movementPoints, occupied, false);
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            hexes.Add(tiles[i].m_Hex);
+        }
+        return hexes;
+    }
+    public void HighlightTileAt(HexCoord originHex, float distance, bool ignorePlayers = true)
+    {
+        List<HexCoord> highlightTiles = new List<HexCoord>();
+        if (ignorePlayers)
+        {
+            highlightTiles = FindHighlight(originHex, distance, true);
+        }
+        else
+        {
+            highlightTiles = FindHighlight(originHex, distance, GameMidiator.m_Instance.m_PlayerManager.GetPlayerHexes(new HexCoord(-999, -999)).ToArray());
+        }
+
+        HighlightTileAt(highlightTiles);
+    }
+
+    public void HighlightTileAt(List<HexCoord> highlightTiles)
+    {
+        for (int i = 0; i < highlightTiles.Count; i++)
+        {
+            GetMapTile(highlightTiles[i]).SetHightLight(true, false);
+        }
     }
 }

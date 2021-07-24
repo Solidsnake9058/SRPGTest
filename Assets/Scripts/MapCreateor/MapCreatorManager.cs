@@ -163,7 +163,7 @@ public class MapCreatorManager : MonoBehaviour
     private List<Player> actorPlayer;
     private List<PlayerRecord> scenarioActorPlayerRecords;
     private List<Scenarion> scenarios;
-    private List<ScenarioAction> scenarioActions;
+    private List<ScenarionAction> scenarioActions;
     private Dictionary<int, string> dicItem;
     private Dictionary<int, string> dicWeapon;
 
@@ -555,11 +555,11 @@ public class MapCreatorManager : MonoBehaviour
     #endregion
 
     #region Stage
-    public void SetPlayer(Vector2 gridPosion, Vector3 pos, bool isDelete = false)
+    public void SetPlayer(HexCoord hex, Vector3 pos, bool isDelete = false)
     {
         if (isDelete)
         {
-            PlayerRecord prtemp = userPlayerRecords.Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).FirstOrDefault();
+            PlayerRecord prtemp = userPlayerRecords.Where(x =>new HexCoord(  x.locX ,x.locY) == hex).FirstOrDefault();
             if (prtemp != null)
             {
                 Transform temp = playerTransform.Find(string.Format(userPlayerNameFormat, prtemp.id));
@@ -569,7 +569,8 @@ public class MapCreatorManager : MonoBehaviour
         }
         else
         {
-            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
+            /*
+            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)hex.x && x.locY == (int)hex.y).Count() == 0)
             {
                 //playerId=
                 if (userPlayerRecords.Where(x => x.characterId == playerTypes[playerIndex].id).Count() > 0)
@@ -581,11 +582,11 @@ public class MapCreatorManager : MonoBehaviour
                 }
 
                 int id = userPlayerRecords.Count > 0 ? userPlayerRecords.Max(x => x.id) + 1 : 0;
-                userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)gridPosion.x, (int)gridPosion.y, playerTypes[playerIndex].id, 0, aiTypeSelection, 0));
+                //userPlayerRecords.Add(new PlayerRecord(id, false, isNewPlayer.isOn, (int)hex.x, (int)hex.y, playerTypes[playerIndex].id, 0, aiTypeSelection, 0));
 
                 Player newPlayer = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)), isScenarioMode ? actorPlayerTransform : playerTransform);
                 newPlayer.name = string.Format(userPlayerNameFormat, id);
-                newPlayer.GetComponent<UserPlayer>().gridPosition = gridPosion;
+                //newPlayer.GetComponent<UserPlayer>().gridPosition = hex;
                 newPlayer.GetComponent<UserPlayer>().SetPlayerModel();
                 if (isScenarioMode)
                 {
@@ -595,15 +596,15 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     stagePlayer.Add(newPlayer.GetComponent<UserPlayer>());
                 }
-            }
+            }*/
         }
     }
 
-    public void SetEnemyPlayer(Vector2 gridPosion, Vector3 pos, bool isDelete = false)
+    public void SetEnemyPlayer(HexCoord hex, Vector3 pos, bool isDelete = false)
     {
         if (isDelete)
         {
-            PlayerRecord prtemp = enemyPlayerRecords.Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).FirstOrDefault();
+            PlayerRecord prtemp = enemyPlayerRecords.Where(x => new HexCoord( x.locX , x.locY) == hex).FirstOrDefault();
             if (prtemp != null)
             {
                 Transform temp = playerTransform.Find(string.Format(enemyPlayerNameFormat, prtemp.id));
@@ -613,7 +614,8 @@ public class MapCreatorManager : MonoBehaviour
         }
         else
         {
-            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)gridPosion.x && x.locY == (int)gridPosion.y).Count() == 0)
+            /*
+            if (userPlayerRecords.Intersect(enemyPlayerRecords).Count() == 0 || userPlayerRecords.Intersect(enemyPlayerRecords).Where(x => x.locX == (int)hex.x && x.locY == (int)hex.y).Count() == 0)
             {
                 int intSearchRange = string.IsNullOrEmpty(searchRange.text) ? 0 : Convert.ToInt32(searchRange.text);
                 if (aiTypeSelection == EnemyAIType.Defanser && intSearchRange <= 0)
@@ -623,14 +625,14 @@ public class MapCreatorManager : MonoBehaviour
                 }
 
                 int id = enemyPlayerRecords.Count > 0 ? enemyPlayerRecords.Max(x => x.id) + 1 : 0;
-                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)gridPosion.x, (int)gridPosion.y, enemyIndex, enemyTypes[enemyLevelIndex].id, aiTypeSelection, intSearchRange));
+                enemyPlayerRecords.Add(new PlayerRecord(id, false, true, (int)hex.x, (int)hex.y, enemyIndex, enemyTypes[enemyLevelIndex].id, aiTypeSelection, intSearchRange));
 
                 Player newPlayer = Instantiate(PlayerPrefabHolder.instance.m_EnemyPlayerPrefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
                 newPlayer.name = string.Format(enemyPlayerNameFormat, id);
                 newPlayer.transform.SetParent(playerTransform);
-                newPlayer.GetComponent<AIPlayer>().gridPosition = gridPosion;
+                newPlayer.GetComponent<AIPlayer>().gridPosition = hex;
                 newPlayer.GetComponent<AIPlayer>().SetPlayerModel();
-            }
+            }*/
         }
     }
 
@@ -839,7 +841,7 @@ public class MapCreatorManager : MonoBehaviour
                 stageClearCondition.Add(new StageClearCondition(defeatList, count));
                 break;
             case StageClearConditionType.SpecifyTile:
-                stageClearCondition.Add(new StageClearCondition(new HexTile.HexCoord(Convert.ToInt32(conditionTileX.text), Convert.ToInt32(conditionTileY.text))));
+                stageClearCondition.Add(new StageClearCondition(new HexCoord(Convert.ToInt32(conditionTileX.text), Convert.ToInt32(conditionTileY.text))));
                 break;
         }
         ReesetConditionUI();
@@ -902,7 +904,7 @@ public class MapCreatorManager : MonoBehaviour
         InitialScenarioUI();
         ClearActor();
         EnableGroup(scenarioGroup);
-        scenarioActions = new List<ScenarioAction>();
+        scenarioActions = new List<ScenarionAction>();
         actorPlayer = new List<Player>();
     }
 
@@ -933,9 +935,9 @@ public class MapCreatorManager : MonoBehaviour
     {
         scenarioType.options.Clear();
 
-        for (int i = 0; i < (int)ScenarioType.Max; i++)
+        for (int i = 0; i < (int)ScenarionType.Max; i++)
         {
-            scenarioType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioType), (ScenarioType)i) });
+            scenarioType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionType), (ScenarionType)i) });
         }
         scenarioType.RefreshShownValue();
     }
@@ -944,9 +946,9 @@ public class MapCreatorManager : MonoBehaviour
     {
         scenarioConditionType.options.Clear();
 
-        for (int i = 0; i < (int)ScenarioConditionType.Max; i++)
+        for (int i = 0; i < (int)ScenarionConditionType.Max; i++)
         {
-            scenarioConditionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioConditionType), (ScenarioConditionType)i) });
+            scenarioConditionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionConditionType), (ScenarionConditionType)i) });
         }
         scenarioConditionType.RefreshShownValue();
     }
@@ -979,9 +981,9 @@ public class MapCreatorManager : MonoBehaviour
     {
         actionType.options.Clear();
 
-        for (int i = 0; i < (int)ScenarioActionType.Max; i++)
+        for (int i = 0; i < (int)ScenarionActionType.Max; i++)
         {
-            actionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActionType), (ScenarioActionType)i) });
+            actionType.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionActionType), (ScenarionActionType)i) });
         }
         actionType.RefreshShownValue();
     }
@@ -991,10 +993,10 @@ public class MapCreatorManager : MonoBehaviour
         createActorPivot.options.Clear();
         selectedActorPivot.options.Clear();
 
-        for (int i = 0; i < (int)ScenarioActorPivotType.Max; i++)
+        for (int i = 0; i < (int)ScenarionActorPivotType.Max; i++)
         {
-            createActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActorPivotType), (ScenarioActorPivotType)i) });
-            selectedActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarioActorPivotType), (ScenarioActorPivotType)i) });
+            createActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionActorPivotType), (ScenarionActorPivotType)i) });
+            selectedActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionActorPivotType), (ScenarionActorPivotType)i) });
         }
         createActorPivot.RefreshShownValue();
         selectedActorPivot.RefreshShownValue();
@@ -1018,23 +1020,23 @@ public class MapCreatorManager : MonoBehaviour
         DisableGroup(controlActorGroup);
         DisableGroup(controlCameraGroup);
         DisableGroup(dialogGroup);
-        ScenarioActionType temp = (ScenarioActionType)Enum.Parse(typeof(ScenarioActionType), actionType.options[actionType.value].text);
+        ScenarionActionType temp = (ScenarionActionType)Enum.Parse(typeof(ScenarionActionType), actionType.options[actionType.value].text);
         switch (temp)
         {
-            case ScenarioActionType.Dialog:
+            case ScenarionActionType.Dialog:
                 EnableGroup(dialogGroup);
                 break;
-            case ScenarioActionType.CreateActor:
+            case ScenarionActionType.CreateActor:
                 EnableGroup(createActorGroup);
                 scenarioActorPlayerRecords = new List<PlayerRecord>();
                 ResetCreateActor();
                 break;
-            case ScenarioActionType.ControlActor:
+            case ScenarionActionType.ControlActor:
                 EnableGroup(controlActorGroup);
                 SetActorSelector();
                 break;
-            case ScenarioActionType.SetCamera:
-            case ScenarioActionType.ControlCamera:
+            case ScenarionActionType.SetCamera:
+            case ScenarionActionType.ControlCamera:
                 EnableGroup(controlCameraGroup);
                 break;
         }
@@ -1057,19 +1059,19 @@ public class MapCreatorManager : MonoBehaviour
         EnableGroup(createScenarioGroup);
         isGetPos = false;
 
-        ScenarioActionType temp = (ScenarioActionType)Enum.Parse(typeof(ScenarioActionType), actionType.options[actionType.value].text);
+        ScenarionActionType temp = (ScenarionActionType)Enum.Parse(typeof(ScenarionActionType), actionType.options[actionType.value].text);
         switch (temp)
         {
-            case ScenarioActionType.CreateActor:
+            case ScenarionActionType.CreateActor:
                 createActorX.text = getPosX.text;
                 createActorY.text = getPosY.text;
                 break;
-            case ScenarioActionType.ControlActor:
+            case ScenarionActionType.ControlActor:
                 controlActorX.text = getPosX.text;
                 controlActorY.text = getPosY.text;
                 break;
-            case ScenarioActionType.SetCamera:
-            case ScenarioActionType.ControlCamera:
+            case ScenarionActionType.SetCamera:
+            case ScenarionActionType.ControlCamera:
                 controlCameraX.text = getPosX.text;
                 controlCameraY.text = getPosY.text;
                 break;
@@ -1091,7 +1093,7 @@ public class MapCreatorManager : MonoBehaviour
         userPlayer.value = 0;
         enemyPlayer.value = 0;
         isOnceEvent.isOn = true;
-        scenarioActions = new List<ScenarioAction>();
+        scenarioActions = new List<ScenarionAction>();
         ClearActionList();
         ClearActor();
         ResetAction();
@@ -1141,12 +1143,12 @@ public class MapCreatorManager : MonoBehaviour
     public void AddScenario()
     {
         int scenarioId = selectedScenarioId == -1 ? scenarios.Count > 0 ? scenarios.OrderBy(x => -x.scenarionId).FirstOrDefault().scenarionId + 1 : 0 : selectedScenarioId;
-        ScenarioType scenarioTypeValue = (ScenarioType)Enum.Parse(typeof(ScenarioType), scenarioType.options[scenarioType.value].text);
-        ScenarioConditionType scenarioConditionTypeValue = (ScenarioConditionType)Enum.Parse(typeof(ScenarioConditionType), scenarioConditionType.options[scenarioConditionType.value].text);
+        ScenarionType scenarioTypeValue = (ScenarionType)Enum.Parse(typeof(ScenarionType), scenarioType.options[scenarioType.value].text);
+        ScenarionConditionType scenarioConditionTypeValue = (ScenarionConditionType)Enum.Parse(typeof(ScenarionConditionType), scenarioConditionType.options[scenarioConditionType.value].text);
         string userPlayerId = userPlayer.options[userPlayer.value].text.Split(',')[0];
         string enemyPlayerId = enemyPlayer.options[enemyPlayer.value].text.Split(',')[0];
 
-        if (selectedScenarioId == -1 && (scenarioTypeValue == ScenarioType.Openning || scenarioTypeValue == ScenarioType.StageClear))
+        if (selectedScenarioId == -1 && (scenarioTypeValue == ScenarionType.Openning || scenarioTypeValue == ScenarionType.StageClear))
         {
             if (scenarios.Count > 0 && scenarios.Where(x => x.scenarionType == scenarioTypeValue).Count() > 0)
             {
@@ -1155,7 +1157,7 @@ public class MapCreatorManager : MonoBehaviour
             }
         }
         Scenarion scenario = new Scenarion(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, isOnceEvent.isOn, scenarioActions);
-        if (scenarioConditionTypeValue == ScenarioConditionType.BeforeBattle || scenarioConditionTypeValue == ScenarioConditionType.AfterBattle)
+        if (scenarioConditionTypeValue == ScenarionConditionType.BeforeBattle || scenarioConditionTypeValue == ScenarionConditionType.AfterBattle)
         {
             scenario = new Scenarion(scenarioId, scenarioTypeValue, scenarioConditionTypeValue, Convert.ToInt32(userPlayerId), Convert.ToInt32(enemyPlayerId), isOnceEvent.isOn, scenarioActions);
         }
@@ -1188,11 +1190,11 @@ public class MapCreatorManager : MonoBehaviour
         ResetScenario();
         selectedScenarioId = Convert.ToInt32(id);
         scenarioType.interactable = false;
-        scenarioType.value = scenarioType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioType), scenario.scenarionType));
+        scenarioType.value = scenarioType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarionType), scenario.scenarionType));
         scenarioType.RefreshShownValue();
 
         scenarioConditionType.interactable = false;
-        scenarioConditionType.value = scenarioConditionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioConditionType), scenario.scenarionConditionType));
+        scenarioConditionType.value = scenarioConditionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarionConditionType), scenario.scenarionConditionType));
         scenarioConditionType.RefreshShownValue();
 
         if (selectedScenarioId != -1)
@@ -1202,16 +1204,16 @@ public class MapCreatorManager : MonoBehaviour
             {
                 for (int i = 0; i < temp.scenarionActions.Count; i++)
                 {
-                    if (temp.scenarionActions[i].scenarioActionType == ScenarioActionType.CreateActor)
+                    if (temp.scenarionActions[i].scenarionActionType == ScenarionActionType.CreateActor)
                     {
                         for (int j = 0; j < temp.scenarionActions[i].createActors.Count; j++)
                         {
                             Vector3 pos = mapHex[Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY)][Convert.ToInt32(temp.scenarionActions[i].createActors[j].locX) + (Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY) >> 1)].HexTilePos();
                             Player player = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<Player>();
-                            player.gridPosition = new Vector2(Convert.ToInt32(temp.scenarionActions[i].createActors[j].locX), Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY));
+                            //player.gridPosition = new Vector2(Convert.ToInt32(temp.scenarionActions[i].createActors[j].locX), Convert.ToInt32(temp.scenarionActions[i].createActors[j].locY));
                             player.playerIndex = temp.scenarionActions[i].createActors[j].id;
                             player.gameObject.name = temp.scenarionActions[i].createActors[j].id.ToString();
-                            player.SetPivot(temp.scenarionActions[i].createActors[j].scenarioActorPivotType);
+                            player.SetPivot(temp.scenarionActions[i].createActors[j].scenarionActorPivotType);
                             player.SetPivot();
                             player.SetPlayerModel();
                             actorPlayer.Add(player);
@@ -1254,12 +1256,12 @@ public class MapCreatorManager : MonoBehaviour
 
     public void RemoveActionList(string id)
     {
-        ScenarioAction temp = scenarioActions.Where(x => x.scenarioActionId.ToString() == id).FirstOrDefault();
+        ScenarionAction temp = scenarioActions.Where(x => x.scenarioActionId.ToString() == id).FirstOrDefault();
 
-        if (temp.scenarioActionType == ScenarioActionType.CreateActor)
+        if (temp.scenarionActionType == ScenarionActionType.CreateActor)
         {
             //when create actor using
-            if (temp.createActors.Select(x => x.id).Intersect(scenarioActions.Where(x => x.scenarioActionType == ScenarioActionType.ControlActor).Select(x => x.actorId)).Count() > 0)
+            if (temp.createActors.Select(x => x.id).Intersect(scenarioActions.Where(x => x.scenarionActionType == ScenarionActionType.ControlActor).Select(x => x.actorId)).Count() > 0)
             {
                 Debug.Log("create actor is using");
                 return;
@@ -1286,7 +1288,7 @@ public class MapCreatorManager : MonoBehaviour
         for (int i = 0; i < scenarioActions.Count; i++)
         {
             CreaterActorSelector temp = Instantiate(creatorActionSelectorPrefab, new Vector3(), Quaternion.identity, scenarioActionItemList).GetComponent<CreaterActorSelector>();
-            temp.SetActionName(scenarioActions[i].scenarioActionId, scenarioActions[i].scenarioActionType);
+            temp.SetActionName(scenarioActions[i].scenarioActionId, scenarioActions[i].scenarionActionType);
         }
     }
 
@@ -1302,33 +1304,33 @@ public class MapCreatorManager : MonoBehaviour
     public void AddAction()
     {
         int actionId = scenarioActions.Count > 0 ? scenarioActions.OrderBy(x => -x.scenarioActionId).FirstOrDefault().scenarioActionId + 1 : 0;
-        ScenarioActionType temp = (ScenarioActionType)Enum.Parse(typeof(ScenarioActionType), actionType.options[actionType.value].text);
+        ScenarionActionType temp = (ScenarionActionType)Enum.Parse(typeof(ScenarionActionType), actionType.options[actionType.value].text);
         float afterWaitTime = string.IsNullOrEmpty(waitTime.text) ? 0 : (float)Convert.ToDouble(waitTime.text);
-        ScenarioAction action = new ScenarioAction();
+        ScenarionAction action = new ScenarionAction();
         switch (temp)
         {
-            case ScenarioActionType.Dialog:
-                action = new ScenarioAction(actionId, dialogName.text, dialogContect.text);
+            case ScenarionActionType.Dialog:
+                action = new ScenarionAction(actionId, dialogName.text, dialogContect.text);
                 break;
-            case ScenarioActionType.CreateActor:
+            case ScenarionActionType.CreateActor:
                 if (scenarioActorPlayerRecords.Count == 0)
                 {
                     return;
                 }
-                action = new ScenarioAction(actionId, scenarioActorPlayerRecords, afterWaitTime, isToDark.isOn);
+                action = new ScenarionAction(actionId, scenarioActorPlayerRecords, afterWaitTime, isToDark.isOn);
                 break;
-            case ScenarioActionType.ControlActor:
-                ScenarioActorPivotType tempPivot = (ScenarioActorPivotType)Enum.Parse(typeof(ScenarioActorPivotType), selectedActorPivot.options[selectedActorPivot.value].text);
+            case ScenarionActionType.ControlActor:
+                ScenarionActorPivotType tempPivot = (ScenarionActorPivotType)Enum.Parse(typeof(ScenarionActorPivotType), selectedActorPivot.options[selectedActorPivot.value].text);
                 string[] tempActorId = selectedActor.options[selectedActor.value].text.Split(',');
-                action = new ScenarioAction(actionId, Convert.ToInt32(tempActorId[0]), new HexTile.HexCoord(Convert.ToInt32(controlActorX.text), Convert.ToInt32(controlActorY.text)), tempPivot, afterWaitTime, isToDark.isOn);
+                action = new ScenarionAction(actionId, Convert.ToInt32(tempActorId[0]), new HexCoord(Convert.ToInt32(controlActorX.text), Convert.ToInt32(controlActorY.text)), tempPivot, afterWaitTime, isToDark.isOn);
                 break;
-            case ScenarioActionType.SetCamera:
-            case ScenarioActionType.ControlCamera:
-                action = new ScenarioAction(actionId, (temp == ScenarioActionType.ControlCamera), new HexTile.HexCoord(Convert.ToInt32(controlCameraX.text), Convert.ToInt32(controlCameraY.text)), afterWaitTime, isToDark.isOn);
+            case ScenarionActionType.SetCamera:
+            case ScenarionActionType.ControlCamera:
+                action = new ScenarionAction(actionId, (temp == ScenarionActionType.ControlCamera), new HexCoord(Convert.ToInt32(controlCameraX.text), Convert.ToInt32(controlCameraY.text)), afterWaitTime, isToDark.isOn);
                 break;
-            case ScenarioActionType.AddUserPlayer:
+            case ScenarionActionType.AddUserPlayer:
                 break;
-            case ScenarioActionType.AddEnemyPlayer:
+            case ScenarionActionType.AddEnemyPlayer:
                 break;
         }
         if (selectedActionId == -1)
@@ -1339,7 +1341,7 @@ public class MapCreatorManager : MonoBehaviour
         {
             //update
             action.scenarioActionId = selectedActionId;
-            List<ScenarioAction> tempActions = scenarioActions.Where(x => x.scenarioActionId != selectedActionId).ToList();
+            List<ScenarionAction> tempActions = scenarioActions.Where(x => x.scenarioActionId != selectedActionId).ToList();
             tempActions.Add(action);
             scenarioActions.Clear();
             scenarioActions.AddRange(tempActions);
@@ -1351,7 +1353,7 @@ public class MapCreatorManager : MonoBehaviour
 
     public void LoadAction(string id)
     {
-        ScenarioAction action = scenarioActions.Where(x => x.scenarioActionId.ToString() == id).FirstOrDefault();
+        ScenarionAction action = scenarioActions.Where(x => x.scenarioActionId.ToString() == id).FirstOrDefault();
         if (action == null)
         {
             return;
@@ -1359,39 +1361,39 @@ public class MapCreatorManager : MonoBehaviour
         ResetAction();
         selectedActionId = Convert.ToInt32(id);
         actionType.interactable = false;
-        actionType.value = actionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioActionType), action.scenarioActionType));
+        actionType.value = actionType.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarionActionType), action.scenarionActionType));
         actionType.RefreshShownValue();
         SetActorPos();
         waitTime.text = action.waitTime.ToString();
         isToDark.isOn = action.isToDark;
-        switch (action.scenarioActionType)
+        switch (action.scenarionActionType)
         {
-            case ScenarioActionType.Dialog:
+            case ScenarionActionType.Dialog:
                 dialogName.text = action.dialogName;
                 dialogContect.text = action.dialogText;
                 break;
-            case ScenarioActionType.CreateActor:
+            case ScenarionActionType.CreateActor:
                 scenarioActorPlayerRecords = action.createActors;
                 ReloadCreateActorList();
                 break;
-            case ScenarioActionType.ControlActor:
+            case ScenarionActionType.ControlActor:
                 SetActorSelector();
                 selectedActor.value = selectedActor.options.FindIndex(x => x.text.Split(',')[0] == action.actorId.ToString());
-                selectedActorPivot.value = selectedActorPivot.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarioActorPivotType), action.actorPivot));
+                selectedActorPivot.value = selectedActorPivot.options.FindIndex(x => x.text == Enum.GetName(typeof(ScenarionActorPivotType), action.actorPivot));
                 controlActorX.text = action.targetMoveTile.m_Q.ToString();
                 controlActorY.text = action.targetMoveTile.m_R.ToString();
                 break;
-            case ScenarioActionType.SetCamera:
+            case ScenarionActionType.SetCamera:
                 controlCameraX.text = action.setCameraPos.m_Q.ToString();
                 controlCameraY.text = action.setCameraPos.m_R.ToString();
                 break;
-            case ScenarioActionType.ControlCamera:
+            case ScenarionActionType.ControlCamera:
                 controlCameraX.text = action.targetMoveTile.m_Q.ToString();
                 controlCameraY.text = action.targetMoveTile.m_R.ToString();
                 break;
-            case ScenarioActionType.AddUserPlayer:
+            case ScenarionActionType.AddUserPlayer:
                 break;
-            case ScenarioActionType.AddEnemyPlayer:
+            case ScenarionActionType.AddEnemyPlayer:
                 break;
         }
     }
@@ -1421,7 +1423,7 @@ public class MapCreatorManager : MonoBehaviour
         for (int i = 0; i < scenarioActorPlayerRecords.Count; i++)
         {
             CreaterActorSelector temp = Instantiate(creatorActorSelectorPrefab, new Vector3(), Quaternion.identity, createActorItemList).GetComponent<CreaterActorSelector>();
-            temp.SetActorName(scenarioActorPlayerRecords[i].id, gameElement.characters.Where(x => x.id == scenarioActorPlayerRecords[i].characterId).FirstOrDefault().name, scenarioActorPlayerRecords[i].locX, scenarioActorPlayerRecords[i].locY, scenarioActorPlayerRecords[i].scenarioActorPivotType);
+            temp.SetActorName(scenarioActorPlayerRecords[i].id, gameElement.characters.Where(x => x.id == scenarioActorPlayerRecords[i].characterId).FirstOrDefault().name, scenarioActorPlayerRecords[i].locX, scenarioActorPlayerRecords[i].locY, scenarioActorPlayerRecords[i].scenarionActorPivotType);
         }
     }
 
@@ -1441,7 +1443,7 @@ public class MapCreatorManager : MonoBehaviour
     {
         string[] id = characterTemplate.options[characterTemplate.value].text.Split(',');
         CharacterTemplate temp = gameElement.characters.Where(x => x.id.ToString() == id[2]).FirstOrDefault();
-        ScenarioActorPivotType tempPivot = (ScenarioActorPivotType)Enum.Parse(typeof(ScenarioActorPivotType), createActorPivot.options[createActorPivot.value].text);
+        ScenarionActorPivotType tempPivot = (ScenarionActorPivotType)Enum.Parse(typeof(ScenarionActorPivotType), createActorPivot.options[createActorPivot.value].text);
 
         int val = 0;
         if (!Int32.TryParse(createActorX.text, out val) || !Int32.TryParse(createActorY.text, out val))
@@ -1459,7 +1461,7 @@ public class MapCreatorManager : MonoBehaviour
             scenarioActorPlayerRecords.Add(new PlayerRecord(actorId, Convert.ToInt32(createActorX.text), Convert.ToInt32(createActorY.text), temp.id, tempPivot));
             Vector3 pos = mapHex[Convert.ToInt32(createActorY.text)][Convert.ToInt32(createActorX.text) + (Convert.ToInt32(createActorY.text) >> 1)].HexTilePos();
             Player player = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, pos, Quaternion.identity, actorPlayerTransform).GetComponent<Player>();
-            player.gridPosition = new Vector2(Convert.ToInt32(createActorX.text), Convert.ToInt32(createActorY.text));
+            //player.gridPosition = new Vector2(Convert.ToInt32(createActorX.text), Convert.ToInt32(createActorY.text));
             player.playerIndex = actorId;
             player.gameObject.name = actorId.ToString();
             player.SetPivot(tempPivot);
@@ -1517,25 +1519,25 @@ public class MapCreatorManager : MonoBehaviour
 
         for (int i = 0; i < (selectedActionId == -1 ? scenarioActions.Count : selectedActionId + 1); i++)
         {
-            if (scenarioActions[i].scenarioActionType == ScenarioActionType.CreateActor)
+            if (scenarioActions[i].scenarionActionType == ScenarionActionType.CreateActor)
             {
                 for (int j = 0; j < scenarioActions[i].createActors.Count; j++)
                 {
                     Vector3 pos = mapHex[Convert.ToInt32(scenarioActions[i].createActors[j].locY)][Convert.ToInt32(scenarioActions[i].createActors[j].locX) + (Convert.ToInt32(scenarioActions[i].createActors[j].locY) >> 1)].HexTilePos();
                     Player player = actorPlayer.Where(x => x.playerIndex == scenarioActions[i].createActors[j].id).FirstOrDefault();
                     player.ShowPlayer();
-                    player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].createActors[j].locX), Convert.ToInt32(scenarioActions[i].createActors[j].locY));
+                    //player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].createActors[j].locX), Convert.ToInt32(scenarioActions[i].createActors[j].locY));
                     player.transform.position = pos;
-                    player.SetPivot(scenarioActions[i].createActors[j].scenarioActorPivotType);
+                    player.SetPivot(scenarioActions[i].createActors[j].scenarionActorPivotType);
                     player.SetPivot();
                 }
             }
-            else if (scenarioActions[i].scenarioActionType == ScenarioActionType.ControlActor)
+            else if (scenarioActions[i].scenarionActionType == ScenarionActionType.ControlActor)
             {
                 Vector3 pos = mapHex[Convert.ToInt32(scenarioActions[i].targetMoveTile.m_R)][Convert.ToInt32(scenarioActions[i].targetMoveTile.m_Q) + (Convert.ToInt32(scenarioActions[i].targetMoveTile.m_R) >> 1)].HexTilePos();
                 Player player = actorPlayer.Where(x => x.playerIndex == scenarioActions[i].actorId).FirstOrDefault();
                 player.ShowPlayer();
-                player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].targetMoveTile.m_Q), Convert.ToInt32(scenarioActions[i].targetMoveTile.m_R));
+                //player.gridPosition = new Vector2(Convert.ToInt32(scenarioActions[i].targetMoveTile.m_Q), Convert.ToInt32(scenarioActions[i].targetMoveTile.m_R));
                 player.transform.position = pos;
                 player.SetPivot(scenarioActions[i].actorPivot);
                 player.SetPivot();
@@ -1616,7 +1618,7 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
-                tile.TileInitializer(TileType.Normal, TileType2D.Plain, 0, 0, j, i, mapSizeX, mapSizeY, 0, -1, -1, false);
+                tile.TileInitializer(TileType.Normal, TileType2D.Plain, 0, 0, j, i, 0, -1, -1, false);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -1635,9 +1637,9 @@ public class MapCreatorManager : MonoBehaviour
         connerPointD = new Vector3(0, 0, -mapSizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
-        ScreenController.instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
+        ScreenController.m_Instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         ReloadScenarioList();
         //Rectangle
@@ -1714,7 +1716,7 @@ public class MapCreatorManager : MonoBehaviour
             Destroy(playerTransform.transform.GetChild(i).gameObject);
         }
 
-        ScreenController.instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
+        ScreenController.m_Instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
@@ -1740,7 +1742,7 @@ public class MapCreatorManager : MonoBehaviour
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
                 TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
-                tile.TileInitializer((TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, mapSizeX, mapSizeY, temp.gold, temp.itemId, temp.weaponId, temp.isShop);
+                tile.TileInitializer((TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, temp.gold, temp.itemId, temp.weaponId, temp.isShop);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -1759,7 +1761,7 @@ public class MapCreatorManager : MonoBehaviour
         connerPointD = new Vector3(0, 0, -mapSizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
         LoadPlayers();
 
@@ -1799,7 +1801,7 @@ public class MapCreatorManager : MonoBehaviour
             Player newPlayer = Instantiate(PlayerPrefabHolder.instance.m_UserPlayerPrefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
             newPlayer.name = string.Format(userPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
-            newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
+            //newPlayer.GetComponent<UserPlayer>().gridPosition = new Vector2(userPlayerRecords[i].locX, userPlayerRecords[i].locY);
             newPlayer.GetComponent<UserPlayer>().SetPlayerModel();
         }
 
@@ -1811,7 +1813,7 @@ public class MapCreatorManager : MonoBehaviour
             Player newPlayer = Instantiate(PlayerPrefabHolder.instance.m_EnemyPlayerPrefab, new Vector3(pos.x, playerHeight, pos.z), Quaternion.Euler(new Vector3(0, 180, 0)));
             newPlayer.name = string.Format(enemyPlayerNameFormat, id);
             newPlayer.transform.SetParent(playerTransform);
-            newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
+            //newPlayer.GetComponent<AIPlayer>().gridPosition = new Vector2(enemyPlayerRecords[i].locX, enemyPlayerRecords[i].locY);
             newPlayer.GetComponent<AIPlayer>().SetPlayerModel();
         }
 

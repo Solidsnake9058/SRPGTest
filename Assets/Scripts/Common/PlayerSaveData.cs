@@ -57,7 +57,7 @@ public class SaveDataStore
         m_ChestStates = new List<ChestState>();
     }
 
-    public bool GetChestState(HexTile.HexCoord hex)
+    public bool GetChestState(HexCoord hex)
     {
         for (int i = 0; i < m_ChestStates.Count; i++)
         {

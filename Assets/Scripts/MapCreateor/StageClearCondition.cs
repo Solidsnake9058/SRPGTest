@@ -8,7 +8,7 @@ public class StageClearCondition
     public StageClearConditionType stageClearConditionType;
     public List<int> enemyDeadList = new List<int>();
     public int enemyDeadCount = 0;
-    public HexTile.HexCoord specifyTile;
+    public HexCoord specifyTile;
 
     public StageClearCondition() { }
 
@@ -19,7 +19,7 @@ public class StageClearCondition
         this.enemyDeadCount = enemyDeadCount;
     }
 
-    public StageClearCondition(HexTile.HexCoord specifyTile)
+    public StageClearCondition(HexCoord specifyTile)
     {
         stageClearConditionType = StageClearConditionType.SpecifyTile;
         this.specifyTile = specifyTile;

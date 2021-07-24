@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class ScreenController : MonoBehaviour
 {
-    public static ScreenController instance;
+    public static ScreenController m_Instance;
 
     public float mSpeed = 5;
 
@@ -37,16 +37,19 @@ public class ScreenController : MonoBehaviour
 
     public Transform cameraPos;
 
+    public bool m_IsCameraMoving { get; private set; }
+
     private void Awake()
     {
-        if (instance == null)
+        if (m_Instance == null)
         {
-            instance = this;
+            m_Instance = this;
             DontDestroyOnLoad(this);
         }
         else
         {
             Destroy(gameObject);
+            return;
         }
         imageRight.enabled = imageLeft.enabled = imageUp.enabled = imageDown.enabled = false;
         playerUIs = new List<PlayerUI>();
@@ -115,6 +118,11 @@ public class ScreenController : MonoBehaviour
     public void SetPlayerUIs()
     {
         playerUIs = (playerUITransform.GetComponentsInChildren<PlayerUI>()).ToList(); ;
+    }
+
+    public void SetPlayerUI(PlayerUI playerUI)
+    {
+        playerUIs.Add(playerUI);
     }
 
     public void TurnCameraRight()
@@ -242,6 +250,32 @@ public class ScreenController : MonoBehaviour
         cameraPos.rotation = Quaternion.Euler(pos);
     }
 
+    public void MoveCameraPos(Vector3 pos, float time = 0)
+    {
+        if (time > 0)
+        {
+            StartCoroutine(MoveCamera(pos, time));
+        }
+        else
+        {
+            cameraPos.localPosition = pos;
+            m_IsCameraMoving = false;
+        }
+    }
+
+    private IEnumerator MoveCamera(Vector3 pos, float time)
+    {
+        float timeCur = 0;
+        Vector3 posCur = cameraPos.localPosition;
+        m_IsCameraMoving = true;
+        while (timeCur < time)
+        {
+            timeCur = Mathf.Min(timeCur + Time.deltaTime, time);
+            cameraPos.localPosition = Vector3.Lerp(posCur, pos, timeCur / time);
+            yield return null;
+        }
+        m_IsCameraMoving = false;
+    }
 
     public bool isContain(Vector3 mp1, Vector3 mp2, Vector3 mp3, Vector3 mp4, Vector3 mp)
     {

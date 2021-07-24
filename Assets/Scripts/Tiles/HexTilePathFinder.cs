@@ -7,7 +7,7 @@ public static class HexTilePathFinder
 {
     public static HexTilePath FindPath(HexTile originTile, HexTile desinationTile, bool ignorePlayer)
     {
-        return FindPath(originTile, desinationTile, new HexTile.HexCoord[0], ignorePlayer);
+        return FindPath(originTile, desinationTile, new HexCoord[0], ignorePlayer);
     }
 
     //public static HexTilePath FindPath(HexTile originTile, HexTile desinationTile, Vector2[] occupied)
@@ -64,7 +64,7 @@ public static class HexTilePathFinder
     //    return null;
     //}
 
-    public static HexTilePath FindPath(HexTile originTile, HexTile desinationTile, HexTile.HexCoord[] occupied, bool ignorePlayers)
+    public static HexTilePath FindPath(HexTile originTile, HexTile desinationTile, HexCoord[] occupied, bool ignorePlayers)
     {
         //Debug.Log("Ori:(" + originTile.gridPostion.x + "," + originTile.gridPostion.y + "), Des:(" + desinationTile.gridPostion.x + "," + desinationTile.gridPostion.y + ")");
 

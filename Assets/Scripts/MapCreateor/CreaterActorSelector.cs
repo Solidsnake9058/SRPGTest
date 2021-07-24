@@ -6,55 +6,55 @@ using UnityEngine.UI;
 
 public class CreaterActorSelector : MonoBehaviour {
     public Text ActorName;
-    public ScenarioSelectType scenarioSelectType;
+    public ScenarionSelectType scenarioSelectType;
 
-    public void SetActorName(int id,string actorName,int posX,int posY,ScenarioActorPivotType scenarioActorPivotType)
+    public void SetActorName(int id,string actorName,int posX,int posY,ScenarionActorPivotType scenarioActorPivotType)
     {
         name = id.ToString();
         string pivot = "";
         switch (scenarioActorPivotType)
         {
-            case ScenarioActorPivotType.Right:
+            case ScenarionActorPivotType.Right:
                 pivot = "R";
                 break;
-            case ScenarioActorPivotType.UpRight:
+            case ScenarionActorPivotType.UpRight:
                 pivot = "UR";
                 break;
-            case ScenarioActorPivotType.UpLeft:
+            case ScenarionActorPivotType.UpLeft:
                 pivot = "UL";
                 break;
-            case ScenarioActorPivotType.Left:
+            case ScenarionActorPivotType.Left:
                 pivot = "L";
                 break;
-            case ScenarioActorPivotType.DownLeft:
+            case ScenarionActorPivotType.DownLeft:
                 pivot = "DL";
                 break;
-            case ScenarioActorPivotType.DownRight:
+            case ScenarionActorPivotType.DownRight:
                 pivot = "DR";
                 break;
         }
         ActorName.text = string.Format("{0} ({1},{2}) {3}", actorName, posX, posY, pivot);
     }
 
-    public void SetActionName(int id, ScenarioActionType action)
+    public void SetActionName(int id, ScenarionActionType action)
     {
         name = id.ToString();
-        ActorName.text = string.Format("Step:{0},{1}", id, Enum.GetName(typeof(ScenarioActionType), action));
+        ActorName.text = string.Format("Step:{0},{1}", id, Enum.GetName(typeof(ScenarionActionType), action));
     }
 
-    public void SetActionName(int id, ScenarioType action)
+    public void SetActionName(int id, ScenarionType action)
     {
         name = id.ToString();
-        ActorName.text = string.Format("{0},{1}", id, Enum.GetName(typeof(ScenarioType), action));
+        ActorName.text = string.Format("{0},{1}", id, Enum.GetName(typeof(ScenarionType), action));
         switch (action)
         {
-            case ScenarioType.Openning:
+            case ScenarionType.Openning:
                 GetComponent<Image>().color = Color.blue;
                 break;
-            case ScenarioType.Event:
+            case ScenarionType.Event:
                 GetComponent<Image>().color = Color.green;
                 break;
-            case ScenarioType.StageClear:
+            case ScenarionType.StageClear:
                 GetComponent<Image>().color = Color.red;
                 break;
         }
@@ -64,13 +64,13 @@ public class CreaterActorSelector : MonoBehaviour {
     {
         switch (scenarioSelectType)
         {
-            case ScenarioSelectType.Scenario:
+            case ScenarionSelectType.Scenario:
                 MapCreatorManager.instance.RemoveScenarioList(name);
                 break;
-            case ScenarioSelectType.Action:
+            case ScenarionSelectType.Action:
                 MapCreatorManager.instance.RemoveActionList(name);
                 break;
-            case ScenarioSelectType.Actor:
+            case ScenarionSelectType.Actor:
                 MapCreatorManager.instance.RemoveCreateActorList(name);
                 break;
         }        
@@ -80,13 +80,13 @@ public class CreaterActorSelector : MonoBehaviour {
     {
         switch (scenarioSelectType)
         {
-            case ScenarioSelectType.Scenario:
+            case ScenarionSelectType.Scenario:
                 MapCreatorManager.instance.LoadScenario(name.Split(',')[0]);
                 break;
-            case ScenarioSelectType.Action:
+            case ScenarionSelectType.Action:
                 MapCreatorManager.instance.LoadAction(name.Split(',')[0].Replace("Step:", ""));
                 break;
-            case ScenarioSelectType.Actor:
+            case ScenarionSelectType.Actor:
                 break;
         }
     }

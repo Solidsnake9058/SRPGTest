@@ -4,75 +4,18 @@ using System.Collections.Generic;
 
 public class UserPlayer : Player
 {
-    public Vector2 originalMapHexIndex
+    public override void SystemUpdate()
     {
-        get
-        {
-            return new Vector2(originalGridPosition.x + (((int)originalGridPosition.y) >> 1), originalGridPosition.y);
-        }
-    }
-    // Use this for initialization
-    void Start()
-    {
-        //SetPlayerModel();
-    }
-
-    public override void SetOriginalPos()
-    {
-        originalGridPosition = gridPosition;
-        base.SetOriginalPos();
-    }
-
-    // Update is called once per frame
-    public override void Update()
-    {
-        //if (GameManager.instance.players[GameManager.instance.currentPlayerIndex] == this)
-        //{
-        //    transform.GetComponent<Renderer>().material.color = Color.green;
-        //}
-        //else
-        //{
-        //    transform.GetComponent<Renderer>().material.color = Color.white;
-        //}
         TurnUpdate();
-        base.Update();
     }
 
     public override void TurnEnd()
     {
         HexTile tile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex);
-        //if (tile.m_IsHaveChest && !tile.m_IsChestOpened)
         {
             tile.OpenChest();
         }
         base.TurnEnd();
-    }
-
-    public override void TurnUpdate()
-    {
-        //highlight
-
-        //if (positionQueue.Count > 0)
-        //{
-        //    transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
-        //    transform.LookAt(positionQueue[0]);
-        //    animator.SetBool("walk", true);
-        //    if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
-        //    {
-        //        transform.position = positionQueue[0];
-        //        positionQueue.RemoveAt(0);
-        //        if (positionQueue.Count == 0)
-        //        {
-        //            //actionPoint--;
-        //            animator.SetBool("walk", false);
-        //            //transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
-        //            GameManager.instance.ShowConfirmMenu();
-        //        }
-        //    }
-        //}
-
-        base.TurnUpdate();
-
     }
 
     protected override void MoveToPointAction()

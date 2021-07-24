@@ -40,6 +40,9 @@ public class TileXml
 [XmlRoot("MapCollection")]
 public class MapContainer
 {
+    [XmlAttribute("stageTitle")]
+    public string stageTitle;
+
     [XmlAttribute("sizeX")]
     public int sizeX;
     [XmlAttribute("sizeY")]

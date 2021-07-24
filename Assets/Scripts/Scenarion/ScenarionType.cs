@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-public enum ScenarioType
+public enum ScenarionType
 {
     Openning,
     Event,
@@ -9,7 +9,7 @@ public enum ScenarioType
     Max
 }
 
-public enum ScenarioConditionType
+public enum ScenarionConditionType
 {
     None,
     AfterShop,
@@ -18,7 +18,7 @@ public enum ScenarioConditionType
     Max
 }
 
-public enum ScenarioActionType
+public enum ScenarionActionType
 {
     Dialog,
     CreateActor,
@@ -30,7 +30,7 @@ public enum ScenarioActionType
     Max
 }
 
-public enum ScenarioActorPivotType
+public enum ScenarionActorPivotType
 {
     Right,
     UpRight,
@@ -41,7 +41,7 @@ public enum ScenarioActorPivotType
     Max
 }
 
-public enum ScenarioSelectType
+public enum ScenarionSelectType
 {
     Scenario,
     Action,

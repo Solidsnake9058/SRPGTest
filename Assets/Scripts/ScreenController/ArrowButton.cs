@@ -28,7 +28,7 @@ public class ArrowButton : MonoBehaviour,IPointerDownHandler,IPointerUpHandler {
 	void Update () {
         if (isPress)
         {
-            ScreenController.instance.MoveCamera(pivot);
+            ScreenController.m_Instance.MoveCamera(pivot);
         }
 	}
 }

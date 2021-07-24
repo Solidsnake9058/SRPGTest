@@ -44,7 +44,7 @@ public class PlayerRecord
     [JsonProperty]
     public int equipWeapon { get; private set; }
     [JsonProperty]
-    public ScenarioActorPivotType scenarioActorPivotType { get; private set; }
+    public ScenarionActorPivotType scenarionActorPivotType { get; private set; }
     [JsonProperty]
     public bool isActable { get; private set; }
 
@@ -79,7 +79,7 @@ public class PlayerRecord
         playerRecord.dex = this.dex;
         playerRecord.mdef = this.mdef;
         playerRecord.equipWeapon = this.equipWeapon;
-        playerRecord.scenarioActorPivotType = this.scenarioActorPivotType;
+        playerRecord.scenarionActorPivotType = this.scenarionActorPivotType;
         playerRecord.isActable = this.isActable;
         playerRecord.aiType = this.aiType;
         playerRecord.searchRange = this.searchRange;
@@ -118,13 +118,13 @@ public class PlayerRecord
         this.searchRange = searchRange;
     }
 
-    public PlayerRecord(int id, int locX, int locY, int characterId, ScenarioActorPivotType scenarioActorPivotType)
+    public PlayerRecord(int id, int locX, int locY, int characterId, ScenarionActorPivotType scenarioActorPivotType)
     {
         this.id = id;
         this.locX = locX;
         this.locY = locY;
         this.characterId = characterId;
-        this.scenarioActorPivotType = scenarioActorPivotType;
+        this.scenarionActorPivotType = scenarioActorPivotType;
         levelId = 0;
     }
 

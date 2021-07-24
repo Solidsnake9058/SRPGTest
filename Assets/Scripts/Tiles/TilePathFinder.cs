@@ -11,6 +11,7 @@ public class TilePathFinder : MonoBehaviour
 
     }
 
+    /*
     public static TilePath FindPath(Tile originTile, Tile desinationTile)
     {
         return FindPath(originTile, desinationTile, new Vector2[0], false);
@@ -69,5 +70,5 @@ public class TilePathFinder : MonoBehaviour
         closed.Remove(originTile);
         return null;
     }
-
+    */
 }

@@ -16,11 +16,14 @@ public class GameMidiator : MonoBehaviour
     [SerializeField]
     private PlayerManager _PlayerManager = default;
     [SerializeField]
+    private ScenarionManager _ScenarionManager = default;
+    [SerializeField]
     private GameUIManager _GameUIManager = default;
 
     public StageManager m_StageManager { get { return _StageManager; } }
     public StageMapManager m_StageMapManager { get { return _StageMapManager; } }
     public PlayerManager m_PlayerManager { get { return _PlayerManager; } }
+    public ScenarionManager m_ScenarionManager { get { return _ScenarionManager; } }
     public GameUIManager m_GameUIManager { get { return _GameUIManager; } }
 
     void Awake()
@@ -39,6 +42,7 @@ public class GameMidiator : MonoBehaviour
 
     private void GameSetting()
     {
+        m_ScenarionManager.GameSetting();
         m_StageMapManager.GameSetting();
         m_StageManager.GameSetting();
         m_PlayerManager.GameSetting();

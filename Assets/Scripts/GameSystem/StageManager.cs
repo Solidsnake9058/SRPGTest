@@ -10,6 +10,8 @@ public class StageManager : IGameItem
     private int m_StageIndex = 0;
     public MapContainer m_Container { get; private set; }
 
+    public string StageTitle => m_Container != null ? m_Container.stageTitle : "";
+
     public bool LoadStageData(SaveDataStore saveData)
     {
 
@@ -18,12 +20,6 @@ public class StageManager : IGameItem
         {
             return false;
         }
-
-        Vector3 connerPointA = Vector3.zero;
-        Vector3 connerPointB = Vector3.zero;
-        Vector3 connerPointC = Vector3.zero;
-        Vector3 connerPointD = Vector3.zero;
-
         m_Container = ObjectSaveLoad.JsonDataLoad<MapContainer>(m_StageAssets[m_StageIndex].text);
         m_Container.InitTileDataMap();
 
@@ -31,10 +27,10 @@ public class StageManager : IGameItem
 
         List<PlayerRecord> userPlayerRecords = GetUserPlayerRecords(saveData.m_UserPlayerRecords, saveData.m_StagePlayerRecords);
         List<PlayerRecord> enemyPlayerRecords = GetEnemyPlayerRecords(saveData.m_StageEnemyRecords);
-        List<Scenarion> stageScenatios = m_Container.scenarionList;
 
         GameMidiator.m_Instance.m_PlayerManager.GenetarePlayers(userPlayerRecords);
         GameMidiator.m_Instance.m_PlayerManager.GenetarePlayers(enemyPlayerRecords);
+        GameMidiator.m_Instance.m_ScenarionManager.SetScenarion(m_Container.scenarionList, saveData.m_RemoveScenaroList);
         return true;
     }
 

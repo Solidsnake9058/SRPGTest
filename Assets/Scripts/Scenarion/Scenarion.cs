@@ -1,21 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
+[System.Serializable]
 public class Scenarion
 {
     public int scenarionId;
-    public ScenarioType scenarionType;
-    public ScenarioConditionType scenarionConditionType;
+    public ScenarionType scenarionType;
+    public ScenarionConditionType scenarionConditionType;
     public int userPlayer = -1;
     public int enemyPlayer = -1;
     public bool isOnceEvent;
-    public List<ScenarioAction> scenarionActions;
+    public List<ScenarionAction> scenarionActions;
     public int scenarionActionStep = 0;
-    public HexTile battleAfterEvent;
+    public HexCoord? battleAfterEvent;
 
     public Scenarion() { }
 
-    public Scenarion(int scenarionId, ScenarioType scenarionType, ScenarioConditionType scenarionConditionType, int userPlayer, int enemyPlayer, bool isOnceEvent, List<ScenarioAction> scenarionActions)
+    public Scenarion(int scenarionId, ScenarionType scenarionType, ScenarionConditionType scenarionConditionType, int userPlayer, int enemyPlayer, bool isOnceEvent, List<ScenarionAction> scenarionActions)
     {
         this.scenarionId = scenarionId;
         this.scenarionType = scenarionType;
@@ -26,7 +27,7 @@ public class Scenarion
         this.scenarionActions = scenarionActions;
     }
 
-    public Scenarion(int scenarionId, ScenarioType scenarionType, ScenarioConditionType scenarionConditionType, bool isOnceEvent, List<ScenarioAction> scenarionActions)
+    public Scenarion(int scenarionId, ScenarionType scenarionType, ScenarionConditionType scenarionConditionType, bool isOnceEvent, List<ScenarionAction> scenarionActions)
     {
         this.scenarionId = scenarionId;
         this.scenarionType = scenarionType;
