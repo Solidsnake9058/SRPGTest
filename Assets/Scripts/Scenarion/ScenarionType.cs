@@ -32,13 +32,12 @@ public enum ScenarionActionType
 
 public enum ScenarionActorPivotType
 {
-    Right,
-    UpRight,
-    UpLeft,
-    Left,
-    DownLeft,
-    DownRight,
-    Max
+    Right = 90,
+    UpRight = 30,
+    UpLeft = 330,
+    Left = 270,
+    DownLeft = 210,
+    DownRight = 150,
 }
 
 public enum ScenarionSelectType

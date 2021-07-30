@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class CharacterSelection : MonoBehaviour
 {
+    protected static GameUIManager m_GameUIManager { get { return GameMidiator.m_Instance.m_GameUIManager; } }
+
     [SerializeField]
     private Text m_PlayerName;
     [SerializeField]
@@ -28,7 +30,7 @@ public class CharacterSelection : MonoBehaviour
     }
     public void CilckActoin()
     {
-        ScreenController.m_Instance.SetCameraPos(m_FocusPos);
+        m_GameUIManager.m_ScreenControlUI.SetCameraPos(m_FocusPos);
         m_ClickEvent?.Invoke();
         //GameManager.instance.DisableGroup(GameManager.instance.unitGroup);
     }

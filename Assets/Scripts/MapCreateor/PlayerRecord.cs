@@ -90,6 +90,7 @@ public class PlayerRecord
     {
         locX = playerRecord.locX;
         locY = playerRecord.locY;
+        scenarionActorPivotType = playerRecord.scenarionActorPivotType;
     }
 
     public void SetPlayerHp(PlayerRecord playerRecord)

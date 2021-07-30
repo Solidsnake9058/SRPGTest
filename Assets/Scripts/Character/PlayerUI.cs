@@ -5,47 +5,41 @@ using UnityEngine.UI;
 
 public class PlayerUI : MonoBehaviour
 {
+    [SerializeField]
+    private Transform m_UIBase = default;
 
-    public Player player;
-    public Image playerHP;
-    public Text playerHPText;
-    public Text playerEnable;
-    private float uiHeight = 1f;
-    public float standradUIHeight = 1f;
-    private bool m_IsEnemy;
-    private int m_PlayerIndex;
+    [SerializeField]
+    private Image m_PlayerHP = default;
+    [SerializeField]
+    private Text m_PlayerHPText = default;
+    [SerializeField]
+    private Text m_PlayerEnable = default;
+    [SerializeField]
+    private float m_StandradUIHeight = 1f;
+    private bool m_IsEnemy = default;
+    private int m_PlayerIndex = default;
 
-    private void Awake()
+    public void SetPosition(Vector3 pos)
     {
-        Transform ui = transform.Find("Canvas").GetComponent<Canvas>().transform;
-
-        playerHP = ui.Find("HP").GetComponent<Image>();
-        playerHPText = ui.Find("HPText").GetComponent<Text>();
-        playerEnable = ui.Find("IsEnable").GetComponent<Text>();
-        uiHeight = standradUIHeight;
+        pos.y = m_StandradUIHeight;
+        transform.position = pos;
     }
-
-    // Update is called once per frame
-    void Update()
+    public void RefreshUI(float hp, float hpMax, PlayerState playerState)
     {
-        if (!GameManager.m_Instance.GetIsWaitingBattle())
-        {
-            transform.position = player.transform.position + new Vector3(0, uiHeight, 0);
-            playerHP.fillAmount = player.m_Hp / (float)player.m_MaxHP;
-            playerHPText.text = string.Format("{0}/{1}", player.m_Hp, player.m_MaxHP);
-            playerEnable.enabled = !player.m_IsActable;
-            playerEnable.text = player.m_Hp > 0 ? "<color=lightblue>E</color>" : "<color=red>D</color>";
-        }
+        m_PlayerHP.fillAmount = hp / hpMax;
+        m_PlayerHPText.text = $"{hp:0}/{hpMax:0}";
+        m_PlayerEnable.enabled = !playerState.Equals(PlayerState.Active);
+        m_PlayerEnable.text = hp > 0 ? "<color=lightblue>E</color>" : "<color=red>D</color>";
     }
 
     public void SetShowUI()
     {
-        uiHeight = standradUIHeight;
+        m_UIBase.localPosition = Vector3.zero;
     }
 
     public void SetHideUI()
     {
-        uiHeight = -100f;
+        m_UIBase.localPosition = new Vector3(0,-100,0);
     }
 
     public void SetPlayerIndex(bool isEnemy, int index)

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerManager : IGameItem
 {
+    protected static GameUIManager m_GameUIManager { get { return GameMidiator.m_Instance.m_GameUIManager; } }
+
     [SerializeField]
     private Transform m_PlayerTransform = default;
     [SerializeField]
@@ -71,7 +73,7 @@ public class PlayerManager : IGameItem
                 continue;
             }
             Vector3 tilePos = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(playerRecord.locX, playerRecord.locY).HexTilePos();
-            CharacterTemplate playerData = m_GameManager.GetPlayerType(playerRecord.characterId, playerRecord.isEnemy);
+            CharacterTemplate playerData = GameMidiator.m_Instance.m_ElementManager.GetPlayerType(playerRecord.characterId, playerRecord.isEnemy);
             Player playerPrefab = playerRecord.isEnemy ? PlayerPrefabHolder.instance.m_EnemyPlayerPrefab : PlayerPrefabHolder.instance.m_UserPlayerPrefab;
             Player player = Instantiate(playerPrefab, m_PlayerTransform);
             string nameFormat = playerRecord.isEnemy ? m_EnemyPlayerNameFormat : m_UserPlayerNameFormat;
@@ -83,11 +85,11 @@ public class PlayerManager : IGameItem
             player.SetPivot();
             player.playerIndex = i;
 
-            PlayerUI playerUI = Instantiate(m_PlayerUIPrefab, tilePos, m_PlayerUIPrefab.transform.rotation, m_PlayerUITransform);
-            playerUI.player = player;
-            playerUI.SetPlayerIndex(playerRecord.isEnemy, i);
+            PlayerUI playerUI = Instantiate(m_PlayerUIPrefab, m_PlayerUITransform);
             playerUI.gameObject.name = string.Format(nameFormat + "UI", i);
-            ScreenController.m_Instance.SetPlayerUI(playerUI);
+            player.SetPlayerUI(playerUI);
+            playerUI.SetPlayerIndex(playerRecord.isEnemy, i);
+            m_GameUIManager.m_ScreenControlUI.SetPlayerUI(playerUI);
 
             if (playerRecord.isEnemy)
             {
@@ -100,8 +102,6 @@ public class PlayerManager : IGameItem
                 m_UserPlayers.Add(player);
             }
         }
-
-        //ScreenController.m_Instance.SetPlayerUIs();
     }
 
     public void HidePlayers()
@@ -161,7 +161,7 @@ public class PlayerManager : IGameItem
             Player player = m_EnemyPlayers[i];
             if (player.m_Hp <= 0)
             {
-                ScreenController.m_Instance.RemoveUI(player.m_IsEnemy, player.playerIndex);
+                m_GameUIManager.m_ScreenControlUI.RemoveUI(player.m_IsEnemy, player.playerIndex);
                 m_DicEnemyPlayers.Remove(m_EnemyPlayers[i].playerIndex);
                 m_EnemyPlayers.Remove(m_EnemyPlayers[i]);
                 Destroy(player.gameObject);
@@ -205,7 +205,7 @@ public class PlayerManager : IGameItem
         return false;
     }
 
-    public List<Player> GetUserPlayerTile(List<HexCoord> hexes, bool isCheckHex = true, bool isCheckAlive = true)
+    public List<Player> GetUserPlayers(List<HexCoord> hexes, bool isCheckHex = true, bool isCheckAlive = true)
     {
         List<Player> result = new List<Player>();
         for (int i = 0; i < m_UserPlayers.Count; i++)
@@ -218,7 +218,7 @@ public class PlayerManager : IGameItem
         return result;
     }
 
-    public List<Player> GetEnemyPlayerTile(List<HexCoord> hexes, bool isCheckHex = true, bool isCheckAlive = true)
+    public List<Player> GetEnemyPlayers(List<HexCoord> hexes, bool isCheckHex = true, bool isCheckAlive = true)
     {
         List<Player> result = new List<Player>();
         for (int i = 0; i < m_EnemyPlayers.Count; i++)
@@ -306,15 +306,48 @@ public class PlayerManager : IGameItem
         return index < m_EnemyPlayers.Count ? m_EnemyPlayers[index] : null;
     }
 
+    public bool CheckPlayerAction(Player player)
+    {
+        if (player.GetIsCanHeal())
+        {
+            List<HexCoord> hexTiles = GetUserTargetHex(player, true);
+            if (hexTiles.Count>0)
+            {
+                return true;
+            }
+        }
+        List<HexCoord> hexAtkTiles = GetUserTargetHex(player, false);
+        if (hexAtkTiles.Count > 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private List<HexCoord> GetUserTargetHex(Player player, bool isHeal)
+    {
+        List<HexCoord> hexes = new List<HexCoord>();
+        List<HexCoord> result = new List<HexCoord>();
+        hexes = isHeal ? player.GetHealRange() : player.GetAttackRangeHex();
+        for (int i = 0; i < hexes.Count; i++)
+        {
+            Player targetPlayer = GetPlayer(hexes[i]);
+            if (targetPlayer && ((isHeal && !targetPlayer.m_IsEnemy && targetPlayer.m_Hp < targetPlayer.m_MaxHP) ||
+                (!isHeal && targetPlayer.m_IsEnemy && targetPlayer.m_Hp > 0)))
+            {
+                result.Add(targetPlayer.m_Hex);
+            }
+        }
+        return result;
+    }
+
     #region Scenario
     public void GenetareActionPlayer(List<PlayerRecord> playerRecords)
     {
         for (int i = 0; i < playerRecords.Count; i++)
         {
             PlayerRecord temp = playerRecords[i];
-            //Vector3 pos = m_StageMapManager.GetMapTile(temp.locX, temp.locY).HexTilePos();
             ActorPlayer player = Instantiate(PlayerPrefabHolder.instance.m_ActorPlayerPrefab, m_ActorPlayerTransform);
-            //player.gridPosition = new Vector2(temp.locX, temp.locY);
             player.playerIndex = temp.id;
             player.gameObject.name = temp.id.ToString();
             player.SetPivot(temp.scenarionActorPivotType);
@@ -325,6 +358,16 @@ public class PlayerManager : IGameItem
             m_DicActorPlayers.Add(temp.id, player);
         }
     }
+
+    public void TurnActive(bool isUserPlayer)
+    {
+        List<Player> players = isUserPlayer ? m_UserPlayers : m_EnemyPlayers;
+        for (int i = 0; i < players.Count; i++)
+        {
+            players[i].TurnActive();
+        }
+    }
+
 
     public Player GetActorPlayerByID(int id)
     {

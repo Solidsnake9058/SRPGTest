@@ -4,23 +4,6 @@ using UnityEngine;
 
 public static class SaveManager
 {
-    //public static SaveManager m_Instance { get; private set; }
-
-    //private void Awake()
-    //{
-    //    if (m_Instance == null)
-    //    {
-    //        m_Instance = this;
-    //        DontDestroyOnLoad(gameObject);
-    //    }
-    //    else
-    //    {
-    //        Destroy(gameObject);
-    //        return;
-    //    }
-    //    Load();
-    //}
-
     private static PlayerSaveData m_GameData
     {
         get

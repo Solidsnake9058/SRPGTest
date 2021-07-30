@@ -17,12 +17,12 @@ public class WeaponUI : ItemUI
         m_ButtonSellItem.enabled = false;
 
         ClearItemList();
-        Dictionary<int, int> playerItems = m_GameManager.m_PlayerWeapons;
+        Dictionary<int, int> playerItems = m_PlayerDataManager.m_PlayerWeapons;
         foreach (var item in playerItems)
         {
             if (item.Value > 0)
             {
-                Weapon selWeapon = m_GameManager.GetWeapon(item.Key);
+                Weapon selWeapon = m_ElementManager.GetWeapon(item.Key);
                 ItemSelection newObject = Instantiate(m_ItemUIPrefab, m_ItemList, false);
 
                 List<string> weaponRangeText = new List<string>();
@@ -58,11 +58,12 @@ public class WeaponUI : ItemUI
 
         m_ButtonUseItem.enabled = false;
         m_ButtonSellItem.enabled = false;
-        Weapon selectItem = m_GameManager.GetWeapon(m_ItemSelectedId);
+        bool isEquipable;
+        Weapon selectItem;
+        Player player = GameManager.m_Instance.GetSelectedPlayer();
+        string[] raceNames = m_ElementManager.GetEquipableRace(player != null ? player.m_Race : -1, m_ItemSelectedId, out selectItem, out isEquipable);
         if (selectItem != null)
         {
-            bool isEquipable;
-            string[] raceNames = m_GameManager.GetEquipableRace(selectItem.id, out isEquipable);
             m_ItemNotice.text = $"<color=yellow>{selectItem.name}</color>\r\n{selectItem.notice}\r\n使えるクラスは、<color=yellow>{string.Join("</color><color=white>、</color><color=yellow>", raceNames)}</color>です。";
             m_ButtonUseItem.enabled = isEquipable;
             if (selectItem.price > 0)
@@ -78,7 +79,7 @@ public class WeaponUI : ItemUI
 
     private void EquipWeapon()
     {
-        if (m_GameManager.EquipWeapon(m_ItemSelectedId))
+        if (m_PlayerDataManager.EquipWeapon(m_ItemSelectedId))
         {
             HideUI();
         }
@@ -86,7 +87,7 @@ public class WeaponUI : ItemUI
 
     protected override void SellItem()
     {
-        if (m_GameManager.SellWeapon(m_ItemSelectedId))
+        if (m_PlayerDataManager.SellWeapon(m_ItemSelectedId))
         {
             SetItem();
         }

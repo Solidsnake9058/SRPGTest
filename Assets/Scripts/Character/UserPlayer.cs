@@ -11,7 +11,7 @@ public class UserPlayer : Player
 
     public override void TurnEnd()
     {
-        HexTile tile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex);
+        HexTile tile = m_StageMapManager.GetMapTile(m_Hex);
         {
             tile.OpenChest();
         }

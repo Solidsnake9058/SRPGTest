@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class ItemUI : IGameUISystem
 {
+    protected static ElementManager m_ElementManager { get { return GameMidiator.m_Instance.m_ElementManager; } }
+    protected static PlayerDataManager m_PlayerDataManager { get { return GameMidiator.m_Instance.m_PlayerDataManager; } }
+
+
     [Header("Prefab")]
     [SerializeField]
     protected ItemSelection m_ItemUIPrefab;
@@ -36,22 +40,26 @@ public class ItemUI : IGameUISystem
 
     protected override void ShowEvent()
     {
+        m_ItemSelectedId = -1;
+        m_ItemNotice.text = "";
         SetItem();
     }
     protected virtual void SetItem()
     {
-        m_ItemGold.text = $"所持金 <color=yellow>{m_GameManager.m_PlayerGold}</color> Gold";
+        int tempSelID = m_ItemSelectedId;
+        m_ItemSelectedId = -1;
+        m_ItemGold.text = $"所持金 <color=yellow>{ m_PlayerDataManager.m_PlayerGold}</color> Gold";
 
         m_ButtonUseItem.enabled = false;
         m_ButtonSellItem.enabled = false;
 
         ClearItemList();
-        Dictionary<int, int> playerItems = m_GameManager.m_PlayerItems;
+        Dictionary<int, int> playerItems = m_PlayerDataManager.m_PlayerItems;
         foreach (var item in playerItems)
         {
             if (item.Value > 0)
             {
-                Item setItem = m_GameManager.GetItem(item.Key);
+                Item setItem = GameMidiator.m_Instance.m_ElementManager.GetItem(item.Key);
                 ItemSelection newObject = Instantiate(m_ItemUIPrefab, m_ItemList, false);
                 string typeName = "";
                 switch (setItem.itemType)
@@ -70,6 +78,7 @@ public class ItemUI : IGameUISystem
                 m_ItemSelections.Add(newObject);
             }
         }
+        SetSelectedItem(tempSelID, false);
     }
 
     public virtual void SetSelectedItem(int id, bool isWeapon)
@@ -89,11 +98,11 @@ public class ItemUI : IGameUISystem
 
         m_ButtonUseItem.enabled = false;
         m_ButtonSellItem.enabled = false;
-        Item selectItem = m_GameManager.GetItem(m_ItemSelectedId);
+        Item selectItem = GameMidiator.m_Instance.m_ElementManager.GetItem(m_ItemSelectedId);
         if (selectItem != null)
         {
             m_ItemNotice.text = $"<color=yellow>{selectItem.name}</color>\r\n{selectItem.notice}";
-            Player player = m_GameManager.GetSelectedPlayer();
+            Player player = GameManager.m_Instance.GetSelectedPlayer();
             if (player != null)
             {
                 switch (selectItem.itemType)
@@ -134,7 +143,7 @@ public class ItemUI : IGameUISystem
 
     protected virtual void SellItem()
     {
-        if (m_GameManager.SellItem(m_ItemSelectedId))
+        if (m_PlayerDataManager.SellItem(m_ItemSelectedId))
         {
             SetItem();
         }
@@ -142,7 +151,7 @@ public class ItemUI : IGameUISystem
 
     private void UseItem()
     {
-        if (m_GameManager.UseItem(m_ItemSelectedId))
+        if (m_PlayerDataManager.UseItem(m_ItemSelectedId))
         {
             HideUI();
         }

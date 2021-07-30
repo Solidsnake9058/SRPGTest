@@ -12,10 +12,13 @@ public class TileXml
     public int id;
 
     [XmlAttribute("spritIndex")]
-    public int spritIndex;
+    public int spriteIndex;
 
     [XmlAttribute("spritChestIndex")]
-    public int spritChestIndex;
+    public int spriteChestIndex;
+
+    [XmlAttribute("isChestOpened")]
+    public bool isChestOpened;
 
     [XmlAttribute("locX")]
     public int locX;
@@ -35,6 +38,23 @@ public class TileXml
     [XmlAttribute("isShop")]
     public bool isShop;
 
+    public TileXml()
+    {
+
+    }
+
+    public TileXml(int locX,int locY)
+    {
+        id = (int)TileType2D.Plain;
+        spriteIndex = 0;
+        spriteChestIndex = 0;
+        this.locX = locX;
+        this.locY = locY;
+        gold = 0;
+        itemId = -1;
+        weaponId = -1;
+        isShop = false;
+    }
 }
 
 [XmlRoot("MapCollection")]

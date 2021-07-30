@@ -93,8 +93,8 @@ public class BattleManager : MonoBehaviour
     {
         battleData = new BattleSendData("ランティア", "魔軍隊長", "", "平原", "村", false, false, true, false, 10, 50, 48, 48, 16, 36, 36, 16, "", 72, 16, 0, "ナイト", null, null);
 
-        battleData.playerData = new PlayerRecord(44, 44, 14, 8, 7, 12, 7);
-        battleData.lvUpData = new PlayerRecord(2, 0, 1, 0, 1, 2, 0);
+        battleData.m_PlayerData = new PlayerRecord(44, 44, 14, 8, 7, 12, 7);
+        battleData.m_LvUpData = new PlayerRecord(2, 0, 1, 0, 1, 2, 0);
 
         if (GameManager.m_Instance != null)
         {
@@ -107,10 +107,10 @@ public class BattleManager : MonoBehaviour
         actor1.GetComponent<BattleActorController>().SetHP(battleData.attackerHP, battleData.attackerMaxHP, battleData.damageByTarget, battleData.attacker);
         actor2.GetComponent<BattleActorController>().SetHP(battleData.targetHP, battleData.targetMaxHP, battleData.damageByAttacker, battleData.target);
 
-        isPlayerAttack = battleData.isPlayerAttack;
-        isCounter = battleData.isCounter;
-        isIndirectAttack = !battleData.isDirect;
-        isHeal = battleData.isHeal;
+        isPlayerAttack = battleData.m_IsPlayerAttack;
+        isCounter = battleData.m_IsCounter;
+        isIndirectAttack = !battleData.m_IsDirect;
+        isHeal = battleData.m_IsHeal;
 
         player1Name.text = battleData.attacker;
         player1Tile.text = battleData.attackerTile;
@@ -119,9 +119,9 @@ public class BattleManager : MonoBehaviour
         player2Tile.text = battleData.targetTile;
         player2DefRate.text = string.Format(DefRateText, battleData.targetDefensRate.ToString());
 
-        isShowItem = !string.IsNullOrEmpty(battleData.getItem);
-        isShowExp = battleData.getExp > 0;
-        isShowLevel = isShowLevelUp = (battleData.lvUpData != null && battleData.lvUpData != default(PlayerRecord));
+        isShowItem = !string.IsNullOrEmpty(battleData.m_GetItem);
+        isShowExp = battleData.m_GetExp > 0;
+        isShowLevel = isShowLevelUp = (battleData.m_LvUpData != null && battleData.m_LvUpData != default(PlayerRecord));
 
     }
 
@@ -176,7 +176,7 @@ public class BattleManager : MonoBehaviour
             attacker.GetComponent<BattleActorController>().isEndAnimation = true;
             target.GetComponent<BattleActorController>().isEndAnimation = true;
 
-            if (battleData.getExp > 0)
+            if (battleData.m_GetExp > 0)
             {
                 //show get exp dialog
                 ShowDialog();
@@ -223,7 +223,7 @@ public class BattleManager : MonoBehaviour
             isShowItem = false;
             Vector2 newSize = new Vector2(getItemWeight, msgBack.rectTransform.sizeDelta.y);
             msgBack.rectTransform.sizeDelta = newSize;
-            msgText.text = string.Format(getItemText, battleData.getItem);
+            msgText.text = string.Format(getItemText, battleData.m_GetItem);
             msgGroup.alpha = 1;
             msgGroup.interactable = true;
             msgGroup.blocksRaycasts = true;
@@ -233,7 +233,7 @@ public class BattleManager : MonoBehaviour
         {
             isShowExp = false;
             ExpDialogController expDialog = expGroup.GetComponent<ExpDialogController>();
-            expDialog.SetExp(battleData.playerExp, battleData.getExp, battleData.attacker);
+            expDialog.SetExp(battleData.playerExp, battleData.m_GetExp, battleData.attacker);
             expDialog.ShowDialog();
             return;
         }
@@ -252,20 +252,20 @@ public class BattleManager : MonoBehaviour
         {
             isShowLevelUp = false;
             playerName.text = battleData.attacker;
-            playerClass.text = battleData.playerClass;
+            playerClass.text = battleData.m_PlayerClass;
             playerHP.text = (battleData.attackerHP - battleData.damageByTarget).ToString() + "/";
-            playerMaxHP.text = battleData.playerData.hp.ToString();
-            playerAtk.text = battleData.playerData.atk.ToString();
-            playerDef.text = battleData.playerData.def.ToString();
-            playerWis.text = battleData.playerData.wis.ToString();
-            playerDex.text = battleData.playerData.dex.ToString();
-            playerMDef.text = battleData.playerData.mdef.ToString();
-            playerMaxHPUp.text = battleData.lvUpData.hp > 0 ? "+" + battleData.lvUpData.hp.ToString() : "";
-            playerAtkUp.text = battleData.lvUpData.atk > 0 ? "+" + battleData.lvUpData.atk.ToString() : "";
-            playerDefUp.text = battleData.lvUpData.def > 0 ? "+" + battleData.lvUpData.def.ToString() : "";
-            playerWisUp.text = battleData.lvUpData.wis > 0 ? "+" + battleData.lvUpData.wis.ToString() : "";
-            playerDexUp.text = battleData.lvUpData.dex > 0 ? "+" + battleData.lvUpData.dex.ToString() : "";
-            playerMDefUp.text = battleData.lvUpData.mdef > 0 ? "+" + battleData.lvUpData.mdef.ToString() : "";
+            playerMaxHP.text = battleData.m_PlayerData.hp.ToString();
+            playerAtk.text = battleData.m_PlayerData.atk.ToString();
+            playerDef.text = battleData.m_PlayerData.def.ToString();
+            playerWis.text = battleData.m_PlayerData.wis.ToString();
+            playerDex.text = battleData.m_PlayerData.dex.ToString();
+            playerMDef.text = battleData.m_PlayerData.mdef.ToString();
+            playerMaxHPUp.text = battleData.m_LvUpData.hp > 0 ? "+" + battleData.m_LvUpData.hp.ToString() : "";
+            playerAtkUp.text = battleData.m_LvUpData.atk > 0 ? "+" + battleData.m_LvUpData.atk.ToString() : "";
+            playerDefUp.text = battleData.m_LvUpData.def > 0 ? "+" + battleData.m_LvUpData.def.ToString() : "";
+            playerWisUp.text = battleData.m_LvUpData.wis > 0 ? "+" + battleData.m_LvUpData.wis.ToString() : "";
+            playerDexUp.text = battleData.m_LvUpData.dex > 0 ? "+" + battleData.m_LvUpData.dex.ToString() : "";
+            playerMDefUp.text = battleData.m_LvUpData.mdef > 0 ? "+" + battleData.m_LvUpData.mdef.ToString() : "";
 
             levelGroup.alpha = 1;
             levelGroup.interactable = true;

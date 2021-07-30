@@ -14,6 +14,7 @@ public class DialogUI : IGameUISystem
     private Button m_ConfirmButton = default;
 
     [SerializeField]
+    [Range(0, 1)]
     private float m_ConfirmWaitTime = 1;
 
     public override void GameSetting()
@@ -27,7 +28,7 @@ public class DialogUI : IGameUISystem
         GameMidiator.m_Instance.m_ScenarionManager.DialogClick();
     }
 
-    public void SetDialog(string name,string content)
+    public void SetDialog(string name, string content)
     {
         m_PlayerName.text = name;
         m_DialogContent.text = content;

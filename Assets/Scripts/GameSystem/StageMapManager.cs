@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class StageMapManager : IGameItem
 {
+    protected static GameUIManager m_GameUIManager { get { return GameMidiator.m_Instance.m_GameUIManager; } }
+
     [SerializeField]
     private Transform m_MapTransform;
 
@@ -37,7 +39,7 @@ public class StageMapManager : IGameItem
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, m_MapTransform);
                 TileXml tileData = mapContainer.m_TileDataMap[i][j];
-                tile.TileInitialize(tileData, 0, i, j);
+                tile.TileInitialize(tileData);
                 row.Add(tile);
                 m_MapHexList.Add(tile);
                 if (j == 0)
@@ -62,7 +64,7 @@ public class StageMapManager : IGameItem
         connerPointD = new Vector3(0, 0, -mapContainer.sizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        m_GameUIManager.m_ScreenControlUI.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
     }
 
     public void RemoveHighlightTiles()

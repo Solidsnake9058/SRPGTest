@@ -7,6 +7,8 @@ using System.Linq;
 
 public class MapCreatorManager : MonoBehaviour
 {
+    protected static GameUIManager m_GameUIManager { get { return GameMidiator.m_Instance.m_GameUIManager; } }
+
     public static MapCreatorManager instance;
 
     public int mapSizeX;
@@ -559,7 +561,7 @@ public class MapCreatorManager : MonoBehaviour
     {
         if (isDelete)
         {
-            PlayerRecord prtemp = userPlayerRecords.Where(x =>new HexCoord(  x.locX ,x.locY) == hex).FirstOrDefault();
+            PlayerRecord prtemp = userPlayerRecords.Where(x => new HexCoord(x.locX, x.locY) == hex).FirstOrDefault();
             if (prtemp != null)
             {
                 Transform temp = playerTransform.Find(string.Format(userPlayerNameFormat, prtemp.id));
@@ -604,7 +606,7 @@ public class MapCreatorManager : MonoBehaviour
     {
         if (isDelete)
         {
-            PlayerRecord prtemp = enemyPlayerRecords.Where(x => new HexCoord( x.locX , x.locY) == hex).FirstOrDefault();
+            PlayerRecord prtemp = enemyPlayerRecords.Where(x => new HexCoord(x.locX, x.locY) == hex).FirstOrDefault();
             if (prtemp != null)
             {
                 Transform temp = playerTransform.Find(string.Format(enemyPlayerNameFormat, prtemp.id));
@@ -993,10 +995,14 @@ public class MapCreatorManager : MonoBehaviour
         createActorPivot.options.Clear();
         selectedActorPivot.options.Clear();
 
-        for (int i = 0; i < (int)ScenarionActorPivotType.Max; i++)
+        ScenarionActorPivotType[] types = (ScenarionActorPivotType[])Enum.GetValues(typeof(ScenarionActorPivotType));
+
+
+        for (int i = 0; i < types.Length; i++)
         {
-            createActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionActorPivotType), (ScenarionActorPivotType)i) });
-            selectedActorPivot.options.Add(new Dropdown.OptionData() { text = Enum.GetName(typeof(ScenarionActorPivotType), (ScenarionActorPivotType)i) });
+            ScenarionActorPivotType type = (ScenarionActorPivotType)i;
+            createActorPivot.options.Add(new Dropdown.OptionData() { text = type.ToString() });
+            selectedActorPivot.options.Add(new Dropdown.OptionData() { text = type.ToString() });
         }
         createActorPivot.RefreshShownValue();
         selectedActorPivot.RefreshShownValue();
@@ -1618,7 +1624,7 @@ public class MapCreatorManager : MonoBehaviour
                     continue;
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
-                tile.TileInitializer(TileType.Normal, TileType2D.Plain, 0, 0, j, i, 0, -1, -1, false);
+                tile.TileInitialize(new TileXml(j, i));
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -1637,9 +1643,9 @@ public class MapCreatorManager : MonoBehaviour
         connerPointD = new Vector3(0, 0, -mapSizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        m_GameUIManager.m_ScreenControlUI.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
-        ScreenController.m_Instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
+        m_GameUIManager.m_ScreenControlUI.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         ReloadScenarioList();
         //Rectangle
@@ -1716,7 +1722,7 @@ public class MapCreatorManager : MonoBehaviour
             Destroy(playerTransform.transform.GetChild(i).gameObject);
         }
 
-        ScreenController.m_Instance.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
+        m_GameUIManager.m_ScreenControlUI.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         Vector3 pos = Vector3.zero;
         map = new List<List<Tile>>();
@@ -1742,7 +1748,7 @@ public class MapCreatorManager : MonoBehaviour
                 }
                 HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
                 TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
-                tile.TileInitializer((TileType)temp.id, (TileType2D)temp.id, temp.spritIndex, temp.spritChestIndex, j, i, temp.gold, temp.itemId, temp.weaponId, temp.isShop);
+                tile.TileInitialize(temp);
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -1761,7 +1767,7 @@ public class MapCreatorManager : MonoBehaviour
         connerPointD = new Vector3(0, 0, -mapSizeY + 1);
         connerPointC = new Vector3(connerPointB.x, 0, connerPointD.z);
 
-        ScreenController.m_Instance.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
+        m_GameUIManager.m_ScreenControlUI.SetLimitPoint(connerPointA, connerPointB, connerPointC, connerPointD);
 
         LoadPlayers();
 

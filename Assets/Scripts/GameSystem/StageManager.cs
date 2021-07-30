@@ -4,8 +4,15 @@ using UnityEngine;
 
 public class StageManager : IGameItem
 {
+    protected static StageMapManager m_StageMapManager { get { return GameMidiator.m_Instance.m_StageMapManager; } }
+    protected static ScenarionManager m_ScenarionManager { get { return GameMidiator.m_Instance.m_ScenarionManager; } }
+    protected static PlayerManager m_PlayerManager { get { return GameMidiator.m_Instance.m_PlayerManager; } }
+
     [SerializeField]
     private TextAsset[] m_StageAssets = default;
+
+    public List<int> m_ShopItemList { get; private set; }
+    public List<int> m_ShopWeaponList { get; private set; }
 
     private int m_StageIndex = 0;
     public MapContainer m_Container { get; private set; }
@@ -22,15 +29,22 @@ public class StageManager : IGameItem
         }
         m_Container = ObjectSaveLoad.JsonDataLoad<MapContainer>(m_StageAssets[m_StageIndex].text);
         m_Container.InitTileDataMap();
+        m_ShopItemList = m_Container.shopItemList;
+        m_ShopWeaponList = m_Container.shopWeaponList;
 
-        GameMidiator.m_Instance.m_StageMapManager.CreateStageMap(m_Container);
+        m_StageMapManager.CreateStageMap(m_Container);
+        for (int i = 0; i < saveData.m_ChestStates.Count; i++)
+        {
+            HexCoord hex = new HexCoord(saveData.m_ChestStates[i].m_LocX, saveData.m_ChestStates[i].m_LocY);
+            m_StageMapManager.GetMapTile(hex).SetChestState(saveData.GetChestState(hex));
+        }
 
         List<PlayerRecord> userPlayerRecords = GetUserPlayerRecords(saveData.m_UserPlayerRecords, saveData.m_StagePlayerRecords);
         List<PlayerRecord> enemyPlayerRecords = GetEnemyPlayerRecords(saveData.m_StageEnemyRecords);
 
-        GameMidiator.m_Instance.m_PlayerManager.GenetarePlayers(userPlayerRecords);
-        GameMidiator.m_Instance.m_PlayerManager.GenetarePlayers(enemyPlayerRecords);
-        GameMidiator.m_Instance.m_ScenarionManager.SetScenarion(m_Container.scenarionList, saveData.m_RemoveScenaroList);
+        m_PlayerManager.GenetarePlayers(userPlayerRecords);
+        m_PlayerManager.GenetarePlayers(enemyPlayerRecords);
+        m_ScenarionManager.SetScenarion(m_Container.scenarionList, saveData.m_RemoveScenaroList);
         return true;
     }
 
@@ -80,7 +94,7 @@ public class StageManager : IGameItem
                     List<int> deatList = condition.enemyDeadList;
                     for (int j = 0; j < deatList.Count; j++)
                     {
-                        Player tempPlayer = GameMidiator.m_Instance.m_PlayerManager.m_EnemyPlayers[deatList[j]] ?? null;
+                        Player tempPlayer = m_PlayerManager.m_EnemyPlayers[deatList[j]] ?? null;
                         if (tempPlayer == null || tempPlayer.m_Hp <= 0)
                         {
                             deadCount++;
@@ -92,7 +106,7 @@ public class StageManager : IGameItem
                     }
                     break;
                 case StageClearConditionType.SpecifyTile:
-                    if (GameMidiator.m_Instance.m_PlayerManager.CheckUserPlayerTile(condition.specifyTile))
+                    if (m_PlayerManager.CheckUserPlayerTile(condition.specifyTile))
                     {
                         return true;
                     }

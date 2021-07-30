@@ -7,9 +7,16 @@ using System.Linq;
 
 public class Player : IGameItem, IPointerClickHandler
 {
+    protected static ElementManager m_ElementManager { get { return GameMidiator.m_Instance.m_ElementManager; } }
+    protected static StageMapManager m_StageMapManager { get { return GameMidiator.m_Instance.m_StageMapManager; } }
+    protected static PlayerManager m_PlayerManager { get { return GameMidiator.m_Instance.m_PlayerManager; } }
+
+
     private static readonly Vector3 m_HidePosition = new Vector3(0, -100, 0);
     public Transform visual;
-    public Animator animator;
+    protected Animator m_Animator;
+
+    protected PlayerUI m_PlayerUI;
     public float moveSpeed { get { return GameManager.m_Instance.m_MoveSpeed; } }
     public int playerIndex;
 
@@ -19,11 +26,10 @@ public class Player : IGameItem, IPointerClickHandler
     public bool m_Moving = false;
     public bool m_Attacking = false;
 
-    public bool m_IsActable = true;
     public bool m_IsMovable = true;
     public bool m_IsAttackable = true;
     public bool IsAlive { get { return m_Hp > 0; } }
-    public bool IsTurnEnd { get { return m_PlayerState.Equals(PlayerState.Wait) ; } }
+    public bool IsTurnEnd { get { return m_PlayerState.Equals(PlayerState.Wait); } }
 
     public string m_PlayerName;
 
@@ -55,6 +61,10 @@ public class Player : IGameItem, IPointerClickHandler
     {
         return m_Hex.PositionSqr();
     }
+    public Vector3 TargetHexTilePos()
+    {
+        return m_HexTarget.PositionSqr();
+    }
 
     private Queue<Vector3> m_PositionQueue = new Queue<Vector3>();
 
@@ -69,7 +79,6 @@ public class Player : IGameItem, IPointerClickHandler
         m_Race = playerData.race;
         m_MovementPerActionPoint = playerData.move;
         _PlayerState = playerRecord.isActable ? PlayerState.Active : PlayerState.Wait;
-        m_IsActable = playerRecord.isActable;
         m_Level = (int)playerRecord.level;
         m_Exp = (int)playerRecord.exp;
         m_MaxHP = (int)playerRecord.hp;
@@ -82,6 +91,12 @@ public class Player : IGameItem, IPointerClickHandler
         m_EquipWeapon = playerRecord.equipWeapon;
     }
 
+    public void SetPlayerUI(PlayerUI playerUI)
+    {
+        m_PlayerUI = playerUI;
+        m_PlayerUI.SetPosition(HexTilePos());
+    }
+
     protected void SetPosition(PlayerRecord playerRecord)
     {
         m_Hex = new HexCoord(playerRecord.locX, playerRecord.locY);
@@ -91,7 +106,6 @@ public class Player : IGameItem, IPointerClickHandler
     protected virtual void SetPlayerDead()
     {
         m_Hp = 0;
-        m_IsActable = false;
         transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
         transform.GetComponent<Renderer>().material.color = Color.gray;
     }
@@ -99,12 +113,12 @@ public class Player : IGameItem, IPointerClickHandler
     public void SetPlayerModel()
     {
         GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, visual);
-        animator = model.GetComponent<Animator>();
+        m_Animator = model.GetComponent<Animator>();
     }
 
     public virtual bool TurnUpdate()
     {
-        if (m_PlayerState.Equals( PlayerState.Wait))
+        if (m_PlayerState.Equals(PlayerState.Wait))
         {
             return false;
         }
@@ -112,6 +126,7 @@ public class Player : IGameItem, IPointerClickHandler
         {
             m_MoveTimeCur += Time.deltaTime;
             transform.position = Vector3.Lerp(m_PositionCur, m_NextPosition.Value, m_MoveTimeCur / m_MoveTime);
+            m_PlayerUI?.SetPosition(transform.position);
         }
         return true;
     }
@@ -128,7 +143,17 @@ public class Player : IGameItem, IPointerClickHandler
     protected Vector3 m_PositionCur;
     protected Vector3? m_NextPosition = null;
     protected bool m_IsMoving = false;
-    private PlayerState playerState;
+    protected bool m_IsMoved = false;
+
+    public bool SetMoveCheck()
+    {
+        if (m_PlayerState.Equals(PlayerState.Active))
+        {
+            _PlayerState = PlayerState.Move;
+            return true;
+        }
+        return false;
+    }
 
     protected bool SetNextPosition()
     {
@@ -141,16 +166,18 @@ public class Player : IGameItem, IPointerClickHandler
             m_MoveTime = dis / moveSpeed;
             m_MoveTimeCur = 0;
             m_IsMoving = true;
-            animator.SetBool("walk", m_IsMoving);
+            m_Animator.SetBool("walk", m_IsMoving);
             return m_IsMoving;
         }
         m_NextPosition = null;
         if (m_IsMoving)
         {
             m_IsMoving = false;
+            m_IsMoved = true;
+            _PlayerState = PlayerState.MoveEnd;
             MoveToPointAction();
         }
-        animator.SetBool("walk", m_IsMoving);
+        m_Animator.SetBool("walk", m_IsMoving);
         return m_IsMoving;
     }
 
@@ -165,46 +192,61 @@ public class Player : IGameItem, IPointerClickHandler
 
     public virtual void TurnEnd()
     {
-        m_IsActable = false;
         m_IsMovable = true;
         m_IsAttackable = true;
         m_Hex = m_HexTarget;
         _PlayerState = PlayerState.Wait;
+        m_PlayerUI?.RefreshUI(m_Hp, m_MaxHP, m_PlayerState);
     }
 
+    public void CancelMoveRange()
+    {
+        m_IsMoved = false;
+        _PlayerState = PlayerState.Active;
+    }
     public void CancelMove()
     {
         transform.position = HexTilePos();
+        m_PlayerUI.SetPosition(HexTilePos());
         m_HexTarget = m_Hex;
-        _PlayerState = PlayerState.Active;
+        _PlayerState = PlayerState.Move;
+    }
+    public void CancelActionRange()
+    {
+        _PlayerState = m_IsMoved ? PlayerState.MoveEnd : PlayerState.Active;
+        if (m_IsMoved)
+        {
+            MoveToPointAction();
+        }
     }
 
     public virtual void TurnActive()
     {
         if (m_Hp > 0)
         {
-            m_IsActable = true;
             m_IsMovable = true;
             m_IsAttackable = true;
+            m_IsMoved = false;
             _PlayerState = PlayerState.Active;
+            m_PlayerUI.RefreshUI(m_Hp, m_MaxHP, m_PlayerState);
         }
     }
 
     public void HidePlayer()
     {
         transform.position = HexTilePos() + m_HidePosition;
+        m_PlayerUI.SetHideUI();
     }
 
     public void ShowPlayer()
     {
         transform.position = HexTilePos();
+        m_PlayerUI.SetShowUI();
     }
 
-    public void GetWeaponAttack(out int derictAtk, out int inderictAtk)
+    public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
     {
-        Weapon weapon = GameManager.m_Instance.gameElement.weapons.Where(x => x.id == m_EquipWeapon).FirstOrDefault();
-        derictAtk = weapon.directAtk;
-        inderictAtk = weapon.indirectAtk;
+        m_ElementManager.GetWeaponAttack(m_EquipWeapon, ref derictAtk, ref inderictAtk);
     }
 
     public bool GetIsCanAttack(bool isDirect)
@@ -212,7 +254,7 @@ public class Player : IGameItem, IPointerClickHandler
         int directAtk = 0;
         int indirectAtk = 0;
 
-        GetWeaponAttack(out directAtk, out indirectAtk);
+        GetWeaponAttack(ref directAtk, ref indirectAtk);
 
         if (isDirect)
         {
@@ -223,12 +265,12 @@ public class Player : IGameItem, IPointerClickHandler
 
     public bool GetIsCanHeal()
     {
-        return GameManager.m_Instance.gameElement.races.Where(x => x.id == this.m_Race).FirstOrDefault().canHeal;
+        return m_ElementManager.GetRace(m_Race).canHeal;
     }
 
     public bool GetIsCanFly()
     {
-        return GameManager.m_Instance.gameElement.races.Where(x => x.id == this.m_Race).FirstOrDefault().canFly;
+        return m_ElementManager.GetRace(m_Race).canFly;
     }
 
     public virtual PlayerRecord LevelUp()
@@ -285,20 +327,6 @@ public class Player : IGameItem, IPointerClickHandler
 
     }
 
-    public virtual List<HexTile> GetAttackRange()
-    {
-        List<HexTile> range = new List<HexTile>();
-        if (GetIsCanAttack(true))
-        {
-            range.AddRange(HexTile.GetCubeRingTile(m_Hex, 1));
-        }
-        if (GetIsCanAttack(false))
-        {
-            range.AddRange(HexTile.GetCubeRingTile(m_Hex, 2));
-        }
-        return range;
-    }
-
     public virtual List<HexCoord> GetAttackRangeHex()
     {
         List<HexCoord> range = new List<HexCoord>();
@@ -313,9 +341,9 @@ public class Player : IGameItem, IPointerClickHandler
         return range;
     }
 
-    public virtual List<HexTile> GetAttackRangeWhitTarget(HexCoord targetGridPosition)
+    public virtual List<HexCoord> GetAttackRangeWithTarget(HexCoord targetGridPosition, List<HexCoord> excludeHex = null)
     {
-        List<HexTile> range = new List<HexTile>();
+        List<HexCoord> range = new List<HexCoord>();
         if (GetIsCanAttack(true))
         {
             range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 1));
@@ -324,18 +352,29 @@ public class Player : IGameItem, IPointerClickHandler
         {
             range.AddRange(HexTile.GetCubeRingTile(targetGridPosition, 2));
         }
+        if (excludeHex != null)
+        {
+            for (int i = 0; i < range.Count; i++)
+            {
+                if (excludeHex.Contains(range[i]))
+                {
+                    range.Remove(range[i]);
+                }
+            }
+        }
+
         return range;
     }
 
     public virtual List<HexCoord> GetHealRange()
     {
-        int healRange = GameManager.m_Instance.gameElement.m_Races[m_Race].healRange;
+        int healRange = m_ElementManager.GetRace(m_Race).healRange;
         return HexCoord.HexSpiral(m_Hex, healRange);
     }
 
     public virtual void OnPointerClick(PointerEventData eventData)
     {
-        HexTile attTile = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(m_Hex);
+        HexTile attTile = m_StageMapManager.GetMapTile(m_Hex);
         attTile.ClickEvent(eventData);
     }
 
@@ -346,27 +385,29 @@ public class Player : IGameItem, IPointerClickHandler
 
     public void SetPivot()
     {
-        switch (m_PlayerPivot)
-        {
-            case ScenarionActorPivotType.Right:
-                transform.rotation = Quaternion.Euler(0, 90, 0);
-                break;
-            case ScenarionActorPivotType.UpRight:
-                transform.rotation = Quaternion.Euler(0, 30, 0);
-                break;
-            case ScenarionActorPivotType.UpLeft:
-                transform.rotation = Quaternion.Euler(0, 330, 0);
-                break;
-            case ScenarionActorPivotType.Left:
-                transform.rotation = Quaternion.Euler(0, 270, 0);
-                break;
-            case ScenarionActorPivotType.DownLeft:
-                transform.rotation = Quaternion.Euler(0, 210, 0);
-                break;
-            case ScenarionActorPivotType.DownRight:
-                transform.rotation = Quaternion.Euler(0, 150, 0);
-                break;
-        }
+        transform.rotation = Quaternion.Euler(0, (int)m_PlayerPivot, 0);
+
+        //switch (m_PlayerPivot)
+        //{
+        //    case ScenarionActorPivotType.Right:
+        //        transform.rotation = Quaternion.Euler(0, 90, 0);
+        //        break;
+        //    case ScenarionActorPivotType.UpRight:
+        //        transform.rotation = Quaternion.Euler(0, 30, 0);
+        //        break;
+        //    case ScenarionActorPivotType.UpLeft:
+        //        transform.rotation = Quaternion.Euler(0, 330, 0);
+        //        break;
+        //    case ScenarionActorPivotType.Left:
+        //        transform.rotation = Quaternion.Euler(0, 270, 0);
+        //        break;
+        //    case ScenarionActorPivotType.DownLeft:
+        //        transform.rotation = Quaternion.Euler(0, 210, 0);
+        //        break;
+        //    case ScenarionActorPivotType.DownRight:
+        //        transform.rotation = Quaternion.Euler(0, 150, 0);
+        //        break;
+        //}
     }
 }
 
@@ -374,5 +415,7 @@ public enum PlayerState
 {
     Active,
     Move,
+    MoveEnd,
+    Action,
     Wait
 }

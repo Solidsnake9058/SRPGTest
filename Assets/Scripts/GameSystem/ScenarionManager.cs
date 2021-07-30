@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class ScenarionManager : IGameItem
 {
+    protected static GameUIManager m_GameUIManager { get { return GameMidiator.m_Instance.m_GameUIManager; } }
+    protected static StageMapManager m_StageMapManager { get { return GameMidiator.m_Instance.m_StageMapManager; } }
+    protected static PlayerManager m_PlayerManager { get { return GameMidiator.m_Instance.m_PlayerManager; } }
+
     private Scenarion m_StageOpenScenarion;
     private Scenarion m_StageClearScenarion;
     private List<Scenarion> m_StageScenarions = new List<Scenarion>();
@@ -11,7 +15,8 @@ public class ScenarionManager : IGameItem
     private List<int> m_RemoveScenarionList = new List<int>();
 
     private bool m_IsWaitAction = false;
-    private bool m_IsMoveCamera { get { return ScreenController.m_Instance.m_IsCameraMoving; } }
+    private bool m_IsMoveCamera { get { return m_GameUIManager.m_ScreenControlUI.m_IsCameraMoving; } }
+    private bool m_IsOpening = false;
     private bool m_IsEnding = false;
     public bool m_IsScenarionRunning { get { return m_RunningScenarion != null; } }
     private Player m_ControlPlayer = null;
@@ -20,6 +25,7 @@ public class ScenarionManager : IGameItem
     {
         m_IsWaitAction = false;
         m_IsEnding = false;
+        m_IsOpening = false;
     }
 
     public void SetScenarion(List<Scenarion> stageScenations, List<int> removeScenaronList)
@@ -63,8 +69,7 @@ public class ScenarionManager : IGameItem
         }
         if (!SetScenarionAction())
         {
-            //TODO Scenarion fin
-            GameManager.m_Instance.ScenationFin(m_IsEnding);
+            GameManager.m_Instance.ScenationFin(m_IsOpening, m_IsEnding);
         }
     }
 
@@ -95,6 +100,18 @@ public class ScenarionManager : IGameItem
         }
         return m_IsScenarionRunning;
     }
+
+    public bool SetBeforeScenarion(Player attacker, Player target, HexCoord hex)
+    {
+        if (attacker.m_IsEnemy.Equals(target.m_IsEnemy))
+        {
+            return m_IsScenarionRunning;
+        }
+        int userID = attacker.m_IsEnemy ? target.playerIndex : attacker.playerIndex;
+        int enemyID = attacker.m_IsEnemy ? attacker.playerIndex : target.playerIndex;
+        return SetBeforeScenarion(userID, enemyID, hex);
+    }
+
 
     public bool SetAfterScenarion(int enemyID, HexCoord hex)
     {
@@ -143,28 +160,28 @@ public class ScenarionManager : IGameItem
             ScenarionAction scenarioAction = m_RunningScenarion.scenarionActions[m_RunningScenarion.scenarionActionStep];
             if (m_RunningScenarion.scenarionActionStep.Equals(0) && m_RunningScenarion.scenarionType == ScenarionType.Openning)
             {
-                GameMidiator.m_Instance.m_PlayerManager.HidePlayers();
+                m_PlayerManager.HidePlayers();
             }
 
             switch (scenarioAction.scenarionActionType)
             {
                 case ScenarionActionType.Dialog:
-                    GameMidiator.m_Instance.m_GameUIManager.SetDialog(scenarioAction.dialogName, scenarioAction.dialogText);
+                    m_GameUIManager.SetDialog(scenarioAction.dialogName, scenarioAction.dialogText);
                     m_IsWaitAction = true;
                     break;
                 case ScenarionActionType.CreateActor:
-                    GameMidiator.m_Instance.m_PlayerManager.GenetareActionPlayer(scenarioAction.createActors);
+                    m_PlayerManager.GenetareActionPlayer(scenarioAction.createActors);
                     break;
                 case ScenarionActionType.ControlActor:
-                    m_ControlPlayer = GameMidiator.m_Instance.m_PlayerManager.MoveActorToTarget(scenarioAction.actorId, scenarioAction.targetMoveTile, scenarioAction.actorPivot);
+                    m_ControlPlayer = m_PlayerManager.MoveActorToTarget(scenarioAction.actorId, scenarioAction.targetMoveTile, scenarioAction.actorPivot);
                     break;
                 case ScenarionActionType.SetCamera:
-                    Vector3 tilePos = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(scenarioAction.setCameraPos).HexTilePos();
-                    ScreenController.m_Instance.MoveCameraPos(tilePos);
+                    Vector3 tilePos = m_StageMapManager.GetMapTile(scenarioAction.setCameraPos).HexTilePos();
+                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(tilePos, false);
                     break;
                 case ScenarionActionType.ControlCamera:
-                    Vector3 moveCaremaPos = GameMidiator.m_Instance.m_StageMapManager.GetMapTile(scenarioAction.targetMoveTile).HexTilePos();
-                    ScreenController.m_Instance.MoveCameraPos(moveCaremaPos, scenarioAction.waitTime);
+                    Vector3 moveCaremaPos = m_StageMapManager.GetMapTile(scenarioAction.targetMoveTile).HexTilePos();
+                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(moveCaremaPos, scenarioAction.isToDark, scenarioAction.waitTime);
                     break;
                 case ScenarionActionType.AddUserPlayer:
                     break;
@@ -179,20 +196,18 @@ public class ScenarionManager : IGameItem
         else
         {
             //Scenario is end
-            //SetStopWaiting();
             //EnableGroup(mapController);
             m_IsWaitAction = false;
             if (m_RunningScenarion.scenarionType == ScenarionType.Openning)
             {
-                GameMidiator.m_Instance.m_PlayerManager.ShowPlayers();
-                Player temp = GameMidiator.m_Instance.m_PlayerManager.GetPlayerByID(0); //userPlayers.Values.Where(x => x.playerIndex == 0).FirstOrDefault();
-                ScreenController.m_Instance.SetCameraPos(temp.HexTilePos());// new Vector3(temp.transform.position.x, 0, temp.transform.position.z));
+                m_IsOpening = true;
             }
-
             if (m_RunningScenarion.scenarionConditionType == ScenarionConditionType.BeforeBattle)
             {
-                //TODO call attack
-                //AttackWithCurrentPlayer(runningScenario.battleAfterEvent);
+                if (m_RunningScenarion.battleAfterEvent.HasValue)
+                {
+                    GameManager.m_Instance.AttackWithCurrentPlayer(m_RunningScenarion.battleAfterEvent.Value);
+                }
             }
             if (m_RunningScenarion.isOnceEvent)
             {

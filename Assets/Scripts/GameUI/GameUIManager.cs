@@ -1,12 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class GameUIManager : IGameItem
 {
     [SerializeField]
-    private GameUI m_GameUI = default;
+    private CanvasScaler m_CanvasScaler = default;
 
+    public ScreenControlUI m_ScreenControlUI { get { return _ScreenControlUI; } }
+    public BlackFrontUI m_BlackFrontUI { get { return _BlackFrontUI; } }
+
+    [SerializeField]
+    private GameUI m_GameUI = default;
+    [SerializeField]
+    private ScreenControlUI _ScreenControlUI = default;
+    [SerializeField]
+    private BlackFrontUI _BlackFrontUI = default;
     [SerializeField]
     private DialogUI m_DialogUI = default;
     [SerializeField]
@@ -20,9 +31,16 @@ public class GameUIManager : IGameItem
     [SerializeField]
     private ShopUI m_ShopUI = default;
 
+
+    public Vector2 CanvasRefRes { get { return m_CanvasScaler.referenceResolution; } }
+    public Vector2 UITransRate { get { return _UITransRate; } }
+    private Vector2 _UITransRate = new Vector2();
+
+
     public override void Initialize(GameManager gameManager)
     {
         m_GameUI.Initialize(gameManager);
+        m_ScreenControlUI.Initialize(gameManager);
         m_DialogUI.Initialize(gameManager);
         m_StatusUI.Initialize(gameManager);
         m_UnitListUI.Initialize(gameManager);
@@ -33,12 +51,22 @@ public class GameUIManager : IGameItem
     public override void GameSetting()
     {
         m_GameUI.GameSetting();
+        m_ScreenControlUI.GameSetting();
+        m_BlackFrontUI.GameSetting();
         m_DialogUI.GameSetting();
         m_StatusUI.GameSetting();
         m_UnitListUI.GameSetting();
         m_ItemUI.GameSetting();
         m_WeaponUI.GameSetting();
         m_ShopUI.GameSetting();
+
+        _UITransRate.x = (CanvasRefRes.x / Screen.width);
+        _UITransRate.y = (CanvasRefRes.y / Screen.height);
+    }
+
+    public override void SystemUpdate()
+    {
+        m_ScreenControlUI.SystemUpdate();
     }
 
     #region Game UI
@@ -46,14 +74,9 @@ public class GameUIManager : IGameItem
     public bool m_IsEndConfirmShowing { get { return m_GameUI.m_IsEndConfirmShowing; } }
     public bool m_IsUIMenuShowing { get { return m_GameUI.m_IsEndConfirmShowing || m_GameUI.m_IsEndConfirmShowing; } }
 
-    public Vector2 SetMenu(MenuType menuType, Vector3 worldPos)
+    public void SetMenu(MenuType menuType, bool isAction, bool isShop, Vector3 worldPos)
     {
-        return m_GameUI.SetMenu(menuType, worldPos);
-    }
-
-    public Vector2 SetMenu(MenuType menuType, bool isShop, Vector3 worldPos)
-    {
-        return m_GameUI.SetMenu(menuType, isShop, worldPos);
+        m_GameUI.SetMenu(menuType, isAction, isShop, worldPos);
     }
 
     public void HideMenu()
@@ -67,9 +90,9 @@ public class GameUIManager : IGameItem
         m_GameUI.ShowStageInfo();
     }
 
-    public void ShowStageTurnInfo(int turnCount, bool isPlayerTurn)
+    public void ShowStageTurnInfo()
     {
-        m_GameUI.ShowStageTrunInfo(turnCount, isPlayerTurn);
+        m_GameUI.ShowStageTrunInfo();
     }
 
     public void ShowUseItemInfo(string name, int hp, int atk, int def, int dex, int wis, int maxHP, int gold, string newCharType)
@@ -121,5 +144,10 @@ public class GameUIManager : IGameItem
     public void SetDialog(string name, string content)
     {
         m_DialogUI.SetDialog(name, content);
+    }
+
+    public void SetConfirmShow(bool isShow)
+    {
+        m_GameUI.SetConfirmShow(isShow);
     }
 }

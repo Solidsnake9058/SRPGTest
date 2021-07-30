@@ -44,9 +44,9 @@ public class StatusUI : IGameUISystem
     }
     public void SetPlayerStatusUI(Player player, CharacterType race, Weapon weapon)
     {
-        int directAtk;
-        int indirectAtk;
-        player.GetWeaponAttack(out directAtk, out indirectAtk);
+        int directAtk = 0;
+        int indirectAtk = 0;
+        player.GetWeaponAttack(ref directAtk, ref indirectAtk);
 
         List<string> weaponRangeText = new List<string>();
         if (directAtk > 0)

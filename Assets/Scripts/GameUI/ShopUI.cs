@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ShopUI : ItemUI
 {
+    protected static StageManager m_StageManager { get { return GameMidiator.m_Instance.m_StageManager; } }
+    protected static PlayerDataManager m_PlayerDataManager { get { return GameMidiator.m_Instance.m_PlayerDataManager; } }
+
     private List<ItemSelection> m_WeaponSelections = new List<ItemSelection>();
     private bool m_IsWeapon = false;
     public override void GameSetting()
@@ -14,22 +17,22 @@ public class ShopUI : ItemUI
 
     protected override void HideEvent()
     {
-        //TODO SetShopDialog
+        GameManager.m_Instance.SetShopDialog();
 
     }
     protected override void SetItem()
     {
-        m_ItemGold.text = $"所持金 <color=yellow>{m_GameManager.m_PlayerGold}</color> Gold";
+        m_ItemGold.text = $"所持金 <color=yellow>{m_PlayerDataManager.m_PlayerGold}</color> Gold";
 
         m_ButtonUseItem.enabled = false;
 
         ClearItemList();
-        List<int> shopItems = m_GameManager.m_ShopItemList;
-        List<int> shopWeapons = m_GameManager.m_ShopWeaponList;
+        List<int> shopItems = m_StageManager.m_ShopItemList;
+        List<int> shopWeapons = m_StageManager.m_ShopWeaponList;
 
         for (int i = 0; i < shopItems.Count; i++)
         {
-            Item selItem = m_GameManager.GetItem(shopItems[i]);
+            Item selItem = m_ElementManager.GetItem(shopItems[i]);
             ItemSelection newObject = Instantiate(m_ItemUIPrefab, m_ItemList, false);
             string itemTypeName = "";
             switch (selItem.itemType)
@@ -50,7 +53,7 @@ public class ShopUI : ItemUI
 
         for (int i = 0; i < shopWeapons.Count; i++)
         {
-            Weapon selWeapon = m_GameManager.GetWeapon(shopWeapons[i]);
+            Weapon selWeapon = m_ElementManager.GetWeapon(shopWeapons[i]);
             ItemSelection newObject = Instantiate(m_ItemUIPrefab, m_ItemList, false);
             List<string> weaponRangeText = new List<string>();
             if (selWeapon.directAtk > 0)
@@ -93,7 +96,7 @@ public class ShopUI : ItemUI
 
         if (m_IsWeapon)
         {
-            Weapon selectWeapon = m_GameManager.GetWeapon(m_ItemSelectedId);
+            Weapon selectWeapon = m_ElementManager.GetWeapon(m_ItemSelectedId);
             if (selectWeapon != null)
             {
                 price = selectWeapon.price;
@@ -102,7 +105,7 @@ public class ShopUI : ItemUI
         }
         else
         {
-            Item selectItem = m_GameManager.GetItem(m_ItemSelectedId);
+            Item selectItem = m_ElementManager.GetItem(m_ItemSelectedId);
             if (selectItem != null)
             {
                 price = selectItem.price;
@@ -110,7 +113,7 @@ public class ShopUI : ItemUI
             }
         }
 
-        if (price <= m_GameManager.m_PlayerGold)
+        if (price <= m_PlayerDataManager.m_PlayerGold)
         {
             m_ButtonUseItem.enabled = true;
         }
@@ -118,7 +121,7 @@ public class ShopUI : ItemUI
 
     private void BuyItemWeapon()
     {
-        if (m_GameManager.BuyItem(m_ItemSelectedId, m_IsWeapon))
+        if (m_PlayerDataManager.BuyItem(m_ItemSelectedId, m_IsWeapon))
         {
             HideUI();
         }

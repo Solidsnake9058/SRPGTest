@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class UnitListUI : IGameUISystem
 {
+    protected static ElementManager m_ElementManager { get { return GameMidiator.m_Instance.m_ElementManager; } }
+    protected static PlayerManager m_PlayerManager { get { return GameMidiator.m_Instance.m_PlayerManager; } }
+
     [Header("Prefab")]
     [SerializeField]
     private CharacterSelection m_CharacterSelectionPrefab;
@@ -37,7 +40,7 @@ public class UnitListUI : IGameUISystem
 
     public override void GameSetting()
     {
-        m_UserPanelButton.onClick.AddListener(()=> SetShowPanel(true));
+        m_UserPanelButton.onClick.AddListener(() => SetShowPanel(true));
         m_EnemyPanelButton.onClick.AddListener(() => SetShowPanel(false));
         m_ConfirmButton.onClick.AddListener(HideUI);
     }
@@ -47,13 +50,13 @@ public class UnitListUI : IGameUISystem
     }
     private void SetUI()
     {
-        m_TurnText.text = string.Format("ターン{0}", m_GameManager.m_TurnCount);
-        SetCharacterList(m_GameManager.userPlayers, m_UserPlayerList, m_PlayerList, false);
-        SetCharacterList(m_GameManager.enemyPlayers, m_EnemyPlayerList, m_EnemyList, true);
+        m_TurnText.text = string.Format("ターン{0}", GameManager.m_Instance.m_TurnCount);
+        SetCharacterList(m_PlayerManager.GetUserPlayers(null, false, false), m_UserPlayerList, m_PlayerList, false);
+        SetCharacterList(m_PlayerManager.GetEnemyPlayers(null, false, true), m_EnemyPlayerList, m_EnemyList, true);
         SetShowPanel(true);
     }
 
-    private void SetCharacterList(Dictionary<int, Player> players, RectTransform content, List<CharacterSelection> playerList, bool isSkipDead)
+    private void SetCharacterList(List<Player> players, RectTransform content, List<CharacterSelection> playerList, bool isSkipDead)
     {
         ClearCharacterList(playerList);
         for (int i = 0; i < players.Count; i++)
@@ -64,7 +67,7 @@ public class UnitListUI : IGameUISystem
                 continue;
             }
             CharacterSelection item = Instantiate(m_CharacterSelectionPrefab, content, false);
-            item.SetText(player.m_PlayerName, m_GameManager.GetRace(player.m_Race).name, player.m_Level, player.m_Hp, player.m_MaxHP, player.m_IsActable, player.transform.position);
+            item.SetText(player.m_PlayerName, m_ElementManager.GetRace(player.m_Race).name, player.m_Level, player.m_Hp, player.m_MaxHP, !player.IsTurnEnd, player.HexTilePos()) ;
             item.SetClickEvent(HideUI);
             playerList.Add(item);
         }
