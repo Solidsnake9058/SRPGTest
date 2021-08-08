@@ -18,7 +18,6 @@ public class ShopUI : ItemUI
     protected override void HideEvent()
     {
         GameManager.m_Instance.SetShopDialog();
-
     }
     protected override void SetItem()
     {

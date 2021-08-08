@@ -30,6 +30,8 @@ public class GameUIManager : IGameItem
     private WeaponUI m_WeaponUI = default;
     [SerializeField]
     private ShopUI m_ShopUI = default;
+    [SerializeField]
+    private GameSettingUI m_GameSettingUI = default;
 
 
     public Vector2 CanvasRefRes { get { return m_CanvasScaler.referenceResolution; } }
@@ -59,6 +61,16 @@ public class GameUIManager : IGameItem
         m_ItemUI.GameSetting();
         m_WeaponUI.GameSetting();
         m_ShopUI.GameSetting();
+        m_GameSettingUI.GameSetting();
+        
+        //HideMenu();
+        //m_DialogUI.HideUI();
+        //m_StatusUI.HideUI();
+        //m_UnitListUI.HideUI();
+        //m_ItemUI.HideUI();
+        //m_WeaponUI.HideUI();
+        //m_ShopUI.HideUI();
+        //m_GameSettingUI.HideUI();
 
         _UITransRate.x = (CanvasRefRes.x / Screen.width);
         _UITransRate.y = (CanvasRefRes.y / Screen.height);
@@ -149,5 +161,10 @@ public class GameUIManager : IGameItem
     public void SetConfirmShow(bool isShow)
     {
         m_GameUI.SetConfirmShow(isShow);
+    }
+
+    public void ShowSetting()
+    {
+        m_GameSettingUI.ShowUI();
     }
 }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Cinemachine;
 
 public class ScreenControlUI : IGameUISystem
 {
@@ -27,7 +27,18 @@ public class ScreenControlUI : IGameUISystem
     private RectTransform m_ArrowHeightGroup = default;
 
     [SerializeField]
+    private Button m_TurnRightButton = default;
+    [SerializeField]
+    private Button m_TurnLeftButton = default;
+    [SerializeField]
+    private Button m_ZoomInButton = default;
+    [SerializeField]
+    private Button m_ZoomOutButton = default;
+
+    [SerializeField]
     private Transform m_MainCameraTrans = default;
+    [SerializeField]
+    private CinemachineVirtualCamera m_Cinemachine = default;
     private Camera m_Camera;
 
     private Vector3 m_LimitPointA;
@@ -37,11 +48,7 @@ public class ScreenControlUI : IGameUISystem
 
     [SerializeField]
     private ArrowButton[] m_ArrowButtons = default;
-
-
     private List<PlayerUI> m_PlayerUIs = new List<PlayerUI>();
-
-    public Transform cameraPos;
 
     private Dictionary<PivotType, Vector3> m_DicMoveDir = new Dictionary<PivotType, Vector3>()
     {{ PivotType.Up, new Vector3(1, 0, 1) },
@@ -58,6 +65,10 @@ public class ScreenControlUI : IGameUISystem
         {
             m_ArrowButtons[i].GameSetting();
         }
+        m_TurnRightButton.onClick.AddListener(TurnCameraRight);
+        m_TurnLeftButton.onClick.AddListener(TurnCameraLeft);
+        m_ZoomInButton.onClick.AddListener(ZoomIn);
+        m_ZoomOutButton.onClick.AddListener(ZoomOut);
     }
 
     public override void SystemUpdate()
@@ -95,9 +106,8 @@ public class ScreenControlUI : IGameUISystem
         {
             m_ArrowButtons[i].LastPivot();
         }
-        float angle = (m_MainCameraTrans.eulerAngles.y + 360 - 90) % 360;
+        float angle = (m_MainCameraTrans.eulerAngles.y + 360 + 90) % 360;
         m_MainCameraTrans.eulerAngles = new Vector3(0, angle, 0);
-        cameraPos.rotation = m_MainCameraTrans.rotation;
         SetPlayerUIRotation();
     }
 
@@ -107,9 +117,8 @@ public class ScreenControlUI : IGameUISystem
         {
             m_ArrowButtons[i].NextPivot();
         }
-        float angle = (m_MainCameraTrans.eulerAngles.y + 360 + 90) % 360;
+        float angle = (m_MainCameraTrans.eulerAngles.y + 360 - 90) % 360;
         m_MainCameraTrans.eulerAngles = new Vector3(0, angle, 0);
-        cameraPos.rotation = m_MainCameraTrans.rotation;
         SetPlayerUIRotation();
     }
 
@@ -141,6 +150,7 @@ public class ScreenControlUI : IGameUISystem
 
     public void SetPlayerUIShow(bool isShowPlayerUI)
     {
+        isShowPlayerUI &= SaveManager.GetIsShowPlayerUI();
         for (int i = 0; i < m_PlayerUIs.Count; i++)
         {
             if (isShowPlayerUI)
@@ -192,11 +202,11 @@ public class ScreenControlUI : IGameUISystem
         m_MainCameraTrans.rotation = Quaternion.Euler(pos);
     }
 
-    public void MoveCameraPos(Vector3 pos,bool isDark, float time = 0)
+    public void MoveCameraPos(Vector3 pos, bool isDark, float time = 0, float stayTime = 0)
     {
         if (time > 0)
         {
-            StartCoroutine(MoveCamera(pos, isDark, time));
+            StartCoroutine(MoveCamera(pos, isDark, time, stayTime));
         }
         else
         {
@@ -205,7 +215,7 @@ public class ScreenControlUI : IGameUISystem
         }
     }
 
-    private IEnumerator MoveCamera(Vector3 pos, bool isDark, float time)
+    private IEnumerator MoveCamera(Vector3 pos, bool isDark, float time, float stayTime)
     {
         float timeCur = 0;
         float rate = 0;
@@ -222,9 +232,10 @@ public class ScreenControlUI : IGameUISystem
             }
             yield return null;
         }
-        m_GameUIManager.m_BlackFrontUI.SetDarkValue(-1);
+        yield return new WaitForSeconds(stayTime);
         m_IsCameraMoving = false;
     }
+
 
     public bool IsContainArea(Vector3 mp1, Vector3 mp2, Vector3 mp3, Vector3 mp4, Vector3 mp)
     {
@@ -242,19 +253,19 @@ public class ScreenControlUI : IGameUISystem
 
     public void ZoomIn()
     {
-        float newZoom = m_Camera.orthographicSize - m_ZoomChange;
+        float newZoom = m_Cinemachine.m_Lens.OrthographicSize - m_ZoomChange;
         SetZoom(newZoom);
     }
 
     public void ZoomOut()
     {
-        float newZoom = m_Camera.orthographicSize + m_ZoomChange;
+        float newZoom = m_Cinemachine.m_Lens.OrthographicSize + m_ZoomChange;
         SetZoom(newZoom);
     }
 
     private void SetZoom(float newZoom)
     {
         newZoom = Mathf.Clamp(newZoom, m_ZoomMin, m_ZoomMax);
-        m_Camera.orthographicSize = newZoom;
+        m_Cinemachine.m_Lens.OrthographicSize = newZoom;
     }
 }

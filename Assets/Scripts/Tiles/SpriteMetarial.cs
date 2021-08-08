@@ -4,26 +4,29 @@ using UnityEngine;
 
 public class SpriteMetarial : MonoBehaviour
 {
-    public SpriteRenderer tileMetarial;
-    public List<Sprite> sprites;
-    public List<Sprite> chestSprites;
+    [SerializeField]
+    public SpriteRenderer m_TileMetarial;
 
-    public int spriteCount { get { return sprites.Count; } }
+    [SerializeField]
+    public List<Sprite> _Sprites;
+    public List<Sprite> _ChestSprites;
+
+    public int SpriteCount => _Sprites.Count;
 
     public int GetSpritesCount()
     {
-        return sprites.Count;
+        return _Sprites.Count;
     }
 
     public Sprite SetSprite(int index)
     {
-        if (index >= sprites.Count)
+        if (index >= _Sprites.Count)
         {
-            tileMetarial.sprite = chestSprites[index- sprites.Count];
-            return chestSprites[index - sprites.Count];
+            m_TileMetarial.sprite = _ChestSprites[index- _Sprites.Count];
+            return _ChestSprites[index - _Sprites.Count];
         }
 
-        tileMetarial.sprite = sprites[index];
-        return sprites[index];
+        m_TileMetarial.sprite = _Sprites[index];
+        return _Sprites[index];
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
+[System.Serializable]
 public class BattleSendData
 {
     public string attacker;
@@ -83,6 +84,7 @@ public class BattleSendData
     }
 }
 
+[System.Serializable]
 public struct BattlePlayerData
 {
     public string m_PlayerName;
@@ -90,6 +92,6 @@ public struct BattlePlayerData
     public float m_DefensRate;
     public int m_MaxHP;
     public int m_HP;
-    public int m_CauseDamage;
+    public int m_GetDamage;
     public bool m_IsEnemy;
 }

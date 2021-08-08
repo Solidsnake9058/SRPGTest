@@ -62,27 +62,27 @@ public class PlayerRecord
     public PlayerRecord Clone()
     {
         PlayerRecord playerRecord = new PlayerRecord();
-        playerRecord.id = this.id;
-        playerRecord.isEnemy = this.isEnemy;
-        playerRecord.isNewPlayer = this.isNewPlayer;
-        playerRecord.locX = this.locX;
-        playerRecord.locY = this.locY;
-        playerRecord.characterId = this.characterId;
-        playerRecord.levelId = this.levelId;
-        playerRecord.level = this.level;
-        playerRecord.exp = this.exp;
-        playerRecord.hp = this.hp;
-        playerRecord.currentHp = this.currentHp;
-        playerRecord.atk = this.atk;
-        playerRecord.def = this.def;
-        playerRecord.wis = this.wis;
-        playerRecord.dex = this.dex;
-        playerRecord.mdef = this.mdef;
-        playerRecord.equipWeapon = this.equipWeapon;
-        playerRecord.scenarionActorPivotType = this.scenarionActorPivotType;
-        playerRecord.isActable = this.isActable;
-        playerRecord.aiType = this.aiType;
-        playerRecord.searchRange = this.searchRange;
+        playerRecord.id = id;
+        playerRecord.isEnemy = isEnemy;
+        playerRecord.isNewPlayer = isNewPlayer;
+        playerRecord.locX = locX;
+        playerRecord.locY = locY;
+        playerRecord.characterId = characterId;
+        playerRecord.levelId = levelId;
+        playerRecord.level = level;
+        playerRecord.exp = exp;
+        playerRecord.hp = hp;
+        playerRecord.currentHp = currentHp;
+        playerRecord.atk = atk;
+        playerRecord.def = def;
+        playerRecord.wis = wis;
+        playerRecord.dex = dex;
+        playerRecord.mdef = mdef;
+        playerRecord.equipWeapon = equipWeapon;
+        playerRecord.scenarionActorPivotType = scenarionActorPivotType;
+        playerRecord.isActable = isActable;
+        playerRecord.aiType = aiType;
+        playerRecord.searchRange = searchRange;
         return playerRecord;
     }
 

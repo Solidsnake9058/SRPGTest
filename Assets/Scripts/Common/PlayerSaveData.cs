@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Newtonsoft.Json;
 
 public class PlayerSaveData
 {
@@ -55,6 +56,12 @@ public class SaveDataStore
         m_PlayerItems = new Dictionary<int, int>();
         m_PlayerWeapons = new Dictionary<int, int>();
         m_ChestStates = new List<ChestState>();
+    }
+
+    public SaveDataStore Clone()
+    {
+        string json = JsonConvert.SerializeObject(this);
+        return JsonConvert.DeserializeObject<SaveDataStore>(json);
     }
 
     public bool GetChestState(HexCoord hex)

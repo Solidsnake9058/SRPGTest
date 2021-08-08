@@ -50,7 +50,7 @@ public class ExpDialogController : MonoBehaviour
             group.alpha = 0;
             group.interactable = false;
             group.blocksRaycasts = false;
-            BattleManager.instance.ShowDialog();
+            BattleManager.m_Instance.ShowDialog();
         }
         else
         {

@@ -5,7 +5,10 @@ using UnityEngine.UI;
 
 public class BattleActorController : MonoBehaviour
 {
-
+    [SerializeField]
+    private bool m_IsPlayer = true;
+    private BattleAnimationController m_BattleAnimation;
+    private bool m_IsHeal;
     public float startWaitTime = 1f;
     public float moveSpeed = 10f;
     public Transform target;
@@ -18,7 +21,9 @@ public class BattleActorController : MonoBehaviour
     public bool isHeal;
     public bool isAttacked;
     public bool isEndAnimation;
-    public string playerName;
+    public string m_PlayerName;
+    public string m_TileName;
+    public float m_DefRate = 0;
 
     public float waitTime = 0;
 
@@ -26,72 +31,103 @@ public class BattleActorController : MonoBehaviour
     public Image hpBar;
     public Text hpText;
     public int hpBarMax = 350;
-    public int hp = 150;
-    public int maxHp = 150;
-    public int damage = 20;
+    public int m_Hp = 150;
+    public int m_MaxHp = 150;
+    public int m_Damage = 20;
 
-    // Use this for initialization
-    private void Awake()
+    public void SetActorInfo(BattlePlayerData battlePlayerData)
     {
+        m_PlayerName = battlePlayerData.m_PlayerName;
+        m_TileName = battlePlayerData.m_TileName;
+        m_DefRate = battlePlayerData.m_DefensRate;
+        m_MaxHp = battlePlayerData.m_MaxHP;
+        m_Hp = battlePlayerData.m_HP;
+        m_Damage = battlePlayerData.m_GetDamage;
 
-    }
-    void Start()
-    {
-        GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, transform.position, transform.rotation, visual);
-        animator = model.GetComponent<Animator>();
+        Vector2 newSize = new Vector2((float)m_MaxHp / hpBarMax * hpBarMax, hpBack.rectTransform.sizeDelta.y);
+
+        hpBack.rectTransform.sizeDelta = newSize;
+        hpBar.rectTransform.sizeDelta = newSize;
         SetHPBar();
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    void Start()
     {
-        if (isAttacker && !isEndAnimation)
-        {
+        m_BattleAnimation = animator.GetComponent<BattleAnimationController>();
+        //GameObject model = Instantiate(PlayerPrefabHolder.instance.playerModelPrefab01, transform.position, transform.rotation, visual);
+        //animator = model.GetComponent<Animator>();
+        //SetHPBar();
+    }
 
-            if (waitTime < startWaitTime)
-            {
-                waitTime += Time.deltaTime;
-            }
-            else
-            {
-                if (!BattleManager.instance.isHeal && !BattleManager.instance.isIndirectAttack)
-                {
-                    if (Vector3.Distance(transform.position, target.position) > attackDistance)
-                    {
-                        animator.SetBool("run", true);
-                        transform.position += transform.forward * moveSpeed * Time.deltaTime;
-                    }
-                    else
-                    {
-                        if (!isAttacked)
-                        {
-                            animator.SetTrigger("attack");
-                            isAttacked = true;
-                        }
-                    }
-                }
-                else
-                {
-                    if (!isAttacked)
-                    {
-                        if (BattleManager.instance.isHeal)
-                        {
-                            animator.SetBool("heal", true);
-                        }
-                        else
-                        {
-                            animator.SetTrigger("attack");
-                            //Debug.Log("attack");
-                        }
-                        isAttacked = true;
-                    }
-                }
-            }
-        }
-        else
-        {
-            animator.SetBool("endDamage", false);
-        }
+    // Update is called once per frame
+    //void FixedUpdate()
+    //{
+    //    //if (isAttacker && !isEndAnimation)
+    //    //{
+
+    //    //    if (waitTime < startWaitTime)
+    //    //    {
+    //    //        waitTime += Time.deltaTime;
+    //    //    }
+    //    //    else
+    //    //    {
+    //    //        if (!BattleManager.instance.isHeal && !BattleManager.instance.isIndirectAttack)
+    //    //        {
+    //    //            if (Vector3.Distance(transform.position, target.position) > attackDistance)
+    //    //            {
+    //    //                animator.SetBool("run", true);
+    //    //                transform.position += transform.forward * moveSpeed * Time.deltaTime;
+    //    //            }
+    //    //            else
+    //    //            {
+    //    //                if (!isAttacked)
+    //    //                {
+    //    //                    animator.SetTrigger("attack");
+    //    //                    isAttacked = true;
+    //    //                }
+    //    //            }
+    //    //        }
+    //    //        else
+    //    //        {
+    //    //            if (!isAttacked)
+    //    //            {
+    //    //                if (BattleManager.instance.isHeal)
+    //    //                {
+    //    //                    animator.SetBool("heal", true);
+    //    //                }
+    //    //                else
+    //    //                {
+    //    //                    animator.SetTrigger("attack");
+    //    //                    //Debug.Log("attack");
+    //    //                }
+    //    //                isAttacked = true;
+    //    //            }
+    //    //        }
+    //    //    }
+    //    //}
+    //    //else
+    //    //{
+    //    //    animator.SetBool("endDamage", false);
+    //    //}
+    //}
+
+    public void SetIdle()
+    {
+        animator.SetTrigger("Reset");
+    }
+    public void SetRun()
+    {
+        animator.SetBool("run", true);
+    }
+
+    public void SetAttack()
+    {
+        animator.SetTrigger("attack");
+    }
+
+    public void SetDamage()
+    {
+        animator.SetTrigger("damage");
     }
 
     public void ResetActor(bool attacker)
@@ -106,15 +142,15 @@ public class BattleActorController : MonoBehaviour
 
     public void GetDamage()
     {
-        if (BattleManager.instance.isHeal)
-        {
-            hp += damage;
-            animator.SetTrigger("cure");
-        }
-        else
-        {
-            hp -= damage;
-            if (hp <= 0)
+        //if (m_IsHeal)
+        //{
+        //    hp += damage;
+        //    //animator.SetTrigger("cure");
+        //}
+        //else
+        //{
+            m_Hp -= m_Damage;
+            if (m_Hp <= 0)
             {
                 animator.SetTrigger("dead");
             }
@@ -122,27 +158,24 @@ public class BattleActorController : MonoBehaviour
             {
                 animator.SetTrigger("damage");
             }
-        }
+        //}
         SetHPBar();
     }
 
     public void SetHP(int hp, int maxHp, int damage, string playerName)
     {
-        this.playerName = playerName;
-        this.hp = hp;
-        this.maxHp = maxHp;
-        this.damage = damage;
+        this.m_PlayerName = playerName;
+        this.m_Hp = hp;
+        this.m_MaxHp = maxHp;
+        this.m_Damage = damage;
         SetHPBar();
     }
 
     public void SetHPBar()
     {
-        Vector2 newSize = new Vector2(((float)maxHp / hpBarMax) * hpBarMax, hpBack.rectTransform.sizeDelta.y);
-
-        hpBack.rectTransform.sizeDelta = newSize;
-        hpBar.rectTransform.sizeDelta = newSize;
-        hpBar.fillAmount = (float)hp / maxHp;
-        hpText.text = string.Format("{0}/{1}", hp, maxHp);
+        
+        hpBar.fillAmount = (float)m_Hp / m_MaxHp;
+        hpText.text = string.Format("{0}/{1}", m_Hp, m_MaxHp);
     }
 
 

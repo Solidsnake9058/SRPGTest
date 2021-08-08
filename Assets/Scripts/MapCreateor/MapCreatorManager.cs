@@ -14,7 +14,6 @@ public class MapCreatorManager : MonoBehaviour
     public int mapSizeX;
     public int mapSizeY;
 
-    public List<List<Tile>> map = new List<List<Tile>>();
     public List<List<HexTile>> mapHex = new List<List<HexTile>>();
 
     public CanvasGroup stageGroup;
@@ -391,24 +390,24 @@ public class MapCreatorManager : MonoBehaviour
         switch (pallerSelection2D)
         {
             case TileType2D.Impassible:
-                spritesMax = TilePrefabHolder.instance.tile_Impassible_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesMax = TilePrefabHolder.m_Instance.m_TileImpassiblePrefab.SpriteCount;
                 break;
             case TileType2D.Road:
-                spritesMax = TilePrefabHolder.instance.tile_Road_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesMax = TilePrefabHolder.m_Instance.m_TileRoadPrefab.SpriteCount;
                 break;
             case TileType2D.Plain:
-                spritesMax = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().spriteCount;
-                spritesChestMax = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().chestSprites.Count;
+                spritesMax = TilePrefabHolder.m_Instance.m_TilePlainPrefab.SpriteCount;
+                spritesChestMax = TilePrefabHolder.m_Instance.m_TilePlainPrefab._ChestSprites.Count;
 
                 break;
             case TileType2D.Wasteland:
-                spritesMax = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesMax = TilePrefabHolder.m_Instance.m_TileWastelandPrefab.SpriteCount;
                 break;
             case TileType2D.Villa:
-                spritesMax = TilePrefabHolder.instance.tile_Villa_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesMax = TilePrefabHolder.m_Instance.m_TileVillaPrefab.SpriteCount;
                 break;
             case TileType2D.Forest:
-                spritesMax = TilePrefabHolder.instance.tile_Forest_prefab.GetComponent<SpriteMetarial>().spriteCount;
+                spritesMax = TilePrefabHolder.m_Instance.m_TileTreePrefab.SpriteCount;
                 break;
         }
     }
@@ -420,23 +419,23 @@ public class MapCreatorManager : MonoBehaviour
         switch (pallerSelection2D)
         {
             case TileType2D.Impassible:
-                temp = TilePrefabHolder.instance.tile_Impassible_prefab.GetComponent<SpriteMetarial>().sprites;
+                temp = TilePrefabHolder.m_Instance.m_TileImpassiblePrefab._Sprites;
                 break;
             case TileType2D.Road:
-                temp = TilePrefabHolder.instance.tile_Road_prefab.GetComponent<SpriteMetarial>().sprites;
+                temp = TilePrefabHolder.m_Instance.m_TileRoadPrefab._Sprites;
                 break;
             case TileType2D.Plain:
-                temp = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().sprites;
-                chestTemp = TilePrefabHolder.instance.tile_Plain_prefab.GetComponent<SpriteMetarial>().chestSprites;
+                temp = TilePrefabHolder.m_Instance.m_TilePlainPrefab._Sprites;
+                chestTemp = TilePrefabHolder.m_Instance.m_TilePlainPrefab._ChestSprites;
                 break;
             case TileType2D.Wasteland:
-                temp = TilePrefabHolder.instance.tile_Wasteland_prefab.GetComponent<SpriteMetarial>().sprites;
+                temp = TilePrefabHolder.m_Instance.m_TileWastelandPrefab._Sprites;
                 break;
             case TileType2D.Villa:
-                temp = TilePrefabHolder.instance.tile_Villa_prefab.GetComponent<SpriteMetarial>().sprites;
+                temp = TilePrefabHolder.m_Instance.m_TileVillaPrefab._Sprites;
                 break;
             case TileType2D.Forest:
-                temp = TilePrefabHolder.instance.tile_Forest_prefab.GetComponent<SpriteMetarial>().sprites;
+                temp = TilePrefabHolder.m_Instance.m_TileTreePrefab._Sprites;
                 break;
         }
 
@@ -1316,23 +1315,23 @@ public class MapCreatorManager : MonoBehaviour
         switch (temp)
         {
             case ScenarionActionType.Dialog:
-                action = new ScenarionAction(actionId, dialogName.text, dialogContect.text);
+                action = new ScenarionAction(actionId, dialogName.text, dialogContect.text,false);
                 break;
             case ScenarionActionType.CreateActor:
                 if (scenarioActorPlayerRecords.Count == 0)
                 {
                     return;
                 }
-                action = new ScenarionAction(actionId, scenarioActorPlayerRecords, afterWaitTime, isToDark.isOn);
+                action = new ScenarionAction(actionId, scenarioActorPlayerRecords, afterWaitTime, afterWaitTime, isToDark.isOn, false);
                 break;
             case ScenarionActionType.ControlActor:
                 ScenarionActorPivotType tempPivot = (ScenarionActorPivotType)Enum.Parse(typeof(ScenarionActorPivotType), selectedActorPivot.options[selectedActorPivot.value].text);
                 string[] tempActorId = selectedActor.options[selectedActor.value].text.Split(',');
-                action = new ScenarionAction(actionId, Convert.ToInt32(tempActorId[0]), new HexCoord(Convert.ToInt32(controlActorX.text), Convert.ToInt32(controlActorY.text)), tempPivot, afterWaitTime, isToDark.isOn);
+                action = new ScenarionAction(actionId, Convert.ToInt32(tempActorId[0]), new HexCoord(Convert.ToInt32(controlActorX.text), Convert.ToInt32(controlActorY.text)), tempPivot, afterWaitTime, afterWaitTime, isToDark.isOn, false);
                 break;
             case ScenarionActionType.SetCamera:
             case ScenarionActionType.ControlCamera:
-                action = new ScenarionAction(actionId, (temp == ScenarionActionType.ControlCamera), new HexCoord(Convert.ToInt32(controlCameraX.text), Convert.ToInt32(controlCameraY.text)), afterWaitTime, isToDark.isOn);
+                action = new ScenarionAction(actionId, (temp == ScenarionActionType.ControlCamera), new HexCoord(Convert.ToInt32(controlCameraX.text), Convert.ToInt32(controlCameraY.text)), afterWaitTime, afterWaitTime, isToDark.isOn, false);
                 break;
             case ScenarionActionType.AddUserPlayer:
                 break;
@@ -1606,7 +1605,6 @@ public class MapCreatorManager : MonoBehaviour
         }
 
         Vector3 pos = Vector3.zero;
-        map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
 
         userPlayerRecords = new List<PlayerRecord>();
@@ -1623,8 +1621,8 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     continue;
                 }
-                HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
-                tile.TileInitialize(new TileXml(j, i));
+                HexTile tile = Instantiate(TilePrefabHolder.m_Instance.m_HexTileBasePrefab, mapTransform);
+                tile.TileInitialize(new TileData(j, i));
                 row.Add(tile);
                 if (i == 0)
                 {
@@ -1725,7 +1723,6 @@ public class MapCreatorManager : MonoBehaviour
         m_GameUIManager.m_ScreenControlUI.SetCameraPos(new Vector3((float)mapSizeX / 2, 0, -(float)mapSizeY / 2));
 
         Vector3 pos = Vector3.zero;
-        map = new List<List<Tile>>();
         mapHex = new List<List<HexTile>>();
 
         userPlayerRecords = container.userPlayerRecords;
@@ -1746,8 +1743,8 @@ public class MapCreatorManager : MonoBehaviour
                 {
                     continue;
                 }
-                HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, mapTransform);
-                TileXml temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
+                HexTile tile = Instantiate(TilePrefabHolder.m_Instance.m_HexTileBasePrefab, mapTransform);
+                TileData temp = container.tiles.Where(x => x.locX == j && x.locY == i).FirstOrDefault();
                 tile.TileInitialize(temp);
                 row.Add(tile);
                 if (i == 0)

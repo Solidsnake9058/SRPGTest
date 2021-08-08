@@ -16,20 +16,25 @@ public class ScenarionAction
     public string dialogName;
     public string dialogText;
     public float waitTime;
+    public float waitTimeDark;
     public bool isToDark;
+    public bool isToLight;
+
 
     public ScenarionAction() { }
 
-    public ScenarionAction(int scenarioActionId, List<PlayerRecord> createActors,float waitTime,bool isToDark)
+    public ScenarionAction(int scenarioActionId, List<PlayerRecord> createActors,float waitTime, float waitTimeDark, bool isToDark, bool isToLight)
     {
         scenarionActionType = ScenarionActionType.CreateActor;
         this.scenarioActionId = scenarioActionId;
         this.createActors = createActors;
 		this.waitTime = waitTime;
-		this.isToDark = isToDark;
+        this.waitTimeDark = waitTimeDark;
+        this.isToDark = isToDark;
+        this.isToLight = isToLight;
     }
 
-    public ScenarionAction(int scenarioActionId, int actorId, HexCoord targetMoveTile, ScenarionActorPivotType actorPivot, float waitTime, bool isToDark)
+    public ScenarionAction(int scenarioActionId, int actorId, HexCoord targetMoveTile, ScenarionActorPivotType actorPivot, float waitTime, float waitTimeDark, bool isToDark, bool isToLight)
     {
         scenarionActionType = ScenarionActionType.ControlActor;
         this.scenarioActionId = scenarioActionId;
@@ -37,10 +42,12 @@ public class ScenarionAction
         this.targetMoveTile = targetMoveTile;
         this.actorPivot = actorPivot;
 		this.waitTime = waitTime;
-		this.isToDark = isToDark;
-	}
+        this.waitTimeDark = waitTimeDark;
+        this.isToDark = isToDark;
+        this.isToLight = isToLight;
+    }
 
-    public ScenarionAction(int scenarioActionId, bool isMoveCamera, HexCoord targetMoveTile, float waitTime, bool isToDark)
+    public ScenarionAction(int scenarioActionId, bool isMoveCamera, HexCoord targetMoveTile, float waitTimeDark, float waitTime, bool isToDark, bool isToLight)
     {
         scenarionActionType = isMoveCamera? ScenarionActionType.ControlCamera: ScenarionActionType.SetCamera;
         this.scenarioActionId = scenarioActionId;
@@ -52,15 +59,18 @@ public class ScenarionAction
         {
             setCameraPos = targetMoveTile;
         }
+        this.waitTimeDark = waitTimeDark;
         this.waitTime = waitTime;
 		this.isToDark = isToDark;
-	}
+        this.isToLight = isToLight;
+    }
 
-    public ScenarionAction(int scenarioActionId, string dialogName, string dialogText)
+    public ScenarionAction(int scenarioActionId, string dialogName, string dialogText, bool isToLight)
     {
         scenarionActionType = ScenarionActionType.Dialog;
         this.scenarioActionId = scenarioActionId;
         this.dialogName = dialogName;
         this.dialogText = dialogText;
+        this.isToLight = isToLight;
     }
 }

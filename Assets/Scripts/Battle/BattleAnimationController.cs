@@ -2,34 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BattleAnimationController : MonoBehaviour {
+public class BattleAnimationController : MonoBehaviour
+{
+    private bool m_SendTargetCheck;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
+    public void SetSendTargetCheck(bool isPlayer)
+    {
+        m_SendTargetCheck = !isPlayer;
+    }
     public void SendDamage()
     {
-        if (!BattleManager.instance.isIndirectAttack)
-        {
-            BattleManager.instance.SendDamage();
-        }
+        BattleManager.m_Instance.SendDamage(m_SendTargetCheck);
+    }
+
+public void RunPreactionFin()
+    {
+        BattleManager.m_Instance.RunPreactionFin();
     }
 
     public void EndBattle()
     {
-        BattleManager.instance.EndBattle();
+        BattleManager.m_Instance.EndBattle();
     }
-
-    public void MoveCamera()
-    {
-        BattleManager.instance.MoveCamera();
-    }
-
 }

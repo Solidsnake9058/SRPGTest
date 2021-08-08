@@ -6,7 +6,8 @@ using System.Xml.Serialization;
 using System.Collections.Generic;
 using System.IO;
 
-public class TileXml
+[System.Serializable]
+public class TileData
 {
     [XmlAttribute("id")]
     public int id;
@@ -38,12 +39,12 @@ public class TileXml
     [XmlAttribute("isShop")]
     public bool isShop;
 
-    public TileXml()
+    public TileData()
     {
 
     }
 
-    public TileXml(int locX,int locY)
+    public TileData(int locX,int locY)
     {
         id = (int)TileType2D.Plain;
         spriteIndex = 0;
@@ -70,7 +71,7 @@ public class MapContainer
 
     [XmlArray("Tiles")]
     [XmlArrayItem("Tile")]
-    public List<TileXml> tiles = new List<TileXml>();
+    public List<TileData> tiles = new List<TileData>();
 
     [XmlArray("UserPlayerRecords")]
     [XmlArrayItem("UserPlayerRecord")]
@@ -96,7 +97,7 @@ public class MapContainer
     [XmlArrayItem("stageClearConditionList")]
     public List<StageClearCondition> stageClearConditionList = new List<StageClearCondition>();
 
-    public Dictionary<int, Dictionary<int, TileXml>> m_TileDataMap = new Dictionary<int, Dictionary<int, TileXml>>();
+    public Dictionary<int, Dictionary<int, TileData>> m_TileDataMap = new Dictionary<int, Dictionary<int, TileData>>();
 
     public void InitTileDataMap()
     {
@@ -104,7 +105,7 @@ public class MapContainer
         {
             if (!m_TileDataMap.ContainsKey(tiles[i].locX))
             {
-                m_TileDataMap.Add(tiles[i].locX, new Dictionary<int, TileXml>());
+                m_TileDataMap.Add(tiles[i].locX, new Dictionary<int, TileData>());
             }
             m_TileDataMap[tiles[i].locX].Add(tiles[i].locY, tiles[i]);
         }
@@ -113,29 +114,9 @@ public class MapContainer
 
 public static class MapSaveLoad
 {
-    public static MapContainer CreateMapContainer(List<List<Tile>> map)
-    {
-        List<TileXml> tiles = new List<TileXml>();
-
-        for (int i = 0; i < map.Count; i++)
-        {
-            for (int j = 0; j < map[i].Count; j++)
-            {
-                tiles.Add(CreateTileXml(map[i][j]));
-            }
-        }
-
-        return new MapContainer()
-        {
-            sizeX = map.Count,
-            sizeY = map[0].Count,
-            tiles = tiles,
-        };
-    }
-
     public static MapContainer CreateMapContainer(List<List<HexTile>> map, List<PlayerRecord> userPlayerRecords, List<PlayerRecord> enemyPlayerRecords, List<int> shopItemList, List<int> shopWeaponList, List<Scenarion> scenarioList, List<StageClearCondition> stageClearConditionList)
     {
-        List<TileXml> tiles = new List<TileXml>();
+        List<TileData> tiles = new List<TileData>();
 
         for (int i = 0; i < map.Count; i++)
         {
@@ -158,32 +139,6 @@ public static class MapSaveLoad
             stageClearConditionList = stageClearConditionList
         };
     }
-
-    public static TileXml CreateTileXml(Tile tile)
-    {
-        return new TileXml()
-        {
-            id = (int)tile.type,
-            locX = (int)tile.gridPosition.x,
-            locY = (int)tile.gridPosition.y
-        };
-    }
-
-    //public static TileXml CreateTileXml(HexTile tile)
-    //{
-    //    return new TileXml()
-    //    {
-    //        id = (int)tile.m_TileType2D,
-    //        spritIndex = tile.m_SpriteIndex,
-    //        locX = tile.m_Hex.m_Q,
-    //        locY = tile.m_Hex.m_R,
-    //        gold = tile.m_Gold,
-    //        itemId = tile.m_ItemId,
-    //        weaponId = tile.m_WeaponId,
-    //        spritChestIndex = tile.m_SpritChestIndex,
-    //        isShop = tile.m_IsShop
-    //    };
-    //}
 
     public static void Save(MapContainer mapContainer, string filename)
     {

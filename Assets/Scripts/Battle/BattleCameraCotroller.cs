@@ -17,37 +17,37 @@ public class BattleCameraCotroller : MonoBehaviour {
     public float moveSpeed = 1f;
 
     // Use this for initialization
-    void Start () {
-        SetFocusTarget(true);
-    }
+    //void Start () {
+    //    SetFocusTarget(true);
+    //}
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (!BattleManager.instance.isIndirectAttack && !BattleManager.instance.isHeal)
-        {
-            if (target != null)
-            {
-                transform.position = new Vector3(target.position.x, transform.position.y, transform.position.z);
-            }
-        }
-        else
-        {
-            if (isStartMove)
-            {
-                if ((transform.localPosition.x * targetDamage.localPosition.x < 0) || Mathf.Abs(transform.localPosition.x) <= Mathf.Abs(targetDamage.localPosition.x))
-                {
-                    transform.localPosition += (new Vector3(targetDamage.localPosition.x, transform.localPosition.y, transform.localPosition.z) - transform.localPosition).normalized * moveSpeed * Time.deltaTime;
-                }
-                else
-                {
-                    BattleManager.instance.SendDamage();
-                    isStartMove = false;
-                }
-            }
+    //// Update is called once per frame
+    //void Update()
+    //{
+    //    if (!BattleManager.instance.isIndirectAttack && !BattleManager.instance.isHeal)
+    //    {
+    //        if (target != null)
+    //        {
+    //            transform.position = new Vector3(target.position.x, transform.position.y, transform.position.z);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        if (isStartMove)
+    //        {
+    //            if ((transform.localPosition.x * targetDamage.localPosition.x < 0) || Mathf.Abs(transform.localPosition.x) <= Mathf.Abs(targetDamage.localPosition.x))
+    //            {
+    //                transform.localPosition += (new Vector3(targetDamage.localPosition.x, transform.localPosition.y, transform.localPosition.z) - transform.localPosition).normalized * moveSpeed * Time.deltaTime;
+    //            }
+    //            else
+    //            {
+    //                BattleManager.instance.SendDamage();
+    //                isStartMove = false;
+    //            }
+    //        }
             
-        }
-    }
+    //    }
+    //}
 
     public void SetFocusTarget(bool isUserPlayer)
     {

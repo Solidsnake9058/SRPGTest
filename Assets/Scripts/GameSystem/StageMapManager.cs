@@ -37,8 +37,8 @@ public class StageMapManager : IGameItem
                 {
                     continue;
                 }
-                HexTile tile = Instantiate(PrefabHolder.instance.m_HexTileBasePrefab, m_MapTransform);
-                TileXml tileData = mapContainer.m_TileDataMap[i][j];
+                HexTile tile = Instantiate(TilePrefabHolder.m_Instance.m_HexTileBasePrefab, m_MapTransform);
+                TileData tileData = mapContainer.m_TileDataMap[i][j];
                 tile.TileInitialize(tileData);
                 row.Add(tile);
                 m_MapHexList.Add(tile);
@@ -83,6 +83,7 @@ public class StageMapManager : IGameItem
 
     public void SetTileLineIsShow(bool isShowTile)
     {
+        isShowTile &= SaveManager.GetIsShowTile();
         for (int i = 0; i < m_MapHex.Count; i++)
         {
             for (int j = 0; j < m_MapHex[i].Count; j++)

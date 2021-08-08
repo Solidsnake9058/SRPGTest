@@ -235,13 +235,13 @@ public class Player : IGameItem, IPointerClickHandler
     public void HidePlayer()
     {
         transform.position = HexTilePos() + m_HidePosition;
-        m_PlayerUI.SetHideUI();
+        //m_PlayerUI.SetHideUI();
     }
 
     public void ShowPlayer()
     {
         transform.position = HexTilePos();
-        m_PlayerUI.SetShowUI();
+        //m_PlayerUI.SetShowUI();
     }
 
     public void GetWeaponAttack(ref int derictAtk, ref int inderictAtk)
@@ -278,15 +278,8 @@ public class Player : IGameItem, IPointerClickHandler
         return new PlayerRecord();
     }
 
-    public virtual PlayerRecord LevelUp(int levelMax)
+    public virtual PlayerRecord LevelUp(int levelMax, int hpMax, int statusMax)
     {
-        int targetLevel = (m_Exp / 100) + 1;
-        if (m_Level < levelMax && m_Hp > 0 && targetLevel > m_Level)
-        {
-            PlayerRecord pr = new PlayerRecord(targetLevel, StatusUpValue(targetLevel), 0, StatusUpValue(targetLevel), StatusUpValue(targetLevel), StatusUpValue(targetLevel), StatusUpValue(targetLevel), StatusUpValue(targetLevel));
-
-            return pr;
-        }
         return null;
     }
 
@@ -299,16 +292,6 @@ public class Player : IGameItem, IPointerClickHandler
         m_Wis = (int)playerRecord.wis;
         m_Dex = (int)playerRecord.dex;
         m_MDef = (int)playerRecord.mdef;
-    }
-
-    private int StatusUpValue(int upLevel)
-    {
-        int value = 0;
-        for (int i = 0; i < upLevel; i++)
-        {
-            value += Random.Range(0, 2);
-        }
-        return value;
     }
 
     public PlayerRecord GetPlayerProp()
@@ -386,28 +369,6 @@ public class Player : IGameItem, IPointerClickHandler
     public void SetPivot()
     {
         transform.rotation = Quaternion.Euler(0, (int)m_PlayerPivot, 0);
-
-        //switch (m_PlayerPivot)
-        //{
-        //    case ScenarionActorPivotType.Right:
-        //        transform.rotation = Quaternion.Euler(0, 90, 0);
-        //        break;
-        //    case ScenarionActorPivotType.UpRight:
-        //        transform.rotation = Quaternion.Euler(0, 30, 0);
-        //        break;
-        //    case ScenarionActorPivotType.UpLeft:
-        //        transform.rotation = Quaternion.Euler(0, 330, 0);
-        //        break;
-        //    case ScenarionActorPivotType.Left:
-        //        transform.rotation = Quaternion.Euler(0, 270, 0);
-        //        break;
-        //    case ScenarionActorPivotType.DownLeft:
-        //        transform.rotation = Quaternion.Euler(0, 210, 0);
-        //        break;
-        //    case ScenarionActorPivotType.DownRight:
-        //        transform.rotation = Quaternion.Euler(0, 150, 0);
-        //        break;
-        //}
     }
 }
 

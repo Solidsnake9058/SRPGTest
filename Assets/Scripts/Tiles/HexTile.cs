@@ -14,7 +14,7 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
 
     public HexCoord m_Hex { get; private set; }
 
-    GameObject m_Prefab;
+    private SpriteMetarial m_Prefab;
     [SerializeField]
     private Renderer m_Visual;
     public Transform tileLine;
@@ -47,9 +47,9 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
         return m_Hex.PositionSqr();
     }
 
-    public TileXml CreateTileXml()
+    public TileData CreateTileXml()
     {
-        return new TileXml()
+        return new TileData()
         {
             id = (int)m_TileType2D,
             spriteIndex = m_SpriteIndex,
@@ -232,7 +232,7 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
     //    return new Vector2(pos.x + (((int)pos.y) >> 1), pos.y);
     //}
 
-    public void TileInitialize(TileXml tileData)
+    public void TileInitialize(TileData tileData)
     {
         SetType2D((TileType2D)tileData.id, tileData.spriteIndex);
         m_SpritChestIndex = tileData.spriteChestIndex;
@@ -452,32 +452,32 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
             case TileType2D.Impassible:
                 m_MovementCost = 9999;
                 m_Impassible = true;
-                m_Prefab = TilePrefabHolder.instance.tile_Impassible_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TileImpassiblePrefab;
                 break;
             case TileType2D.Road:
                 m_MovementCost = 1;
                 m_DefenseRate = 0;
-                m_Prefab = TilePrefabHolder.instance.tile_Road_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TileRoadPrefab;
                 break;
             case TileType2D.Plain:
                 m_MovementCost = 1.5f;
                 m_DefenseRate = 10;
-                m_Prefab = TilePrefabHolder.instance.tile_Plain_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TilePlainPrefab;
                 break;
             case TileType2D.Wasteland:
                 m_MovementCost = 3;
                 m_DefenseRate = 30;
-                m_Prefab = TilePrefabHolder.instance.tile_Wasteland_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TileWastelandPrefab;
                 break;
             case TileType2D.Villa:
                 m_MovementCost = 1;
                 m_DefenseRate = 50;
-                m_Prefab = TilePrefabHolder.instance.tile_Villa_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TileVillaPrefab;
                 break;
             case TileType2D.Forest:
                 m_MovementCost = 2;
                 m_DefenseRate = 40;
-                m_Prefab = TilePrefabHolder.instance.tile_Forest_prefab;
+                m_Prefab = TilePrefabHolder.m_Instance.m_TileTreePrefab;
                 break;
         }
         GenerateVisuals();
@@ -490,8 +490,8 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
         {
             Destroy(container.transform.GetChild(i).gameObject);
         }
-        GameObject newVisual = Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation, container.transform);
-        newVisual.GetComponent<SpriteMetarial>().SetSprite(m_SpriteIndex);
+        SpriteMetarial newVisual = Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation, container.transform);
+        newVisual.SetSprite(m_SpriteIndex);
         m_Visual = newVisual.GetComponent<Renderer>();
     }
 

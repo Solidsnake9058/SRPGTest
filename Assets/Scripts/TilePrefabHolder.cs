@@ -5,17 +5,18 @@ using UnityEngine;
 public class TilePrefabHolder : MonoBehaviour
 {
 
-    public static TilePrefabHolder instance { get; private set; }
+    public static TilePrefabHolder m_Instance { get; private set; }
 
-    public GameObject tile_Road_prefab;
-    public GameObject tile_Plain_prefab;
-    public GameObject tile_Wasteland_prefab;
-    public GameObject tile_Villa_prefab;
-    public GameObject tile_Forest_prefab;
-    public GameObject tile_Impassible_prefab;
+    public HexTile m_HexTileBasePrefab;
+    public SpriteMetarial m_TileRoadPrefab;
+    public SpriteMetarial m_TilePlainPrefab;
+    public SpriteMetarial m_TileWastelandPrefab;
+    public SpriteMetarial m_TileVillaPrefab;
+    public SpriteMetarial m_TileTreePrefab;
+    public SpriteMetarial m_TileImpassiblePrefab;
 
     private void Awake()
     {
-        instance = this;
+        m_Instance = this;
     }
 }

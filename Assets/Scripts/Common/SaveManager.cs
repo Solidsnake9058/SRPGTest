@@ -57,7 +57,7 @@ public static class SaveManager
     {
         if (index >= 0 && index < m_GameData.m_SaveDataStores.Count)
         {
-            return m_GameData.m_SaveDataStores[index];
+            return m_GameData.m_SaveDataStores[index].Clone();
         }
         else
         {
@@ -67,7 +67,7 @@ public static class SaveManager
 
     public static SaveDataStore GetSaveDataStore()
     {
-        return m_GameData.m_SaveDataStoreAuto;
+        return m_GameData.m_SaveDataStoreAuto.Clone();
     }
 
     public static void SetSaveDataStore(int index, SaveDataStore saveDataStore)

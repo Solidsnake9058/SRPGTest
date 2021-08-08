@@ -20,6 +20,8 @@ public class ScenarionManager : IGameItem
     private bool m_IsEnding = false;
     public bool m_IsScenarionRunning { get { return m_RunningScenarion != null; } }
     private Player m_ControlPlayer = null;
+    private bool m_ToDark = false;
+    private bool m_ToLight = false;
 
     public override void GameSetting()
     {
@@ -63,7 +65,7 @@ public class ScenarionManager : IGameItem
             m_ControlPlayer.SystemUpdate();
             isWaitActor = !m_ControlPlayer.IsTurnEnd;
         }
-        if (isWaitActor || m_IsWaitAction || m_IsMoveCamera)
+        if (isWaitActor || m_IsWaitAction || m_IsMoveCamera || (m_ToLight && m_GameUIManager.m_BlackFrontUI.IsDark))
         {
             return;
         }
@@ -155,12 +157,17 @@ public class ScenarionManager : IGameItem
     private bool SetScenarionAction()
     {
         m_ControlPlayer = null;
+        bool isToLight = m_ToDark;
+        m_ToDark = false;
+        m_ToLight = false;
         if (m_RunningScenarion.scenarionActionStep < m_RunningScenarion.scenarionActions.Count)
         {
             ScenarionAction scenarioAction = m_RunningScenarion.scenarionActions[m_RunningScenarion.scenarionActionStep];
+            m_ToDark = scenarioAction.isToDark;
             if (m_RunningScenarion.scenarionActionStep.Equals(0) && m_RunningScenarion.scenarionType == ScenarionType.Openning)
             {
                 m_PlayerManager.HidePlayers();
+                m_GameUIManager.m_ScreenControlUI.SetPlayerUIShow(false);
             }
 
             switch (scenarioAction.scenarionActionType)
@@ -177,11 +184,13 @@ public class ScenarionManager : IGameItem
                     break;
                 case ScenarionActionType.SetCamera:
                     Vector3 tilePos = m_StageMapManager.GetMapTile(scenarioAction.setCameraPos).HexTilePos();
-                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(tilePos, false);
+                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(tilePos, scenarioAction.isToDark, scenarioAction.waitTime, scenarioAction.waitTimeDark);
+                    m_ToDark = scenarioAction.isToDark;
                     break;
                 case ScenarionActionType.ControlCamera:
                     Vector3 moveCaremaPos = m_StageMapManager.GetMapTile(scenarioAction.targetMoveTile).HexTilePos();
-                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(moveCaremaPos, scenarioAction.isToDark, scenarioAction.waitTime);
+                    m_GameUIManager.m_ScreenControlUI.MoveCameraPos(moveCaremaPos, scenarioAction.isToDark, scenarioAction.waitTime, scenarioAction.waitTimeDark);
+                    m_ToDark = scenarioAction.isToDark;
                     break;
                 case ScenarionActionType.AddUserPlayer:
                     break;
@@ -191,6 +200,12 @@ public class ScenarionManager : IGameItem
             //currentWaitingTime = 0;
             //isToDark = scenarioAction.isToDark;
             //waitingTime = scenarioAction.waitTime;
+            m_ToLight = scenarioAction.isToLight;
+            if (scenarioAction.isToLight)
+            {
+                m_ToDark = false;
+                m_GameUIManager.m_BlackFrontUI.SetToLight();
+            }
             m_RunningScenarion.scenarionActionStep++;
         }
         else
@@ -215,6 +230,11 @@ public class ScenarionManager : IGameItem
                 SetScenarion(m_StageScenarions, m_RemoveScenarionList);
             }
             m_RunningScenarion = null;
+        }
+        isToLight &= m_RunningScenarion == null;
+        if (isToLight)
+        {
+            m_GameUIManager.m_BlackFrontUI.SetToLight();
         }
         return m_IsScenarionRunning;
     }
