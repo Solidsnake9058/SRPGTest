@@ -17,6 +17,7 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
     private SpriteMetarial m_Prefab;
     [SerializeField]
     private Renderer m_Visual;
+    private SpriteMetarial m_SpriteMetarial;
     public Transform tileLine;
     public bool m_IsHighLight { get; private set; }
 
@@ -99,7 +100,8 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
     public void SetHightLight(bool isHighLight, bool isAtk)
     {
         m_IsHighLight = isHighLight;
-        m_Visual.material.color = m_IsHighLight ? (isAtk ? GameManager.m_Instance.m_AttackTileColor : GameManager.m_Instance.m_MoveTileColor) : Color.white;
+        m_SpriteMetarial.SetHighlightColor(m_IsHighLight ? (isAtk ? GameManager.m_Instance.m_AttackTileColor : GameManager.m_Instance.m_MoveTileColor) : Color.white);
+        //m_Visual.material.color = m_IsHighLight ? (isAtk ? GameManager.m_Instance.m_AttackTileColor : GameManager.m_Instance.m_MoveTileColor) : Color.white;
     }
 
 
@@ -491,6 +493,7 @@ public class HexTile : IGameItem, IPointerClickHandler, IPointerEnterHandler
             Destroy(container.transform.GetChild(i).gameObject);
         }
         SpriteMetarial newVisual = Instantiate(m_Prefab, transform.position, m_Prefab.transform.rotation, container.transform);
+        m_SpriteMetarial = newVisual;
         newVisual.SetSprite(m_SpriteIndex);
         m_Visual = newVisual.GetComponent<Renderer>();
     }

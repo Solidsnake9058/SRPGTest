@@ -15,7 +15,7 @@ public class BattleAnimationController : MonoBehaviour
         BattleManager.m_Instance.SendDamage(m_SendTargetCheck);
     }
 
-public void RunPreactionFin()
+    public void RunPreactionFin()
     {
         BattleManager.m_Instance.RunPreactionFin();
     }
